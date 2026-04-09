@@ -1,24 +1,23 @@
 import type { NextRequest } from "next/server";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { loginStudent } from "@/lib/business-logic/student-account";
+import { getServerT } from "@/lib/i18n-server";
 import {
   checkRateLimit,
   rateLimitErrorResponse,
 } from "@/lib/middleware/rate-limit";
 import { signStudentToken } from "@/lib/student-auth";
+import { studentLoginSchema } from "@/lib/validations";
+import { parseWithLocale } from "@/lib/validations/parse-with-locale";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerT(request);
   try {
     const body = await request.json();
-    const { nis, password } = body;
+    const parsed = await parseWithLocale(studentLoginSchema, body, request);
+    if (!parsed.success) return parsed.response;
 
-    if (!nis || !password) {
-      return errorResponse(
-        "NIS dan password harus diisi",
-        "VALIDATION_ERROR",
-        400,
-      );
-    }
+    const { nis, password } = parsed.data;
 
     // Check rate limit (3 attempts per minute per NIS)
     const rateLimitResult = await checkRateLimit("login", nis);
@@ -29,7 +28,7 @@ export async function POST(request: NextRequest) {
     const result = await loginStudent({ nis, password });
 
     if (!result.success || !result.student) {
-      return errorResponse(result.error || "Login gagal", "UNAUTHORIZED", 401);
+      return errorResponse(t("api.invalidCredentials"), "UNAUTHORIZED", 401);
     }
 
     const token = await signStudentToken({
@@ -38,7 +37,7 @@ export async function POST(request: NextRequest) {
     });
 
     const response = successResponse({
-      message: "Login berhasil",
+      message: t("api.loginSuccess"),
       mustChangePassword: result.student.mustChangePassword,
       user: {
         studentNis: result.student.nis,
@@ -54,6 +53,6 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     console.error("Student login error:", error);
-    return errorResponse("Internal server error", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }

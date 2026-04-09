@@ -5,19 +5,23 @@ import {
   applyDiscountToTuitions,
   previewDiscountApplication,
 } from "@/lib/business-logic/discount-processor";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
+import { discountApplySchema } from "@/lib/validations";
+import { parseWithLocale } from "@/lib/validations/parse-with-locale";
 
 export async function POST(request: NextRequest) {
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   try {
     const body = await request.json();
-    const { discountId, preview } = body;
+    const parsed = await parseWithLocale(discountApplySchema, body, request);
+    if (!parsed.success) return parsed.response;
 
-    if (!discountId) {
-      return errorResponse("Discount ID is required", "VALIDATION_ERROR", 400);
-    }
+    const { discountId } = parsed.data;
+    const { preview } = body;
 
     // Check if discount exists
     const discount = await prisma.discount.findUnique({
@@ -29,12 +33,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (!discount) {
-      return errorResponse("Discount not found", "NOT_FOUND", 404);
+      return errorResponse(t("api.notFound", { resource: "Discount" }), "NOT_FOUND", 404);
     }
 
     if (!discount.isActive) {
       return errorResponse(
-        "Cannot apply inactive discount",
+        t("api.discountInactive"),
         "VALIDATION_ERROR",
         400,
       );
@@ -97,7 +101,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Apply discount error:", error);
     const message =
-      error instanceof Error ? error.message : "Failed to apply discount";
+      error instanceof Error ? error.message : t("api.internalError");
     return errorResponse(message, "SERVER_ERROR", 500);
   }
 }

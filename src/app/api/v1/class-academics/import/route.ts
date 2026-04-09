@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { generateClassName } from "@/lib/business-logic/class-name-generator";
 import { readExcelBuffer } from "@/lib/excel-utils";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
 
 interface ClassRow {
@@ -15,12 +16,13 @@ export async function POST(request: NextRequest) {
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
 
     if (!file) {
-      return errorResponse("File is required", "VALIDATION_ERROR", 400);
+      return errorResponse(t("api.fileRequired"), "VALIDATION_ERROR", 400);
     }
 
     const buffer = await file.arrayBuffer();
@@ -38,13 +40,13 @@ export async function POST(request: NextRequest) {
       const rowNum = i + 2;
 
       if (!row["Academic Year"] || !row.Grade || !row.Section) {
-        errors.push({ row: rowNum, error: "Missing required fields" });
+        errors.push({ row: rowNum, error: t("api.missingRequiredFields") });
         continue;
       }
 
       const grade = Number.parseInt(row.Grade, 10);
       if (Number.isNaN(grade) || grade < 1 || grade > 12) {
-        errors.push({ row: rowNum, error: "Grade must be between 1 and 12" });
+        errors.push({ row: rowNum, error: t("api.gradeRange") });
         continue;
       }
 
@@ -106,6 +108,6 @@ export async function POST(request: NextRequest) {
     return successResponse({ imported, errors });
   } catch (error) {
     console.error("Import classes error:", error);
-    return errorResponse("Failed to import classes", "SERVER_ERROR", 500);
+    return errorResponse(t("api.importFailed", { resource: "classes" }), "SERVER_ERROR", 500);
   }
 }

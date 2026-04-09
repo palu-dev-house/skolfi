@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { requireRole } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -10,12 +11,13 @@ export async function GET(
   const auth = await requireRole(request, ["ADMIN", "CASHIER"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   const { nis } = await params;
 
   const student = await prisma.student.findUnique({ where: { nis } });
 
   if (!student) {
-    return errorResponse("Student not found", "NOT_FOUND", 404);
+    return errorResponse(t("api.notFound", { resource: "Student" }), "NOT_FOUND", 404);
   }
 
   return successResponse(student);
@@ -28,6 +30,7 @@ export async function PUT(
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   const { nis } = await params;
 
   try {
@@ -35,7 +38,7 @@ export async function PUT(
     const existing = await prisma.student.findUnique({ where: { nis } });
 
     if (!existing) {
-      return errorResponse("Student not found", "NOT_FOUND", 404);
+      return errorResponse(t("api.notFound", { resource: "Student" }), "NOT_FOUND", 404);
     }
 
     if (body.nik && body.nik !== existing.nik) {
@@ -43,7 +46,7 @@ export async function PUT(
         where: { nik: body.nik },
       });
       if (nikTaken) {
-        return errorResponse("NIK already exists", "DUPLICATE_ENTRY", 409);
+        return errorResponse(t("api.alreadyExists", { resource: "NIK" }), "DUPLICATE_ENTRY", 409);
       }
     }
 
@@ -64,7 +67,7 @@ export async function PUT(
     return successResponse(student);
   } catch (error) {
     console.error("Update student error:", error);
-    return errorResponse("Failed to update student", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }
 
@@ -75,14 +78,15 @@ export async function DELETE(
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   const { nis } = await params;
 
   const existing = await prisma.student.findUnique({ where: { nis } });
   if (!existing) {
-    return errorResponse("Student not found", "NOT_FOUND", 404);
+    return errorResponse(t("api.notFound", { resource: "Student" }), "NOT_FOUND", 404);
   }
 
   await prisma.student.delete({ where: { nis } });
 
-  return successResponse({ message: "Student deleted successfully" });
+  return successResponse({ message: t("api.deleteSuccess", { resource: "Student" }) });
 }

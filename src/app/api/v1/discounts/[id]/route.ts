@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { requireRole } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { removeDiscountFromTuitions } from "@/lib/business-logic/discount-processor";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
 
 interface RouteParams {
@@ -12,6 +13,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   const { id } = await params;
 
   const discount = await prisma.discount.findUnique({
@@ -35,7 +37,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   });
 
   if (!discount) {
-    return errorResponse("Discount not found", "NOT_FOUND", 404);
+    return errorResponse(t("api.notFound", { resource: "Discount" }), "NOT_FOUND", 404);
   }
 
   // Get usage statistics
@@ -71,6 +73,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   const { id } = await params;
 
   try {
@@ -90,7 +93,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!existingDiscount) {
-      return errorResponse("Discount not found", "NOT_FOUND", 404);
+      return errorResponse(t("api.notFound", { resource: "Discount" }), "NOT_FOUND", 404);
     }
 
     // Build update data
@@ -105,7 +108,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     if (name !== undefined) {
       if (!name) {
-        return errorResponse("Name cannot be empty", "VALIDATION_ERROR", 400);
+        return errorResponse(t("api.requiredFields"), "VALIDATION_ERROR", 400);
       }
       updateData.name = name;
     }
@@ -121,7 +124,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     if (discountAmount !== undefined) {
       if (discountAmount <= 0) {
         return errorResponse(
-          "Discount amount must be greater than 0",
+          t("api.mustBePositive", { field: "Discount amount" }),
           "VALIDATION_ERROR",
           400,
         );
@@ -132,7 +135,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     if (targetPeriods !== undefined) {
       if (!Array.isArray(targetPeriods) || targetPeriods.length === 0) {
         return errorResponse(
-          "At least one target period is required",
+          t("api.periodRequired"),
           "VALIDATION_ERROR",
           400,
         );
@@ -169,7 +172,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     return successResponse({ discount });
   } catch (error) {
     console.error("Update discount error:", error);
-    return errorResponse("Failed to update discount", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }
 
@@ -177,6 +180,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   const { id } = await params;
 
   try {
@@ -189,7 +193,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!discount) {
-      return errorResponse("Discount not found", "NOT_FOUND", 404);
+      return errorResponse(t("api.notFound", { resource: "Discount" }), "NOT_FOUND", 404);
     }
 
     // Remove discount from all tuitions first
@@ -201,11 +205,11 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     });
 
     return successResponse({
-      message: "Discount deleted successfully",
+      message: t("api.deleteSuccess", { resource: "Discount" }),
       tuitionsAffected: removedCount,
     });
   } catch (error) {
     console.error("Delete discount error:", error);
-    return errorResponse("Failed to delete discount", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }

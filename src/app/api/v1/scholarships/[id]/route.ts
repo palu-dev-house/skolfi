@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { requireRole } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -10,6 +11,7 @@ export async function GET(
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   const { id } = await params;
 
   const scholarship = await prisma.scholarship.findUnique({
@@ -30,7 +32,7 @@ export async function GET(
   });
 
   if (!scholarship) {
-    return errorResponse("Scholarship not found", "NOT_FOUND", 404);
+    return errorResponse(t("api.notFound", { resource: "Scholarship" }), "NOT_FOUND", 404);
   }
 
   return successResponse(scholarship);
@@ -43,6 +45,7 @@ export async function DELETE(
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   const { id } = await params;
 
   try {
@@ -51,7 +54,7 @@ export async function DELETE(
     });
 
     if (!scholarship) {
-      return errorResponse("Scholarship not found", "NOT_FOUND", 404);
+      return errorResponse(t("api.notFound", { resource: "Scholarship" }), "NOT_FOUND", 404);
     }
 
     // Note: Deleting scholarship does NOT revert auto-paid tuitions
@@ -60,11 +63,11 @@ export async function DELETE(
     await prisma.scholarship.delete({ where: { id } });
 
     return successResponse({
-      message: "Scholarship deleted successfully",
+      message: t("api.deleteSuccess", { resource: "Scholarship" }),
       note: "Auto-paid tuitions were not reverted",
     });
   } catch (error) {
     console.error("Delete scholarship error:", error);
-    return errorResponse("Failed to delete scholarship", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }

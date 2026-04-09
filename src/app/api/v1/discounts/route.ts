@@ -2,7 +2,10 @@ import type { NextRequest } from "next/server";
 import type { Prisma } from "@/generated/prisma/client";
 import { requireRole } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
+import { discountSchema } from "@/lib/validations";
+import { parseWithLocale } from "@/lib/validations/parse-with-locale";
 
 export async function GET(request: NextRequest) {
   const auth = await requireRole(request, ["ADMIN"]);
@@ -73,8 +76,12 @@ export async function POST(request: NextRequest) {
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   try {
     const body = await request.json();
+    const parsed = await parseWithLocale(discountSchema, body, request);
+    if (!parsed.success) return parsed.response;
+
     const {
       name,
       description,
@@ -83,40 +90,7 @@ export async function POST(request: NextRequest) {
       targetPeriods,
       academicYearId,
       classAcademicId,
-    } = body;
-
-    // Validation
-    if (!name) {
-      return errorResponse("Name is required", "VALIDATION_ERROR", 400);
-    }
-
-    if (!discountAmount || discountAmount <= 0) {
-      return errorResponse(
-        "Discount amount must be greater than 0",
-        "VALIDATION_ERROR",
-        400,
-      );
-    }
-
-    if (
-      !targetPeriods ||
-      !Array.isArray(targetPeriods) ||
-      targetPeriods.length === 0
-    ) {
-      return errorResponse(
-        "At least one target period is required",
-        "VALIDATION_ERROR",
-        400,
-      );
-    }
-
-    if (!academicYearId) {
-      return errorResponse(
-        "Academic year is required",
-        "VALIDATION_ERROR",
-        400,
-      );
-    }
+    } = parsed.data;
 
     // Check if academic year exists
     const academicYear = await prisma.academicYear.findUnique({
@@ -124,7 +98,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!academicYear) {
-      return errorResponse("Academic year not found", "NOT_FOUND", 404);
+      return errorResponse(t("api.notFound", { resource: "Academic year" }), "NOT_FOUND", 404);
     }
 
     // Check if class exists (if provided)
@@ -134,13 +108,13 @@ export async function POST(request: NextRequest) {
       });
 
       if (!classAcademic) {
-        return errorResponse("Class not found", "NOT_FOUND", 404);
+        return errorResponse(t("api.notFound", { resource: "Class" }), "NOT_FOUND", 404);
       }
 
       // Verify class belongs to the academic year
       if (classAcademic.academicYearId !== academicYearId) {
         return errorResponse(
-          "Class does not belong to the selected academic year",
+          t("api.classNotInYear"),
           "VALIDATION_ERROR",
           400,
         );
@@ -177,6 +151,6 @@ export async function POST(request: NextRequest) {
     return successResponse({ discount }, 201);
   } catch (error) {
     console.error("Create discount error:", error);
-    return errorResponse("Failed to create discount", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }

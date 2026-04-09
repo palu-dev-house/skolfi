@@ -6,15 +6,17 @@ import {
   getBankAccountById,
   updateBankAccount,
 } from "@/lib/business-logic/bank-account";
+import { getServerT } from "@/lib/i18n-server";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getServerT(request);
   try {
     const session = await getSessionFromRequest(request);
     if (!session) {
-      return errorResponse("Unauthorized", "UNAUTHORIZED", 401);
+      return errorResponse(t("api.unauthorized"), "UNAUTHORIZED", 401);
     }
 
     const { id } = await params;
@@ -26,7 +28,7 @@ export async function GET(
     if (error instanceof Error) {
       return errorResponse(error.message, "NOT_FOUND", 404);
     }
-    return errorResponse("Internal server error", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }
 
@@ -34,14 +36,15 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getServerT(request);
   try {
     const session = await getSessionFromRequest(request);
     if (!session) {
-      return errorResponse("Unauthorized", "UNAUTHORIZED", 401);
+      return errorResponse(t("api.unauthorized"), "UNAUTHORIZED", 401);
     }
 
     if (session.role !== "ADMIN") {
-      return errorResponse("Forbidden", "FORBIDDEN", 403);
+      return errorResponse(t("api.forbidden"), "FORBIDDEN", 403);
     }
 
     const { id } = await params;
@@ -55,7 +58,7 @@ export async function PUT(
     if (error instanceof Error) {
       return errorResponse(error.message, "VALIDATION_ERROR", 400);
     }
-    return errorResponse("Internal server error", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }
 
@@ -63,25 +66,26 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getServerT(request);
   try {
     const session = await getSessionFromRequest(request);
     if (!session) {
-      return errorResponse("Unauthorized", "UNAUTHORIZED", 401);
+      return errorResponse(t("api.unauthorized"), "UNAUTHORIZED", 401);
     }
 
     if (session.role !== "ADMIN") {
-      return errorResponse("Forbidden", "FORBIDDEN", 403);
+      return errorResponse(t("api.forbidden"), "FORBIDDEN", 403);
     }
 
     const { id } = await params;
     await deleteBankAccount(id);
 
-    return successResponse({ message: "Bank account berhasil dihapus" });
+    return successResponse({ message: t("api.deleteSuccess", { resource: "Bank account" }) });
   } catch (error) {
     console.error("Delete bank account error:", error);
     if (error instanceof Error) {
       return errorResponse(error.message, "VALIDATION_ERROR", 400);
     }
-    return errorResponse("Internal server error", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }

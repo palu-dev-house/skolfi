@@ -1,12 +1,14 @@
 import type { NextRequest } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get("status") || undefined;
@@ -91,6 +93,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("Get payment requests error:", error);
-    return errorResponse("Terjadi kesalahan", "INTERNAL_ERROR", 500);
+    return errorResponse(t("api.internalError"), "INTERNAL_ERROR", 500);
   }
 }

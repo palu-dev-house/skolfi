@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { requireRole } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -10,6 +11,7 @@ export async function GET(
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   const { id } = await params;
 
   const employee = await prisma.employee.findUnique({
@@ -25,7 +27,7 @@ export async function GET(
   });
 
   if (!employee) {
-    return errorResponse("Employee not found", "NOT_FOUND", 404);
+    return errorResponse(t("api.notFound", { resource: "Employee" }), "NOT_FOUND", 404);
   }
 
   return successResponse(employee);
@@ -38,6 +40,7 @@ export async function PUT(
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   const { id } = await params;
 
   try {
@@ -49,7 +52,7 @@ export async function PUT(
     });
 
     if (!existing) {
-      return errorResponse("Employee not found", "NOT_FOUND", 404);
+      return errorResponse(t("api.notFound", { resource: "Employee" }), "NOT_FOUND", 404);
     }
 
     if (email && email !== existing.email) {
@@ -57,7 +60,7 @@ export async function PUT(
         where: { email },
       });
       if (emailTaken) {
-        return errorResponse("Email already exists", "DUPLICATE_ENTRY", 409);
+        return errorResponse(t("api.alreadyExists", { resource: "Email" }), "DUPLICATE_ENTRY", 409);
       }
     }
 
@@ -81,7 +84,7 @@ export async function PUT(
     return successResponse(employee);
   } catch (error) {
     console.error("Update employee error:", error);
-    return errorResponse("Failed to update employee", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }
 
@@ -92,6 +95,7 @@ export async function DELETE(
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   const { id } = await params;
 
   const existing = await prisma.employee.findUnique({
@@ -99,12 +103,12 @@ export async function DELETE(
   });
 
   if (!existing) {
-    return errorResponse("Employee not found", "NOT_FOUND", 404);
+    return errorResponse(t("api.notFound", { resource: "Employee" }), "NOT_FOUND", 404);
   }
 
   if (auth.employeeId === id) {
     return errorResponse(
-      "Cannot delete your own account",
+      t("api.cannotDeleteSelf"),
       "VALIDATION_ERROR",
       400,
     );
@@ -112,5 +116,5 @@ export async function DELETE(
 
   await prisma.employee.delete({ where: { employeeId: id } });
 
-  return successResponse({ message: "Employee deleted successfully" });
+  return successResponse({ message: t("api.deleteSuccess", { resource: "Employee" }) });
 }

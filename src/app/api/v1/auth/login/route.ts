@@ -2,32 +2,31 @@ import bcrypt from "bcryptjs";
 import type { NextRequest } from "next/server";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { signToken } from "@/lib/auth";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
+import { loginSchema } from "@/lib/validations";
+import { parseWithLocale } from "@/lib/validations/parse-with-locale";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerT(request);
   try {
     const body = await request.json();
-    const { email, password } = body;
+    const parsed = await parseWithLocale(loginSchema, body, request);
+    if (!parsed.success) return parsed.response;
 
-    if (!email || !password) {
-      return errorResponse(
-        "Email and password are required",
-        "VALIDATION_ERROR",
-        400,
-      );
-    }
+    const { email, password } = parsed.data;
 
     const employee = await prisma.employee.findUnique({
       where: { email },
     });
 
     if (!employee) {
-      return errorResponse("Invalid email or password", "UNAUTHORIZED", 401);
+      return errorResponse(t("api.invalidCredentials"), "UNAUTHORIZED", 401);
     }
 
     const isPasswordValid = await bcrypt.compare(password, employee.password);
     if (!isPasswordValid) {
-      return errorResponse("Invalid email or password", "UNAUTHORIZED", 401);
+      return errorResponse(t("api.invalidCredentials"), "UNAUTHORIZED", 401);
     }
 
     const token = await signToken({
@@ -37,7 +36,7 @@ export async function POST(request: NextRequest) {
       role: employee.role,
     });
 
-    const response = successResponse({ message: "Login successful" });
+    const response = successResponse({ message: t("api.loginSuccess") });
 
     response.headers.set(
       "Set-Cookie",
@@ -47,6 +46,6 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     console.error("Login error:", error);
-    return errorResponse("Internal server error", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }

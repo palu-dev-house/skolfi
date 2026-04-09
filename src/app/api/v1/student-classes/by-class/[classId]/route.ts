@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
 
 // GET - Get all students assigned to a specific class
@@ -11,6 +12,7 @@ export async function GET(
   const auth = await requireAuth(request);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   const { classId } = await params;
 
   const classAcademic = await prisma.classAcademic.findUnique({
@@ -21,7 +23,7 @@ export async function GET(
   });
 
   if (!classAcademic) {
-    return errorResponse("Class not found", "NOT_FOUND", 404);
+    return errorResponse(t("api.notFound", { resource: "Class" }), "NOT_FOUND", 404);
   }
 
   const studentClasses = await prisma.studentClass.findMany({

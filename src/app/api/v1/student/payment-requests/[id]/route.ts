@@ -1,16 +1,18 @@
 import type { NextRequest } from "next/server";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { getPaymentRequest } from "@/lib/business-logic/payment-request";
+import { getServerT } from "@/lib/i18n-server";
 import { getStudentSessionFromRequest } from "@/lib/student-auth";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const t = await getServerT(request);
   try {
     const session = await getStudentSessionFromRequest(request);
     if (!session) {
-      return errorResponse("Unauthorized", "UNAUTHORIZED", 401);
+      return errorResponse(t("api.unauthorized"), "UNAUTHORIZED", 401);
     }
 
     const { id } = await params;
@@ -33,6 +35,6 @@ export async function GET(
     if (error instanceof Error) {
       return errorResponse(error.message, "NOT_FOUND", 404);
     }
-    return errorResponse("Internal server error", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }

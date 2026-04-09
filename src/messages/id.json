@@ -1009,6 +1009,7 @@
     "importSuccessful": "{imported} penempatan siswa diimpor, {skipped} dilewati",
     "periodRequired": "Minimal satu periode target harus dipilih",
     "academicYearRequired": "Tahun ajaran harus dipilih",
-    "classNotInYear": "Kelas tidak termasuk dalam tahun ajaran yang dipilih"
+    "classNotInYear": "Kelas tidak termasuk dalam tahun ajaran yang dipilih",
+    "restoreSuccess": "Akun berhasil dipulihkan"
   }
 }

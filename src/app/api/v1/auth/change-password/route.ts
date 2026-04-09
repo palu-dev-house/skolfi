@@ -2,30 +2,22 @@ import bcrypt from "bcryptjs";
 import type { NextRequest } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
+import { changePasswordSchema } from "@/lib/validations";
+import { parseWithLocale } from "@/lib/validations/parse-with-locale";
 
 export async function POST(request: NextRequest) {
+  const t = await getServerT(request);
   const auth = await requireAuth(request);
   if (auth instanceof Response) return auth;
 
   try {
-    const { currentPassword, newPassword } = await request.json();
+    const body = await request.json();
+    const parsed = await parseWithLocale(changePasswordSchema, body, request);
+    if (!parsed.success) return parsed.response;
 
-    if (!currentPassword || !newPassword) {
-      return errorResponse(
-        "Current password and new password are required",
-        "VALIDATION_ERROR",
-        400,
-      );
-    }
-
-    if (newPassword.length < 6) {
-      return errorResponse(
-        "New password must be at least 6 characters",
-        "VALIDATION_ERROR",
-        400,
-      );
-    }
+    const { currentPassword, newPassword } = parsed.data;
 
     // Get the employee
     const employee = await prisma.employee.findUnique({
@@ -33,7 +25,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!employee) {
-      return errorResponse("Employee not found", "NOT_FOUND", 404);
+      return errorResponse(t("api.notFound", { resource: "Employee" }), "NOT_FOUND", 404);
     }
 
     // Verify current password
@@ -44,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     if (!isValidPassword) {
       return errorResponse(
-        "Current password is incorrect",
+        t("api.currentPasswordIncorrect"),
         "INVALID_PASSWORD",
         400,
       );
@@ -58,9 +50,9 @@ export async function POST(request: NextRequest) {
       data: { password: hashedPassword },
     });
 
-    return successResponse({ message: "Password changed successfully" });
+    return successResponse({ message: t("api.passwordChanged") });
   } catch (error) {
     console.error("Change password error:", error);
-    return errorResponse("Failed to change password", "INTERNAL_ERROR", 500);
+    return errorResponse(t("api.passwordChangeFailed"), "INTERNAL_ERROR", 500);
   }
 }

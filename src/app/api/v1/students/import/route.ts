@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { requireRole } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { readExcelBuffer } from "@/lib/excel-utils";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
 
 interface StudentRow {
@@ -19,12 +20,13 @@ export async function POST(request: NextRequest) {
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
 
     if (!file) {
-      return errorResponse("File is required", "VALIDATION_ERROR", 400);
+      return errorResponse(t("api.fileRequired"), "VALIDATION_ERROR", 400);
     }
 
     // Get current user for accountCreatedBy
@@ -49,7 +51,7 @@ export async function POST(request: NextRequest) {
         errors.push({
           row: rowNum,
           nis: row.NIS || "",
-          error: "Missing required fields",
+          error: t("api.missingRequiredFields"),
         });
         continue;
       }
@@ -111,6 +113,6 @@ export async function POST(request: NextRequest) {
     return successResponse({ imported, updated, errors });
   } catch (error) {
     console.error("Import students error:", error);
-    return errorResponse("Failed to import students", "SERVER_ERROR", 500);
+    return errorResponse(t("api.importFailed", { resource: "students" }), "SERVER_ERROR", 500);
   }
 }

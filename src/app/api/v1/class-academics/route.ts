@@ -2,7 +2,10 @@ import type { NextRequest } from "next/server";
 import { requireRole } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { generateClassName } from "@/lib/business-logic/class-name-generator";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
+import { classAcademicSchema } from "@/lib/validations";
+import { parseWithLocale } from "@/lib/validations/parse-with-locale";
 
 export async function GET(request: NextRequest) {
   const auth = await requireRole(request, ["ADMIN"]);
@@ -68,49 +71,29 @@ export async function POST(request: NextRequest) {
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   try {
     const body = await request.json();
+    const parsed = await parseWithLocale(classAcademicSchema, body, request);
+    if (!parsed.success) return parsed.response;
+
     const {
       academicYearId,
       grade,
       section,
       paymentFrequency = "MONTHLY",
-      monthlyFee,
-      quarterlyFee,
-      semesterFee,
-    } = body;
+    } = parsed.data;
 
-    if (!academicYearId || !grade || !section) {
-      return errorResponse(
-        "Academic year, grade, and section are required",
-        "VALIDATION_ERROR",
-        400,
-      );
-    }
-
-    if (grade < 1 || grade > 12) {
-      return errorResponse(
-        "Grade must be between 1 and 12",
-        "VALIDATION_ERROR",
-        400,
-      );
-    }
-
-    // Validate payment frequency
-    if (!["MONTHLY", "QUARTERLY", "SEMESTER"].includes(paymentFrequency)) {
-      return errorResponse(
-        "Payment frequency must be MONTHLY, QUARTERLY, or SEMESTER",
-        "VALIDATION_ERROR",
-        400,
-      );
-    }
+    const monthlyFee = body.monthlyFee;
+    const quarterlyFee = body.quarterlyFee;
+    const semesterFee = body.semesterFee;
 
     const academicYear = await prisma.academicYear.findUnique({
       where: { id: academicYearId },
     });
 
     if (!academicYear) {
-      return errorResponse("Academic year not found", "NOT_FOUND", 404);
+      return errorResponse(t("api.notFound", { resource: "Academic year" }), "NOT_FOUND", 404);
     }
 
     const existing = await prisma.classAcademic.findUnique({
@@ -125,7 +108,7 @@ export async function POST(request: NextRequest) {
 
     if (existing) {
       return errorResponse(
-        "Class already exists for this academic year, grade, and section",
+        t("api.classAlreadyExists"),
         "DUPLICATE_ENTRY",
         409,
       );
@@ -158,6 +141,6 @@ export async function POST(request: NextRequest) {
     return successResponse(classAcademic, 201);
   } catch (error) {
     console.error("Create class error:", error);
-    return errorResponse("Failed to create class", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }

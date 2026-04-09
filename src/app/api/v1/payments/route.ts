@@ -3,7 +3,10 @@ import type { Prisma } from "@/generated/prisma/client";
 import { requireAuth } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { processPayment } from "@/lib/business-logic/payment-processor";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
+import { paymentSchema } from "@/lib/validations";
+import { parseWithLocale } from "@/lib/validations/parse-with-locale";
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
@@ -91,25 +94,13 @@ export async function POST(request: NextRequest) {
   const auth = await requireAuth(request);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   try {
     const body = await request.json();
-    const { tuitionId, amount, notes } = body;
+    const parsed = await parseWithLocale(paymentSchema, body, request);
+    if (!parsed.success) return parsed.response;
 
-    if (!tuitionId || amount === undefined) {
-      return errorResponse(
-        "Tuition ID and amount are required",
-        "VALIDATION_ERROR",
-        400,
-      );
-    }
-
-    if (amount <= 0) {
-      return errorResponse(
-        "Amount must be greater than 0",
-        "VALIDATION_ERROR",
-        400,
-      );
-    }
+    const { tuitionId, amount, notes } = parsed.data;
 
     // Check if tuition exists
     const tuition = await prisma.tuition.findUnique({
@@ -129,12 +120,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (!tuition) {
-      return errorResponse("Tuition not found", "NOT_FOUND", 404);
+      return errorResponse(t("api.notFound", { resource: "Tuition" }), "NOT_FOUND", 404);
     }
 
     if (tuition.status === "PAID") {
       return errorResponse(
-        "Tuition is already fully paid",
+        t("api.tuitionFullyPaid"),
         "VALIDATION_ERROR",
         400,
       );
@@ -195,6 +186,6 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error) {
       return errorResponse(error.message, "VALIDATION_ERROR", 400);
     }
-    return errorResponse("Failed to process payment", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }

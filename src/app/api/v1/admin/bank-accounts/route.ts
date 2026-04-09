@@ -5,12 +5,16 @@ import {
   createBankAccount,
   getAllBankAccounts,
 } from "@/lib/business-logic/bank-account";
+import { getServerT } from "@/lib/i18n-server";
+import { bankAccountSchema } from "@/lib/validations";
+import { parseWithLocale } from "@/lib/validations/parse-with-locale";
 
 export async function GET(request: NextRequest) {
+  const t = await getServerT(request);
   try {
     const session = await getSessionFromRequest(request);
     if (!session) {
-      return errorResponse("Unauthorized", "UNAUTHORIZED", 401);
+      return errorResponse(t("api.unauthorized"), "UNAUTHORIZED", 401);
     }
 
     const bankAccounts = await getAllBankAccounts();
@@ -18,39 +22,36 @@ export async function GET(request: NextRequest) {
     return successResponse({ bankAccounts });
   } catch (error) {
     console.error("List bank accounts error:", error);
-    return errorResponse("Internal server error", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }
 
 export async function POST(request: NextRequest) {
+  const t = await getServerT(request);
   try {
     const session = await getSessionFromRequest(request);
     if (!session) {
-      return errorResponse("Unauthorized", "UNAUTHORIZED", 401);
+      return errorResponse(t("api.unauthorized"), "UNAUTHORIZED", 401);
     }
 
     if (session.role !== "ADMIN") {
-      return errorResponse("Forbidden", "FORBIDDEN", 403);
+      return errorResponse(t("api.forbidden"), "FORBIDDEN", 403);
     }
 
     const body = await request.json();
+    const parsed = await parseWithLocale(bankAccountSchema, body, request);
+    if (!parsed.success) return parsed.response;
+
     const {
       bankName,
       bankCode,
       accountNumber,
       accountName,
-      logoUrl,
-      displayOrder,
       isActive,
-    } = body;
+    } = parsed.data;
 
-    if (!bankName || !bankCode || !accountNumber || !accountName) {
-      return errorResponse(
-        "bankName, bankCode, accountNumber, dan accountName harus diisi",
-        "VALIDATION_ERROR",
-        400,
-      );
-    }
+    const logoUrl = body.logoUrl;
+    const displayOrder = body.displayOrder;
 
     const bankAccount = await createBankAccount({
       bankName,
@@ -68,6 +69,6 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error) {
       return errorResponse(error.message, "VALIDATION_ERROR", 400);
     }
-    return errorResponse("Internal server error", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }

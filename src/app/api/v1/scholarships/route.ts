@@ -6,7 +6,10 @@ import {
   applyScholarship,
   getClassFeeAmount,
 } from "@/lib/business-logic/scholarship-processor";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
+import { scholarshipSchema } from "@/lib/validations";
+import { parseWithLocale } from "@/lib/validations/parse-with-locale";
 
 export async function GET(request: NextRequest) {
   const auth = await requireRole(request, ["ADMIN"]);
@@ -75,25 +78,14 @@ export async function POST(request: NextRequest) {
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   try {
     const body = await request.json();
-    const { studentNis, classAcademicId, name, nominal } = body;
+    const parsed = await parseWithLocale(scholarshipSchema, body, request);
+    if (!parsed.success) return parsed.response;
 
-    if (!studentNis || !classAcademicId || nominal === undefined) {
-      return errorResponse(
-        "Student NIS, class, and nominal are required",
-        "VALIDATION_ERROR",
-        400,
-      );
-    }
-
-    if (nominal < 0) {
-      return errorResponse(
-        "Nominal must be a positive number",
-        "VALIDATION_ERROR",
-        400,
-      );
-    }
+    const { studentNis, classAcademicId, nominal } = parsed.data;
+    const name = body.name;
 
     // Check if student exists
     const student = await prisma.student.findUnique({
@@ -101,7 +93,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!student) {
-      return errorResponse("Student not found", "NOT_FOUND", 404);
+      return errorResponse(t("api.notFound", { resource: "Student" }), "NOT_FOUND", 404);
     }
 
     // Check if class exists
@@ -110,7 +102,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!classAcademic) {
-      return errorResponse("Class not found", "NOT_FOUND", 404);
+      return errorResponse(t("api.notFound", { resource: "Class" }), "NOT_FOUND", 404);
     }
 
     // Get fee amount from existing tuitions
@@ -176,6 +168,6 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Create scholarship error:", error);
-    return errorResponse("Failed to create scholarship", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }

@@ -5,6 +5,7 @@ import {
   createPaymentRequest,
   listPaymentRequests,
 } from "@/lib/business-logic/payment-request";
+import { getServerT } from "@/lib/i18n-server";
 import {
   generateIdempotencyKey,
   withIdempotency,
@@ -14,12 +15,15 @@ import {
   rateLimitErrorResponse,
 } from "@/lib/middleware/rate-limit";
 import { getStudentSessionFromRequest } from "@/lib/student-auth";
+import { paymentRequestSchema } from "@/lib/validations";
+import { parseWithLocale } from "@/lib/validations/parse-with-locale";
 
 export async function GET(request: NextRequest) {
+  const t = await getServerT(request);
   try {
     const session = await getStudentSessionFromRequest(request);
     if (!session) {
-      return errorResponse("Unauthorized", "UNAUTHORIZED", 401);
+      return errorResponse(t("api.unauthorized"), "UNAUTHORIZED", 401);
     }
 
     const { searchParams } = new URL(request.url);
@@ -37,27 +41,23 @@ export async function GET(request: NextRequest) {
     return successResponse(result);
   } catch (error) {
     console.error("List payment requests error:", error);
-    return errorResponse("Internal server error", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }
 
 export async function POST(request: NextRequest) {
+  const t = await getServerT(request);
   try {
     const session = await getStudentSessionFromRequest(request);
     if (!session) {
-      return errorResponse("Unauthorized", "UNAUTHORIZED", 401);
+      return errorResponse(t("api.unauthorized"), "UNAUTHORIZED", 401);
     }
 
     const body = await request.json();
-    const { tuitionIds } = body;
+    const parsed = await parseWithLocale(paymentRequestSchema, body, request);
+    if (!parsed.success) return parsed.response;
 
-    if (!tuitionIds || !Array.isArray(tuitionIds) || tuitionIds.length === 0) {
-      return errorResponse(
-        "tuitionIds harus berupa array dan tidak boleh kosong",
-        "VALIDATION_ERROR",
-        400,
-      );
-    }
+    const { tuitionIds } = parsed.data;
 
     // Check rate limit (3 per minute per user)
     const rateLimitResult = await checkRateLimit(
@@ -94,6 +94,6 @@ export async function POST(request: NextRequest) {
     if (error instanceof Error) {
       return errorResponse(error.message, "VALIDATION_ERROR", 400);
     }
-    return errorResponse("Internal server error", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }

@@ -10,18 +10,20 @@ import {
   type ScholarshipExcelRow,
   validateScholarshipData,
 } from "@/lib/excel-templates/scholarship-template";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
 
     if (!file) {
-      return errorResponse("File is required", "VALIDATION_ERROR", 400);
+      return errorResponse(t("api.fileRequired"), "VALIDATION_ERROR", 400);
     }
 
     // Read Excel file
@@ -31,7 +33,7 @@ export async function POST(request: NextRequest) {
     const data = XLSX.utils.sheet_to_json<ScholarshipExcelRow>(firstSheet);
 
     if (data.length === 0) {
-      return errorResponse("Excel file is empty", "VALIDATION_ERROR", 400);
+      return errorResponse(t("api.excelEmpty"), "VALIDATION_ERROR", 400);
     }
 
     // Get valid students and classes for validation
@@ -153,6 +155,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Import scholarships error:", error);
-    return errorResponse("Failed to import scholarships", "SERVER_ERROR", 500);
+    return errorResponse(t("api.importFailed", { resource: "scholarships" }), "SERVER_ERROR", 500);
   }
 }

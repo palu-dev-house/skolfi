@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { requireRole } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { generateClassName } from "@/lib/business-logic/class-name-generator";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -11,6 +12,7 @@ export async function GET(
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   const { id } = await params;
 
   const classAcademic = await prisma.classAcademic.findUnique({
@@ -22,7 +24,7 @@ export async function GET(
   });
 
   if (!classAcademic) {
-    return errorResponse("Class not found", "NOT_FOUND", 404);
+    return errorResponse(t("api.notFound", { resource: "Class" }), "NOT_FOUND", 404);
   }
 
   return successResponse(classAcademic);
@@ -35,6 +37,7 @@ export async function PUT(
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   const { id } = await params;
 
   try {
@@ -45,7 +48,7 @@ export async function PUT(
     });
 
     if (!existing) {
-      return errorResponse("Class not found", "NOT_FOUND", 404);
+      return errorResponse(t("api.notFound", { resource: "Class" }), "NOT_FOUND", 404);
     }
 
     const grade = body.grade ?? existing.grade;
@@ -61,7 +64,7 @@ export async function PUT(
         where: { id: body.academicYearId },
       });
       if (!newYear) {
-        return errorResponse("Academic year not found", "NOT_FOUND", 404);
+        return errorResponse(t("api.notFound", { resource: "Academic year" }), "NOT_FOUND", 404);
       }
       academicYear = newYear;
     }
@@ -83,7 +86,7 @@ export async function PUT(
       });
       if (duplicate && duplicate.id !== id) {
         return errorResponse(
-          "Class already exists for this academic year, grade, and section",
+          t("api.classAlreadyExists"),
           "DUPLICATE_ENTRY",
           409,
         );
@@ -139,7 +142,7 @@ export async function PUT(
     return successResponse(classAcademic);
   } catch (error) {
     console.error("Update class error:", error);
-    return errorResponse("Failed to update class", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }
 
@@ -150,6 +153,7 @@ export async function DELETE(
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   const { id } = await params;
 
   const existing = await prisma.classAcademic.findUnique({
@@ -158,12 +162,12 @@ export async function DELETE(
   });
 
   if (!existing) {
-    return errorResponse("Class not found", "NOT_FOUND", 404);
+    return errorResponse(t("api.notFound", { resource: "Class" }), "NOT_FOUND", 404);
   }
 
   if (existing._count.tuitions > 0) {
     return errorResponse(
-      "Cannot delete class with existing tuitions. Delete tuitions first.",
+      t("api.cannotDelete", { resource: "class", dependency: "tuitions" }),
       "VALIDATION_ERROR",
       400,
     );
@@ -171,5 +175,5 @@ export async function DELETE(
 
   await prisma.classAcademic.delete({ where: { id } });
 
-  return successResponse({ message: "Class deleted successfully" });
+  return successResponse({ message: t("api.deleteSuccess", { resource: "Class" }) });
 }

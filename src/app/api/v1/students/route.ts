@@ -2,7 +2,10 @@ import bcrypt from "bcryptjs";
 import type { NextRequest } from "next/server";
 import { requireAuth, requireRole } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
+import { studentSchema } from "@/lib/validations";
+import { parseWithLocale } from "@/lib/validations/parse-with-locale";
 
 export async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
@@ -48,31 +51,22 @@ export async function POST(request: NextRequest) {
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   try {
     const body = await request.json();
-    const { nis, nik, name, address, parentName, parentPhone, startJoinDate } =
-      body;
+    const parsed = await parseWithLocale(studentSchema, body, request);
+    if (!parsed.success) return parsed.response;
 
-    if (
-      !nis ||
-      !nik ||
-      !name ||
-      !address ||
-      !parentName ||
-      !parentPhone ||
-      !startJoinDate
-    ) {
-      return errorResponse("All fields are required", "VALIDATION_ERROR", 400);
-    }
+    const { nis, nik, name, address, parentName, parentPhone, startJoinDate } = parsed.data;
 
     const existingNis = await prisma.student.findUnique({ where: { nis } });
     if (existingNis) {
-      return errorResponse("NIS already exists", "DUPLICATE_ENTRY", 409);
+      return errorResponse(t("api.alreadyExists", { resource: "NIS" }), "DUPLICATE_ENTRY", 409);
     }
 
     const existingNik = await prisma.student.findUnique({ where: { nik } });
     if (existingNik) {
-      return errorResponse("NIK already exists", "DUPLICATE_ENTRY", 409);
+      return errorResponse(t("api.alreadyExists", { resource: "NIK" }), "DUPLICATE_ENTRY", 409);
     }
 
     // Get current user for accountCreatedBy
@@ -90,7 +84,7 @@ export async function POST(request: NextRequest) {
         address,
         parentName,
         parentPhone,
-        startJoinDate: new Date(startJoinDate),
+        startJoinDate,
         // Auto-create account with default password
         hasAccount: true,
         password: hashedPassword,
@@ -103,6 +97,6 @@ export async function POST(request: NextRequest) {
     return successResponse(student, 201);
   } catch (error) {
     console.error("Create student error:", error);
-    return errorResponse("Failed to create student", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }

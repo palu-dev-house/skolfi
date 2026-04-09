@@ -2,7 +2,10 @@ import bcrypt from "bcryptjs";
 import type { NextRequest } from "next/server";
 import { requireRole } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
+import { employeeSchema } from "@/lib/validations";
+import { parseWithLocale } from "@/lib/validations/parse-with-locale";
 
 export async function GET(request: NextRequest) {
   const auth = await requireRole(request, ["ADMIN"]);
@@ -60,21 +63,17 @@ export async function POST(request: NextRequest) {
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   try {
     const body = await request.json();
-    const { name, email, role } = body;
+    const parsed = await parseWithLocale(employeeSchema, body, request);
+    if (!parsed.success) return parsed.response;
 
-    if (!name || !email) {
-      return errorResponse(
-        "Name and email are required",
-        "VALIDATION_ERROR",
-        400,
-      );
-    }
+    const { name, email, role } = parsed.data;
 
     const existing = await prisma.employee.findUnique({ where: { email } });
     if (existing) {
-      return errorResponse("Email already exists", "DUPLICATE_ENTRY", 409);
+      return errorResponse(t("api.alreadyExists", { resource: "Email" }), "DUPLICATE_ENTRY", 409);
     }
 
     const hashedPassword = await bcrypt.hash("123456", 10);
@@ -98,6 +97,6 @@ export async function POST(request: NextRequest) {
     return successResponse(employee, 201);
   } catch (error) {
     console.error("Create employee error:", error);
-    return errorResponse("Failed to create employee", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }

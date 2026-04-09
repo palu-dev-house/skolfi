@@ -1,7 +1,10 @@
 import type { NextRequest } from "next/server";
 import { requireRole } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
+import { academicYearSchema } from "@/lib/validations";
+import { parseWithLocale } from "@/lib/validations/parse-with-locale";
 
 export async function GET(request: NextRequest) {
   const auth = await requireRole(request, ["ADMIN"]);
@@ -48,31 +51,18 @@ export async function POST(request: NextRequest) {
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   try {
     const body = await request.json();
-    const { year, startDate, endDate, isActive } = body;
+    const parsed = await parseWithLocale(academicYearSchema, body, request);
+    if (!parsed.success) return parsed.response;
 
-    if (!year || !startDate || !endDate) {
-      return errorResponse(
-        "Year, start date, and end date are required",
-        "VALIDATION_ERROR",
-        400,
-      );
-    }
-
-    const yearRegex = /^\d{4}\/\d{4}$/;
-    if (!yearRegex.test(year)) {
-      return errorResponse(
-        "Year must be in format YYYY/YYYY (e.g., 2024/2025)",
-        "VALIDATION_ERROR",
-        400,
-      );
-    }
+    const { year, startDate, endDate, isActive } = parsed.data;
 
     const existing = await prisma.academicYear.findUnique({ where: { year } });
     if (existing) {
       return errorResponse(
-        "Academic year already exists",
+        t("api.alreadyExists", { resource: "Academic year" }),
         "DUPLICATE_ENTRY",
         409,
       );
@@ -88,8 +78,8 @@ export async function POST(request: NextRequest) {
     const academicYear = await prisma.academicYear.create({
       data: {
         year,
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
+        startDate,
+        endDate,
         isActive: isActive || false,
       },
     });
@@ -97,6 +87,6 @@ export async function POST(request: NextRequest) {
     return successResponse(academicYear, 201);
   } catch (error) {
     console.error("Create academic year error:", error);
-    return errorResponse("Failed to create academic year", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }

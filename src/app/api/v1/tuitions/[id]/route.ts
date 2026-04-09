@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { requireRole } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -10,6 +11,7 @@ export async function GET(
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   const { id } = await params;
 
   const tuition = await prisma.tuition.findUnique({
@@ -36,7 +38,7 @@ export async function GET(
   });
 
   if (!tuition) {
-    return errorResponse("Tuition not found", "NOT_FOUND", 404);
+    return errorResponse(t("api.notFound", { resource: "Tuition" }), "NOT_FOUND", 404);
   }
 
   return successResponse(tuition);
@@ -49,6 +51,7 @@ export async function PUT(
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   const { id } = await params;
 
   try {
@@ -57,7 +60,7 @@ export async function PUT(
 
     const tuition = await prisma.tuition.findUnique({ where: { id } });
     if (!tuition) {
-      return errorResponse("Tuition not found", "NOT_FOUND", 404);
+      return errorResponse(t("api.notFound", { resource: "Tuition" }), "NOT_FOUND", 404);
     }
 
     const updateData: Record<string, unknown> = {};
@@ -86,7 +89,7 @@ export async function PUT(
     return successResponse(updatedTuition);
   } catch (error) {
     console.error("Update tuition error:", error);
-    return errorResponse("Failed to update tuition", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }
 
@@ -97,6 +100,7 @@ export async function DELETE(
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   const { id } = await params;
 
   try {
@@ -106,12 +110,12 @@ export async function DELETE(
     });
 
     if (!tuition) {
-      return errorResponse("Tuition not found", "NOT_FOUND", 404);
+      return errorResponse(t("api.notFound", { resource: "Tuition" }), "NOT_FOUND", 404);
     }
 
     if (tuition._count.payments > 0) {
       return errorResponse(
-        "Cannot delete tuition with existing payments",
+        t("api.cannotDelete", { resource: "tuition", dependency: "payments" }),
         "VALIDATION_ERROR",
         400,
       );
@@ -119,9 +123,9 @@ export async function DELETE(
 
     await prisma.tuition.delete({ where: { id } });
 
-    return successResponse({ message: "Tuition deleted successfully" });
+    return successResponse({ message: t("api.deleteSuccess", { resource: "Tuition" }) });
   } catch (error) {
     console.error("Delete tuition error:", error);
-    return errorResponse("Failed to delete tuition", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }

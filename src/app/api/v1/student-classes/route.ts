@@ -1,7 +1,10 @@
 import type { NextRequest } from "next/server";
 import { requireAuth, requireRole } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
+import { studentClassAssignSchema, studentClassRemoveSchema } from "@/lib/validations";
+import { parseWithLocale } from "@/lib/validations/parse-with-locale";
 
 // GET - List student-class assignments with filters
 export async function GET(request: NextRequest) {
@@ -93,28 +96,13 @@ export async function POST(request: NextRequest) {
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
+
   const body = await request.json();
-  const { classAcademicId, studentNisList } = body;
+  const parsed = await parseWithLocale(studentClassAssignSchema, body, request);
+  if (!parsed.success) return parsed.response;
 
-  if (!classAcademicId) {
-    return errorResponse(
-      "Class Academic ID is required",
-      "VALIDATION_ERROR",
-      400,
-    );
-  }
-
-  if (
-    !studentNisList ||
-    !Array.isArray(studentNisList) ||
-    studentNisList.length === 0
-  ) {
-    return errorResponse(
-      "Student NIS list is required",
-      "VALIDATION_ERROR",
-      400,
-    );
-  }
+  const { classAcademicId, studentNisList } = parsed.data;
 
   // Verify class exists
   const classAcademic = await prisma.classAcademic.findUnique({
@@ -122,7 +110,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (!classAcademic) {
-    return errorResponse("Class not found", "NOT_FOUND", 404);
+    return errorResponse(t("api.notFound", { resource: "Class" }), "NOT_FOUND", 404);
   }
 
   // Verify all students exist
@@ -160,7 +148,7 @@ export async function POST(request: NextRequest) {
 
   if (toAssign.length === 0) {
     return errorResponse(
-      "All students are already assigned to this class",
+      t("api.allStudentsAssigned"),
       "DUPLICATE_ENTRY",
       409,
     );
@@ -190,15 +178,10 @@ export async function DELETE(request: NextRequest) {
   if (auth instanceof Response) return auth;
 
   const body = await request.json();
-  const { classAcademicId, studentNisList } = body;
+  const parsed = await parseWithLocale(studentClassRemoveSchema, body, request);
+  if (!parsed.success) return parsed.response;
 
-  if (!classAcademicId || !studentNisList || studentNisList.length === 0) {
-    return errorResponse(
-      "Class Academic ID and Student NIS list are required",
-      "VALIDATION_ERROR",
-      400,
-    );
-  }
+  const { classAcademicId, studentNisList } = parsed.data;
 
   const deleted = await prisma.studentClass.deleteMany({
     where: {

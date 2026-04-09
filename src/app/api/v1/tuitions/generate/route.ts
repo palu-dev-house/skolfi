@@ -9,12 +9,14 @@ import {
   generateTuitions,
   getRecordCountForFrequency,
 } from "@/lib/business-logic/tuition-generator";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   try {
     const body = await request.json();
     const {
@@ -26,12 +28,12 @@ export async function POST(request: NextRequest) {
     } = body;
 
     if (!classAcademicId) {
-      return errorResponse("Class is required", "VALIDATION_ERROR", 400);
+      return errorResponse(t("api.requiredFields"), "VALIDATION_ERROR", 400);
     }
 
     if (!feeAmount || feeAmount <= 0) {
       return errorResponse(
-        "Fee amount is required and must be greater than 0",
+        t("api.mustBePositive", { field: "Fee amount" }),
         "VALIDATION_ERROR",
         400,
       );
@@ -46,7 +48,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!classAcademic) {
-      return errorResponse("Class not found", "NOT_FOUND", 404);
+      return errorResponse(t("api.notFound", { resource: "Class" }), "NOT_FOUND", 404);
     }
 
     // Get students - either specified ones or all students in the class
@@ -78,7 +80,7 @@ export async function POST(request: NextRequest) {
 
     if (students.length === 0) {
       return errorResponse(
-        "No students found to generate tuitions for",
+        t("api.noStudentsForTuition"),
         "VALIDATION_ERROR",
         400,
       );
@@ -193,6 +195,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Generate tuitions error:", error);
-    return errorResponse("Failed to generate tuitions", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }

@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { requireAuth, requireRole } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { reversePayment } from "@/lib/business-logic/payment-processor";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(
@@ -11,6 +12,7 @@ export async function GET(
   const auth = await requireAuth(request);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   const { id } = await params;
 
   const payment = await prisma.payment.findUnique({
@@ -43,7 +45,7 @@ export async function GET(
   });
 
   if (!payment) {
-    return errorResponse("Payment not found", "NOT_FOUND", 404);
+    return errorResponse(t("api.notFound", { resource: "Payment" }), "NOT_FOUND", 404);
   }
 
   return successResponse(payment);
@@ -57,6 +59,7 @@ export async function DELETE(
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   const { id } = await params;
 
   try {
@@ -72,14 +75,14 @@ export async function DELETE(
     });
 
     if (!payment) {
-      return errorResponse("Payment not found", "NOT_FOUND", 404);
+      return errorResponse(t("api.notFound", { resource: "Payment" }), "NOT_FOUND", 404);
     }
 
     // Reverse the payment
     const result = await reversePayment(id, prisma);
 
     return successResponse({
-      message: "Payment reversed successfully",
+      message: t("api.paymentReversed"),
       result: {
         tuitionId: result.tuitionId,
         newStatus: result.newStatus,
@@ -91,6 +94,6 @@ export async function DELETE(
     if (error instanceof Error) {
       return errorResponse(error.message, "VALIDATION_ERROR", 400);
     }
-    return errorResponse("Failed to reverse payment", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }

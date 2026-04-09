@@ -7,19 +7,21 @@ import {
   type DiscountExcelRow,
   validateDiscountData,
 } from "@/lib/excel-templates/discount-template";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
   try {
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const applyImmediately = formData.get("applyImmediately") === "true";
 
     if (!file) {
-      return errorResponse("File is required", "VALIDATION_ERROR", 400);
+      return errorResponse(t("api.fileRequired"), "VALIDATION_ERROR", 400);
     }
 
     // Read Excel file
@@ -29,7 +31,7 @@ export async function POST(request: NextRequest) {
     const data = XLSX.utils.sheet_to_json<DiscountExcelRow>(firstSheet);
 
     if (data.length === 0) {
-      return errorResponse("Excel file is empty", "VALIDATION_ERROR", 400);
+      return errorResponse(t("api.excelEmpty"), "VALIDATION_ERROR", 400);
     }
 
     // Get valid academic years and classes for validation
@@ -161,6 +163,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Import discounts error:", error);
-    return errorResponse("Failed to import discounts", "SERVER_ERROR", 500);
+    return errorResponse(t("api.importFailed", { resource: "discounts" }), "SERVER_ERROR", 500);
   }
 }

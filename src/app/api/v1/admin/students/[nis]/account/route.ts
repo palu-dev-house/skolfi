@@ -5,16 +5,18 @@ import {
   createStudentAccount,
   softDeleteAccount,
 } from "@/lib/business-logic/student-account";
+import { getServerT } from "@/lib/i18n-server";
 
 // Create account for student
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ nis: string }> },
 ) {
+  const t = await getServerT(request);
   try {
     const session = await getSessionFromRequest(request);
     if (!session) {
-      return errorResponse("Unauthorized", "UNAUTHORIZED", 401);
+      return errorResponse(t("api.unauthorized"), "UNAUTHORIZED", 401);
     }
 
     const { nis } = await params;
@@ -30,7 +32,7 @@ export async function POST(
     if (error instanceof Error) {
       return errorResponse(error.message, "VALIDATION_ERROR", 400);
     }
-    return errorResponse("Internal server error", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }
 
@@ -39,10 +41,11 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ nis: string }> },
 ) {
+  const t = await getServerT(request);
   try {
     const session = await getSessionFromRequest(request);
     if (!session) {
-      return errorResponse("Unauthorized", "UNAUTHORIZED", 401);
+      return errorResponse(t("api.unauthorized"), "UNAUTHORIZED", 401);
     }
 
     const { nis } = await params;
@@ -51,12 +54,12 @@ export async function DELETE(
 
     await softDeleteAccount(nis, session.employeeId, reason);
 
-    return successResponse({ message: "Akun berhasil dihapus" });
+    return successResponse({ message: t("api.deleteSuccess", { resource: "Account" }) });
   } catch (error) {
     console.error("Delete student account error:", error);
     if (error instanceof Error) {
       return errorResponse(error.message, "VALIDATION_ERROR", 400);
     }
-    return errorResponse("Internal server error", "SERVER_ERROR", 500);
+    return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);
   }
 }

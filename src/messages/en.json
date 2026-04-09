@@ -1008,6 +1008,7 @@
     "importSuccessful": "{imported} student-class assignments imported, {skipped} skipped",
     "periodRequired": "At least one target period is required",
     "academicYearRequired": "Academic year is required",
-    "classNotInYear": "Class does not belong to the selected academic year"
+    "classNotInYear": "Class does not belong to the selected academic year",
+    "restoreSuccess": "Account restored successfully"
   }
 }

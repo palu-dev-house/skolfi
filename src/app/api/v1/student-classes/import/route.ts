@@ -2,17 +2,20 @@ import type { NextRequest } from "next/server";
 import { requireRole } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { parseStudentClassImport } from "@/lib/excel-templates/student-class-template";
+import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
   const auth = await requireRole(request, ["ADMIN"]);
   if (auth instanceof Response) return auth;
 
+  const t = await getServerT(request);
+
   const formData = await request.formData();
   const file = formData.get("file") as File | null;
 
   if (!file) {
-    return errorResponse("No file uploaded", "VALIDATION_ERROR", 400);
+    return errorResponse(t("api.fileRequired"), "VALIDATION_ERROR", 400);
   }
 
   const buffer = await file.arrayBuffer();
@@ -22,7 +25,7 @@ export async function POST(request: NextRequest) {
     return errorResponse(
       parseErrors.length > 0
         ? `Parse errors: ${parseErrors.join("; ")}`
-        : "No valid data found in file",
+        : t("api.noValidData"),
       "VALIDATION_ERROR",
       400,
     );
