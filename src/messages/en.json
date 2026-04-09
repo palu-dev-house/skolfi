@@ -955,7 +955,9 @@
     "min": "Minimum value {min}",
     "max": "Maximum value {max}",
     "date": "Invalid date format",
-    "unique": "Already in use"
+    "unique": "Already in use",
+    "invalidFormat": "Invalid format for {field}",
+    "positive": "Must be greater than 0"
   },
   "api": {
     "internalError": "Internal server error",

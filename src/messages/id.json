@@ -956,7 +956,9 @@
     "min": "Nilai minimal {min}",
     "max": "Nilai maksimal {max}",
     "date": "Format tanggal tidak valid",
-    "unique": "Sudah digunakan"
+    "unique": "Sudah digunakan",
+    "invalidFormat": "Format {field} tidak valid",
+    "positive": "Harus lebih dari 0"
   },
   "api": {
     "internalError": "Terjadi kesalahan server",
