@@ -106,51 +106,9 @@ src/lib/validations/
 
 ---
 
-## 4. Testing
+## 4. Student Portal Mobile UX
 
-### Framework
-- **Vitest** — unit and integration tests
-- **Playwright** — e2e and smoke tests
-
-### Structure
-
-```
-tests/
-  ├── unit/
-  │   ├── validations/         # All Zod schema tests
-  │   ├── business-logic/      # Payment calc, tuition generation
-  │   └── lib/                 # i18n helpers, circuit breaker, rate limit
-  ├── integration/             # API route tests with real DB
-  │   ├── auth/
-  │   ├── payments/
-  │   ├── tuitions/
-  │   └── students/
-  ├── e2e/
-  │   ├── student-portal/      # Login → view payment → pay → history
-  │   └── admin/               # Login → manage students → generate tuition → verify
-  ├── smoke/
-  │   ├── student-portal.spec.ts  # Pages load, auth works, critical elements render
-  │   └── admin.spec.ts
-  └── edge-cases/
-      ├── duplicate-payment.spec.ts
-      ├── tuition-generation.spec.ts
-      ├── rate-limit.spec.ts
-      ├── idempotency.spec.ts
-      └── concurrent-requests.spec.ts
-```
-
-### Coverage
-
-- **Smoke**: Both portals — pages load, auth redirects work, critical buttons/links render.
-- **E2E**: Student flow (login → view payment → pay → view history) + Admin flow (login → manage students → generate tuition → verify payment).
-- **Edge cases**: Duplicate payments, concurrent tuition generation, rate limit boundaries, idempotency replay, expired sessions, invalid Zod schemas.
-- **Unit**: All Zod schemas, business logic functions, i18n server helper, circuit breaker state transitions.
-
----
-
-## 5. Student Portal Mobile UX
-
-### 5.1 Bottom Navigation
+### 4.1 Bottom Navigation
 - Replace sidebar/drawer with fixed bottom navigation on mobile (`< sm` breakpoint).
 - 4 tabs: Home, Payments, History, Settings.
 - Active tab: highlighted icon + label. Inactive: icon only.
@@ -159,13 +117,13 @@ tests/
 - Header/top area respects `env(safe-area-inset-top)` for notched devices.
 - Touch-friendly tap targets (min 44px).
 
-### 5.2 Bottom Sheet (vaul)
+### 4.2 Bottom Sheet (vaul)
 - Install `vaul` package.
 - Use for mobile interactions: payment detail actions, confirmation dialogs, filter options.
 - On mobile: bottom sheet replaces modals. On desktop: modals stay.
 - Features: drag-to-dismiss, snap points.
 
-### 5.3 Other Mobile Improvements
+### 4.3 Other Mobile Improvements
 - Payment cards on mobile — already in place, keep as-is.
 - Ensure all interactive elements meet 44px minimum touch target.
 
@@ -177,7 +135,6 @@ tests/
 |---|---|---|
 | Locale persistence | `NEXT_LOCALE` cookie | Consistent frontend + backend, already in place |
 | Zod scope | Shared backend + frontend | Single source of truth, no drift |
-| Test framework | Vitest + Playwright | Fast, Bun-compatible, modern |
 | Bottom nav tabs | 4 (Home, Payments, History, Settings) | Only 4 items, clean fit |
 | Bottom sheet lib | vaul | Native-feeling drag gestures, lightweight |
 | Mobile nav pattern | Bottom nav (no sidebar/drawer) | Mobile-native behavior |
