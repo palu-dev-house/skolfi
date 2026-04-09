@@ -20,11 +20,11 @@ import { notifications } from "@mantine/notifications";
 import { IconFilter, IconSearch, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import type { PaymentStatus } from "@/generated/prisma/client";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import { useClassAcademics } from "@/hooks/api/useClassAcademics";
 import { useDeleteTuition, useTuitions } from "@/hooks/api/useTuitions";
+import { useQueryParams } from "@/hooks/useQueryParams";
 import {
   getPeriodDisplayName,
   PERIODS,
@@ -38,11 +38,12 @@ const STATUS_COLORS: Record<PaymentStatus, string> = {
 
 export default function TuitionTable() {
   const t = useTranslations();
-  const [page, setPage] = useState(1);
-  const [classAcademicId, setClassAcademicId] = useState<string | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
-  const [period, setPeriod] = useState<string | null>(null);
-  const [studentSearch, setStudentSearch] = useState("");
+  const { setParams, getParam, getNumParam } = useQueryParams();
+  const page = getNumParam("page", 1)!;
+  const classAcademicId = getParam("classAcademicId") ?? null;
+  const status = getParam("status") ?? null;
+  const period = getParam("period") ?? null;
+  const studentSearch = getParam("studentSearch", "") ?? "";
 
   const { data: academicYearsData } = useAcademicYears({ limit: 100 });
   const activeYear = academicYearsData?.academicYears.find((ay) => ay.isActive);
@@ -138,7 +139,7 @@ export default function TuitionTable() {
             leftSection={<IconFilter size={16} />}
             data={classOptions}
             value={classAcademicId}
-            onChange={setClassAcademicId}
+            onChange={(value) => setParams({ classAcademicId: value, page: 1 })}
             clearable
             searchable
           />
@@ -150,14 +151,14 @@ export default function TuitionTable() {
               { value: "PAID", label: t("tuition.status.paid") },
             ]}
             value={status}
-            onChange={setStatus}
+            onChange={(value) => setParams({ status: value, page: 1 })}
             clearable
           />
           <Select
             placeholder={t("tuition.filterByPeriod")}
             data={periodOptions}
             value={period}
-            onChange={setPeriod}
+            onChange={(value) => setParams({ period: value, page: 1 })}
             clearable
             searchable
           />
@@ -165,7 +166,7 @@ export default function TuitionTable() {
             placeholder={t("tuition.searchStudent")}
             leftSection={<IconSearch size={16} />}
             value={studentSearch}
-            onChange={(e) => setStudentSearch(e.currentTarget.value)}
+            onChange={(e) => setParams({ studentSearch: e.currentTarget.value, page: 1 })}
           />
         </Group>
       </Paper>
@@ -312,7 +313,7 @@ export default function TuitionTable() {
           <Pagination
             total={data.pagination.totalPages}
             value={page}
-            onChange={setPage}
+            onChange={(p) => setParams({ page: p })}
           />
         </Group>
       )}

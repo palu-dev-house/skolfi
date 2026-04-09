@@ -22,24 +22,27 @@ import {
   IconPhone,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import { useClassAcademics } from "@/hooks/api/useClassAcademics";
 import {
   useExportOverdueReport,
   useOverdueReport,
 } from "@/hooks/api/useReports";
+import { useQueryParams } from "@/hooks/useQueryParams";
 import { getMonthDisplayName } from "@/lib/business-logic/tuition-generator";
 
-const GRADES = Array.from({ length: 12 }, (_, i) => ({
-  value: String(i + 1),
-  label: `Grade ${i + 1}`,
-}));
-
 export default function OverdueReportTable() {
-  const [classAcademicId, setClassAcademicId] = useState<string | null>(null);
-  const [grade, setGrade] = useState<string | null>(null);
-  const [academicYearId, setAcademicYearId] = useState<string | null>(null);
+  const t = useTranslations("report");
+  const { setParams, getParam } = useQueryParams();
+  const classAcademicId = getParam("classAcademicId") ?? null;
+  const grade = getParam("grade") ?? null;
+  const academicYearId = getParam("academicYearId") ?? null;
+
+  const grades = Array.from({ length: 12 }, (_, i) => ({
+    value: String(i + 1),
+    label: `Grade ${i + 1}`,
+  }));
 
   const { data: academicYearsData } = useAcademicYears({ limit: 100 });
   const activeYear = academicYearsData?.academicYears.find((ay) => ay.isActive);
@@ -88,7 +91,7 @@ export default function OverdueReportTable() {
           <Paper withBorder p="md" radius="md">
             <Stack gap="xs">
               <Text size="sm" c="dimmed">
-                Students with Overdue
+                {t("studentsWithOverdue")}
               </Text>
               <Text size="xl" fw={700} c="red">
                 {data.summary.totalStudents}
@@ -98,7 +101,7 @@ export default function OverdueReportTable() {
           <Paper withBorder p="md" radius="md">
             <Stack gap="xs">
               <Text size="sm" c="dimmed">
-                Total Overdue Records
+                {t("totalOverdueRecords")}
               </Text>
               <Text size="xl" fw={700} c="orange">
                 {data.summary.totalOverdueRecords}
@@ -108,7 +111,7 @@ export default function OverdueReportTable() {
           <Paper withBorder p="md" radius="md">
             <Stack gap="xs">
               <Text size="sm" c="dimmed">
-                Total Outstanding Amount
+                {t("totalOutstandingAmount")}
               </Text>
               <Text size="xl" fw={700} c="red">
                 <NumberFormatter
@@ -127,31 +130,29 @@ export default function OverdueReportTable() {
       <Paper withBorder p="md">
         <Group gap="md" grow>
           <Select
-            placeholder="Filter by academic year"
+            placeholder={t("filterByAcademicYear")}
             leftSection={<IconFilter size={16} />}
             data={yearOptions}
             value={academicYearId}
             onChange={(value) => {
-              setAcademicYearId(value);
-              setClassAcademicId(null);
+              setParams({ academicYearId: value, classAcademicId: null });
             }}
             clearable
           />
           <Select
-            placeholder="Filter by grade"
-            data={GRADES}
+            placeholder={t("filterByGrade")}
+            data={grades}
             value={grade}
             onChange={(value) => {
-              setGrade(value);
-              setClassAcademicId(null);
+              setParams({ grade: value, classAcademicId: null });
             }}
             clearable
           />
           <Select
-            placeholder="Filter by class"
+            placeholder={t("filterByClass")}
             data={classOptions}
             value={classAcademicId}
-            onChange={setClassAcademicId}
+            onChange={(value) => setParams({ classAcademicId: value })}
             clearable
             searchable
           />
@@ -161,7 +162,7 @@ export default function OverdueReportTable() {
             onClick={handleExport}
             disabled={!data || data.overdue.length === 0}
           >
-            Export to Excel
+            {t("exportToExcel")}
           </Button>
         </Group>
       </Paper>
@@ -181,7 +182,7 @@ export default function OverdueReportTable() {
       {!isLoading && data?.overdue.length === 0 && (
         <Paper withBorder p="xl">
           <Text ta="center" c="dimmed" py="xl">
-            No overdue payments found
+            {t("noOverdueFound")}
           </Text>
         </Paper>
       )}
@@ -210,7 +211,7 @@ export default function OverdueReportTable() {
                   <Group gap="md">
                     <Stack gap={0} align="flex-end">
                       <Text size="sm" c="dimmed">
-                        Overdue Amount
+                        {t("overdueAmount")}
                       </Text>
                       <Text fw={700} c="red">
                         <NumberFormatter
@@ -222,7 +223,7 @@ export default function OverdueReportTable() {
                       </Text>
                     </Stack>
                     <Badge color="red" size="lg">
-                      {item.overdueCount} months
+                      {item.overdueCount} {t("month")}
                     </Badge>
                   </Group>
                 </Group>
@@ -234,17 +235,17 @@ export default function OverdueReportTable() {
                     <Group gap="md">
                       <Stack gap={0}>
                         <Text size="sm" c="dimmed">
-                          Parent Name
+                          {t("parentName")}
                         </Text>
                         <Text fw={500}>{item.student.parentName || "-"}</Text>
                       </Stack>
                       <Stack gap={0}>
                         <Text size="sm" c="dimmed">
-                          Phone
+                          {t("overdue.student")}
                         </Text>
                         <Group gap="xs">
                           <Text fw={500}>{item.student.parentPhone}</Text>
-                          <Tooltip label="Call parent">
+                          <Tooltip label={t("callParent")}>
                             <ActionIcon
                               variant="subtle"
                               color="green"
@@ -265,24 +266,24 @@ export default function OverdueReportTable() {
                     <Table striped highlightOnHover withTableBorder>
                       <Table.Thead>
                         <Table.Tr>
-                          <Table.Th>Month</Table.Th>
-                          <Table.Th>Due Date</Table.Th>
+                          <Table.Th>{t("month")}</Table.Th>
+                          <Table.Th>{t("dueDate")}</Table.Th>
                           <Table.Th ta="right" align="right">
-                            Fee Amount
+                            {t("feeAmount")}
                           </Table.Th>
                           <Table.Th ta="right" align="right">
-                            Scholarship Amount
+                            {t("scholarshipAmount")}
                           </Table.Th>
                           <Table.Th ta="right" align="right">
-                            Discount Amount
+                            {t("discountAmount")}
                           </Table.Th>
                           <Table.Th ta="right" align="right">
-                            Paid Amount
+                            {t("paidAmount")}
                           </Table.Th>
                           <Table.Th ta="right" align="right">
-                            Outstanding
+                            {t("outstanding")}
                           </Table.Th>
-                          <Table.Th>Days Overdue</Table.Th>
+                          <Table.Th>{t("daysOverdue")}</Table.Th>
                         </Table.Tr>
                       </Table.Thead>
                       <Table.Tbody>
@@ -351,7 +352,7 @@ export default function OverdueReportTable() {
                                 }
                                 variant="light"
                               >
-                                {month.daysOverdue} days
+                                {month.daysOverdue} {t("days")}
                               </Badge>
                             </Table.Td>
                           </Table.Tr>

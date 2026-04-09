@@ -18,13 +18,14 @@ import { useDebouncedValue } from "@mantine/hooks";
 import { IconClock, IconSearch } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import { useAdminPaymentRequests } from "@/hooks/api/useAdminPaymentRequests";
+import { useQueryParams } from "@/hooks/useQueryParams";
 
 export default function OnlineTransactionsPage() {
-  const [page, setPage] = useState(1);
-  const [status, setStatus] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
+  const { setParams, getParam, getNumParam } = useQueryParams();
+  const page = getNumParam("page", 1)!;
+  const status = getParam("status") ?? null;
+  const search = getParam("search", "") ?? "";
   const [debouncedSearch] = useDebouncedValue(search, 300);
   const t = useTranslations();
 
@@ -84,8 +85,7 @@ export default function OnlineTransactionsPage() {
               leftSection={<IconSearch size={18} />}
               value={search}
               onChange={(e) => {
-                setSearch(e.currentTarget.value);
-                setPage(1);
+                setParams({ search: e.currentTarget.value, page: 1 });
               }}
               style={{ flex: 1 }}
             />
@@ -93,8 +93,7 @@ export default function OnlineTransactionsPage() {
               placeholder={t("onlineTransaction.allStatus")}
               value={status}
               onChange={(v) => {
-                setStatus(v);
-                setPage(1);
+                setParams({ status: v, page: 1 });
               }}
               data={[
                 { value: "PENDING", label: t("payment.status.pending") },
@@ -194,7 +193,7 @@ export default function OnlineTransactionsPage() {
                 <Group justify="center">
                   <Pagination
                     value={page}
-                    onChange={setPage}
+                    onChange={(p) => setParams({ page: p })}
                     total={totalPages}
                   />
                 </Group>

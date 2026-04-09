@@ -19,21 +19,20 @@ import { notifications } from "@mantine/notifications";
 import { IconFilter, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import { useClassAcademics } from "@/hooks/api/useClassAcademics";
 import {
   useDeleteScholarship,
   useScholarships,
 } from "@/hooks/api/useScholarships";
+import { useQueryParams } from "@/hooks/useQueryParams";
 
 export default function ScholarshipTable() {
   const t = useTranslations();
-  const [page, setPage] = useState(1);
-  const [classAcademicId, setClassAcademicId] = useState<string | null>(null);
-  const [isFullScholarship, setIsFullScholarship] = useState<string | null>(
-    null,
-  );
+  const { setParams, getParam, getNumParam } = useQueryParams();
+  const page = getNumParam("page", 1)!;
+  const classAcademicId = getParam("classAcademicId") ?? null;
+  const isFullScholarship = getParam("isFullScholarship") ?? null;
 
   const { data: academicYearsData } = useAcademicYears({ limit: 100 });
   const activeYear = academicYearsData?.academicYears.find((ay) => ay.isActive);
@@ -107,7 +106,7 @@ export default function ScholarshipTable() {
             leftSection={<IconFilter size={16} />}
             data={classOptions}
             value={classAcademicId}
-            onChange={setClassAcademicId}
+            onChange={(value) => setParams({ classAcademicId: value, page: 1 })}
             clearable
             searchable
             w={250}
@@ -119,7 +118,7 @@ export default function ScholarshipTable() {
               { value: "false", label: t("scholarship.types.PARTIAL") },
             ]}
             value={isFullScholarship}
-            onChange={setIsFullScholarship}
+            onChange={(value) => setParams({ isFullScholarship: value, page: 1 })}
             clearable
             w={200}
           />
@@ -231,7 +230,7 @@ export default function ScholarshipTable() {
           <Pagination
             total={data.pagination.totalPages}
             value={page}
-            onChange={setPage}
+            onChange={(p) => setParams({ page: p })}
           />
         </Group>
       )}

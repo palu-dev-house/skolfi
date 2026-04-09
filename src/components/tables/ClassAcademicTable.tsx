@@ -24,21 +24,20 @@ import {
 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import {
   useClassAcademics,
   useDeleteClassAcademic,
 } from "@/hooks/api/useClassAcademics";
+import { useQueryParams } from "@/hooks/useQueryParams";
 
 export default function ClassAcademicTable() {
   const t = useTranslations();
   const router = useRouter();
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [academicYearFilter, setAcademicYearFilter] = useState<string | null>(
-    null,
-  );
+  const { setParams, getParam, getNumParam } = useQueryParams();
+  const page = getNumParam("page", 1)!;
+  const search = getParam("search", "") ?? "";
+  const academicYearFilter = getParam("academicYearId") ?? null;
 
   const { data: academicYearsData } = useAcademicYears({ limit: 100 });
 
@@ -99,8 +98,7 @@ export default function ClassAcademicTable() {
           leftSection={<IconSearch size={16} />}
           value={search}
           onChange={(e) => {
-            setSearch(e.currentTarget.value);
-            setPage(1);
+            setParams({ search: e.currentTarget.value, page: 1 });
           }}
           style={{ flex: 1 }}
         />
@@ -109,8 +107,7 @@ export default function ClassAcademicTable() {
           data={academicYearOptions}
           value={academicYearFilter}
           onChange={(value) => {
-            setAcademicYearFilter(value);
-            setPage(1);
+            setParams({ academicYearId: value, page: 1 });
           }}
           clearable
           searchable
@@ -218,7 +215,7 @@ export default function ClassAcademicTable() {
           <Pagination
             total={data.pagination.totalPages}
             value={page}
-            onChange={setPage}
+            onChange={(p) => setParams({ page: p })}
           />
         </Group>
       )}

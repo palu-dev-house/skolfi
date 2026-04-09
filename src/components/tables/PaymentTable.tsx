@@ -26,21 +26,22 @@ import {
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import { useClassAcademics } from "@/hooks/api/useClassAcademics";
 import { useDeletePayment, usePayments } from "@/hooks/api/usePayments";
 import { useAuth } from "@/hooks/useAuth";
+import { useQueryParams } from "@/hooks/useQueryParams";
 import { getMonthDisplayName } from "@/lib/business-logic/tuition-generator";
 
 export default function PaymentTable() {
   const t = useTranslations();
   const { user } = useAuth();
-  const [page, setPage] = useState(1);
-  const [classAcademicId, setClassAcademicId] = useState<string | null>(null);
-  const [studentSearch, setStudentSearch] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const { setParams, getParam, getNumParam } = useQueryParams();
+  const page = getNumParam("page", 1)!;
+  const classAcademicId = getParam("classAcademicId") ?? null;
+  const studentSearch = getParam("studentSearch", "") ?? "";
+  const dateFrom = getParam("dateFrom", "") ?? "";
+  const dateTo = getParam("dateTo", "") ?? "";
 
   const { data: academicYearsData } = useAcademicYears({ limit: 100 });
   const activeYear = academicYearsData?.academicYears.find((ay) => ay.isActive);
@@ -121,7 +122,7 @@ export default function PaymentTable() {
             leftSection={<IconFilter size={16} />}
             data={classOptions}
             value={classAcademicId}
-            onChange={setClassAcademicId}
+            onChange={(value) => setParams({ classAcademicId: value, page: 1 })}
             clearable
             searchable
           />
@@ -129,19 +130,19 @@ export default function PaymentTable() {
             placeholder={t("payment.searchStudent")}
             leftSection={<IconSearch size={16} />}
             value={studentSearch}
-            onChange={(e) => setStudentSearch(e.currentTarget.value)}
+            onChange={(e) => setParams({ studentSearch: e.currentTarget.value, page: 1 })}
           />
           <TextInput
             type="date"
             placeholder={t("payment.fromDate")}
             value={dateFrom}
-            onChange={(e) => setDateFrom(e.currentTarget.value)}
+            onChange={(e) => setParams({ dateFrom: e.currentTarget.value, page: 1 })}
           />
           <TextInput
             type="date"
             placeholder={t("payment.toDate")}
             value={dateTo}
-            onChange={(e) => setDateTo(e.currentTarget.value)}
+            onChange={(e) => setParams({ dateTo: e.currentTarget.value, page: 1 })}
           />
         </Group>
       </Paper>
@@ -311,7 +312,7 @@ export default function PaymentTable() {
           <Pagination
             total={data.pagination.totalPages}
             value={page}
-            onChange={setPage}
+            onChange={(p) => setParams({ page: p })}
           />
         </Group>
       )}

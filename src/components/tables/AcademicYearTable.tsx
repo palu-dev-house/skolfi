@@ -23,17 +23,18 @@ import {
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import {
   useAcademicYears,
   useDeleteAcademicYear,
   useSetActiveAcademicYear,
 } from "@/hooks/api/useAcademicYears";
+import { useQueryParams } from "@/hooks/useQueryParams";
 
 export default function AcademicYearTable() {
   const t = useTranslations();
   const router = useRouter();
-  const [page, setPage] = useState(1);
+  const { setParams, getNumParam } = useQueryParams();
+  const page = getNumParam("page", 1)!;
 
   const { data, isLoading } = useAcademicYears({ page, limit: 10 });
 
@@ -219,7 +220,7 @@ export default function AcademicYearTable() {
           <Pagination
             total={data.pagination.totalPages}
             value={page}
-            onChange={setPage}
+            onChange={(p) => setParams({ page: p })}
           />
         </Group>
       )}

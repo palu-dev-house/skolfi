@@ -24,7 +24,6 @@ import {
 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import {
   useApplyDiscount,
@@ -32,14 +31,16 @@ import {
   useDeleteDiscount,
   useDiscounts,
 } from "@/hooks/api/useDiscounts";
+import { useQueryParams } from "@/hooks/useQueryParams";
 import { getPeriodDisplayName } from "@/lib/business-logic/tuition-generator";
 
 export default function DiscountTable() {
   const t = useTranslations();
   const router = useRouter();
-  const [page, setPage] = useState(1);
-  const [academicYearId, setAcademicYearId] = useState<string | null>(null);
-  const [isActive, setIsActive] = useState<string | null>("true");
+  const { setParams, getParam, getNumParam } = useQueryParams();
+  const page = getNumParam("page", 1)!;
+  const academicYearId = getParam("academicYearId") ?? null;
+  const isActive = getParam("isActive", "true") ?? "true";
 
   const { data: academicYearsData } = useAcademicYears({ limit: 100 });
   const activeYear = academicYearsData?.academicYears.find((ay) => ay.isActive);
@@ -191,7 +192,7 @@ export default function DiscountTable() {
             leftSection={<IconFilter size={16} />}
             data={academicYearOptions}
             value={academicYearId || activeYear?.id || null}
-            onChange={setAcademicYearId}
+            onChange={(value) => setParams({ academicYearId: value, page: 1 })}
             clearable
             searchable
             w={250}
@@ -203,7 +204,7 @@ export default function DiscountTable() {
               { value: "false", label: t("common.inactive") },
             ]}
             value={isActive}
-            onChange={setIsActive}
+            onChange={(value) => setParams({ isActive: value, page: 1 })}
             clearable
             w={150}
           />
@@ -359,7 +360,7 @@ export default function DiscountTable() {
           <Pagination
             total={data.pagination.totalPages}
             value={page}
-            onChange={setPage}
+            onChange={(p) => setParams({ page: p })}
           />
         </Group>
       )}

@@ -18,19 +18,20 @@ import { notifications } from "@mantine/notifications";
 import { IconEdit, IconKey, IconSearch, IconTrash } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import {
   useDeleteEmployee,
   useEmployees,
   useResetEmployeePassword,
 } from "@/hooks/api/useEmployees";
+import { useQueryParams } from "@/hooks/useQueryParams";
 
 export default function EmployeeTable() {
   const t = useTranslations();
   const router = useRouter();
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [roleFilter, setRoleFilter] = useState<string | null>(null);
+  const { setParams, getParam, getNumParam } = useQueryParams();
+  const page = getNumParam("page", 1)!;
+  const search = getParam("search", "") ?? "";
+  const roleFilter = getParam("role") ?? null;
 
   const { data, isLoading } = useEmployees({
     page,
@@ -118,8 +119,7 @@ export default function EmployeeTable() {
           leftSection={<IconSearch size={16} />}
           value={search}
           onChange={(e) => {
-            setSearch(e.currentTarget.value);
-            setPage(1);
+            setParams({ search: e.currentTarget.value, page: 1 });
           }}
           style={{ flex: 1 }}
         />
@@ -131,8 +131,7 @@ export default function EmployeeTable() {
           ]}
           value={roleFilter}
           onChange={(value) => {
-            setRoleFilter(value);
-            setPage(1);
+            setParams({ role: value, page: 1 });
           }}
           clearable
           w={160}
@@ -235,7 +234,7 @@ export default function EmployeeTable() {
           <Pagination
             total={data.pagination.totalPages}
             value={page}
-            onChange={setPage}
+            onChange={(p) => setParams({ page: p })}
           />
         </Group>
       )}

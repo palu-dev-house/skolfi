@@ -17,14 +17,15 @@ import { IconEdit, IconSearch, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
 import { useDeleteStudent, useStudents } from "@/hooks/api/useStudents";
+import { useQueryParams } from "@/hooks/useQueryParams";
 
 export default function StudentTable() {
   const t = useTranslations();
   const router = useRouter();
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
+  const { setParams, getParam, getNumParam } = useQueryParams();
+  const page = getNumParam("page", 1)!;
+  const search = getParam("search", "") ?? "";
 
   const { data, isLoading } = useStudents({
     page,
@@ -76,8 +77,7 @@ export default function StudentTable() {
         leftSection={<IconSearch size={16} />}
         value={search}
         onChange={(e) => {
-          setSearch(e.currentTarget.value);
-          setPage(1);
+          setParams({ search: e.currentTarget.value, page: 1 });
         }}
       />
 
@@ -155,7 +155,7 @@ export default function StudentTable() {
           <Pagination
             total={data.pagination.totalPages}
             value={page}
-            onChange={setPage}
+            onChange={(p) => setParams({ page: p })}
           />
         </Group>
       )}
