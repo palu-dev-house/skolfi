@@ -57,7 +57,9 @@ export default function EditClassPage({
     <>
       <PageHeader
         title={t("class.edit")}
-        description={t("class.editDescription", { name: classAcademic.className })}
+        description={t("class.editDescription", {
+          name: classAcademic.className,
+        })}
       />
       <Paper withBorder p="lg" maw={500}>
         <ClassAcademicForm

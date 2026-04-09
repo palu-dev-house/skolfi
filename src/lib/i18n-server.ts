@@ -1,8 +1,11 @@
 import type { NextRequest } from "next/server";
 
-type Messages = Record<string, string | Record<string, string | Record<string, string>>>;
+type Messages = Record<
+  string,
+  string | Record<string, string | Record<string, string>>
+>;
 
-let messagesCache: Record<string, Messages> = {};
+const messagesCache: Record<string, Messages> = {};
 
 async function loadMessages(locale: string): Promise<Messages> {
   if (messagesCache[locale]) return messagesCache[locale];
@@ -21,13 +24,19 @@ function getNestedValue(obj: Messages, path: string): string {
   return typeof current === "string" ? current : path;
 }
 
-function interpolate(template: string, params: Record<string, string | number>): string {
+function interpolate(
+  template: string,
+  params: Record<string, string | number>,
+): string {
   return template.replace(/\{(\w+)\}/g, (_, key) =>
-    params[key] !== undefined ? String(params[key]) : `{${key}}`
+    params[key] !== undefined ? String(params[key]) : `{${key}}`,
   );
 }
 
-export type ServerT = (key: string, params?: Record<string, string | number>) => string;
+export type ServerT = (
+  key: string,
+  params?: Record<string, string | number>,
+) => string;
 
 export async function getServerT(request: NextRequest): Promise<ServerT> {
   const locale = request.cookies.get("NEXT_LOCALE")?.value;

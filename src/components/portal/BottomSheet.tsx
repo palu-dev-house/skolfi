@@ -19,7 +19,11 @@ export function BottomSheet({
   snapPoints,
 }: BottomSheetProps) {
   return (
-    <Drawer.Root open={open} onOpenChange={onOpenChange} snapPoints={snapPoints}>
+    <Drawer.Root
+      open={open}
+      onOpenChange={onOpenChange}
+      snapPoints={snapPoints}
+    >
       <Drawer.Portal>
         <Drawer.Overlay
           style={{
@@ -59,16 +63,14 @@ export function BottomSheet({
           {title && (
             <Box px="md" pb="sm">
               <Drawer.Title asChild>
-                <Text fw={600} size="lg">{title}</Text>
+                <Text fw={600} size="lg">
+                  {title}
+                </Text>
               </Drawer.Title>
             </Box>
           )}
 
-          <Box
-            px="md"
-            pb="md"
-            style={{ overflow: "auto", flex: 1 }}
-          >
+          <Box px="md" pb="md" style={{ overflow: "auto", flex: 1 }}>
             {children}
           </Box>
         </Drawer.Content>

@@ -16,7 +16,11 @@ export async function POST(
 
   const existing = await prisma.academicYear.findUnique({ where: { id } });
   if (!existing) {
-    return errorResponse(t("api.notFound", { resource: "Academic year" }), "NOT_FOUND", 404);
+    return errorResponse(
+      t("api.notFound", { resource: "Academic year" }),
+      "NOT_FOUND",
+      404,
+    );
   }
 
   // Deactivate all, then activate the selected one

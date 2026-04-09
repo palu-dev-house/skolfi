@@ -45,7 +45,11 @@ export async function GET(
   });
 
   if (!payment) {
-    return errorResponse(t("api.notFound", { resource: "Payment" }), "NOT_FOUND", 404);
+    return errorResponse(
+      t("api.notFound", { resource: "Payment" }),
+      "NOT_FOUND",
+      404,
+    );
   }
 
   return successResponse(payment);
@@ -75,7 +79,11 @@ export async function DELETE(
     });
 
     if (!payment) {
-      return errorResponse(t("api.notFound", { resource: "Payment" }), "NOT_FOUND", 404);
+      return errorResponse(
+        t("api.notFound", { resource: "Payment" }),
+        "NOT_FOUND",
+        404,
+      );
     }
 
     // Reverse the payment

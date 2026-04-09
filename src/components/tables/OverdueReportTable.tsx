@@ -75,8 +75,7 @@ export default function OverdueReportTable() {
     academicYearsData?.academicYears?.map((ay) => ({
       value: ay.id,
       label:
-        ay.year +
-        (ay.isActive ? ` (${tAcademicYear("statuses.active")})` : ""),
+        ay.year + (ay.isActive ? ` (${tAcademicYear("statuses.active")})` : ""),
     })) || [];
 
   const classOptions =

@@ -122,9 +122,7 @@ export default function PaymentDetailPage() {
 
     modals.openConfirmModal({
       title: t("cancelConfirmTitle"),
-      children: (
-        <Text size="sm">{t("cancelConfirmDesc")}</Text>
-      ),
+      children: <Text size="sm">{t("cancelConfirmDesc")}</Text>,
       labels: { confirm: t("yesCancel"), cancel: tCommon("no") },
       confirmProps: { color: "red" },
       onConfirm: async () => {

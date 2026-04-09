@@ -60,7 +60,9 @@ export async function GET(request: NextRequest) {
     });
 
     const totalFees = Number(outstandingData._sum.feeAmount || 0);
-    const totalScholarships = Number(outstandingData._sum.scholarshipAmount || 0);
+    const totalScholarships = Number(
+      outstandingData._sum.scholarshipAmount || 0,
+    );
     const totalPaid = Number(outstandingData._sum.paidAmount || 0);
     const totalOutstanding = Math.max(
       totalFees - totalScholarships - totalPaid,
@@ -76,7 +78,8 @@ export async function GET(request: NextRequest) {
         })
       : [];
 
-    const paidCount = tuitionStats.find((s) => s.status === "PAID")?._count || 0;
+    const paidCount =
+      tuitionStats.find((s) => s.status === "PAID")?._count || 0;
     const unpaidCount =
       tuitionStats.find((s) => s.status === "UNPAID")?._count || 0;
     const partialCount =
@@ -91,7 +94,9 @@ export async function GET(request: NextRequest) {
           include: {
             student: { select: { name: true, nis: true } },
             classAcademic: { select: { className: true } },
-            discount: { select: { name: true, reason: true, description: true } },
+            discount: {
+              select: { name: true, reason: true, description: true },
+            },
           },
         },
         employee: { select: { name: true } },

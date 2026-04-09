@@ -1,12 +1,13 @@
 import type { z } from "zod";
 
-type TranslationFn = (key: string, params?: Record<string, string | number>) => string;
+type TranslationFn = (
+  key: string,
+  params?: Record<string, string | number>,
+) => string;
 
-export function zodResolver<T extends z.ZodType>(
-  schema: T,
-  t: TranslationFn,
-) {
-  return (values: z.infer<T>): Record<string, string | null> => {
+export function zodResolver<T extends z.ZodType>(schema: T, t: TranslationFn) {
+  // biome-ignore lint/suspicious/noExplicitAny: resolver must accept any Mantine form values shape
+  return (values: any): Record<string, string | null> => {
     const result = schema.safeParse(values);
     if (result.success) return {};
 
@@ -28,26 +29,26 @@ function mapZodErrorToTranslation(
 ): string {
   switch (issue.code) {
     case "too_small":
-      if (issue.type === "string" && issue.minimum === 1) {
+      if (issue.origin === "string" && Number(issue.minimum) === 1) {
         return t("validation.required");
       }
-      if (issue.type === "string") {
-        return t("validation.minLength", { min: issue.minimum as number });
+      if (issue.origin === "string") {
+        return t("validation.minLength", { min: Number(issue.minimum) });
       }
-      if (issue.type === "number") {
-        return t("validation.min", { min: issue.minimum as number });
+      if (issue.origin === "number" || issue.origin === "int") {
+        return t("validation.min", { min: Number(issue.minimum) });
       }
-      if (issue.type === "array") {
+      if (issue.origin === "array" || issue.origin === "set") {
         return t("validation.required");
       }
       return t("validation.required");
     case "too_big":
-      if (issue.type === "string") {
-        return t("validation.maxLength", { max: issue.maximum as number });
+      if (issue.origin === "string") {
+        return t("validation.maxLength", { max: Number(issue.maximum) });
       }
-      return t("validation.max", { max: issue.maximum as number });
-    case "invalid_string":
-      if (issue.validation === "email") {
+      return t("validation.max", { max: Number(issue.maximum) });
+    case "invalid_format":
+      if (issue.format === "email") {
         return t("validation.email");
       }
       return t("validation.invalidFormat", { field });
@@ -55,7 +56,7 @@ function mapZodErrorToTranslation(
       if (issue.expected === "number") return t("validation.number");
       if (issue.expected === "date") return t("validation.date");
       return t("validation.required");
-    case "invalid_enum_value":
+    case "invalid_value":
       return t("validation.invalidFormat", { field });
     case "custom":
       return issue.message || t("validation.required");

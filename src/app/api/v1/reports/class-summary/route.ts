@@ -31,7 +31,8 @@ export async function GET(request: NextRequest) {
         totalEffectiveFees:
           acc.totalEffectiveFees + cls.statistics.totalEffectiveFees,
         totalPaid: acc.totalPaid + cls.statistics.totalPaid,
-        totalOutstanding: acc.totalOutstanding + cls.statistics.totalOutstanding,
+        totalOutstanding:
+          acc.totalOutstanding + cls.statistics.totalOutstanding,
       }),
       {
         totalStudents: 0,

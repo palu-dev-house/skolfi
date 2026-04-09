@@ -120,15 +120,15 @@ export async function POST(request: NextRequest) {
     });
 
     if (!tuition) {
-      return errorResponse(t("api.notFound", { resource: "Tuition" }), "NOT_FOUND", 404);
+      return errorResponse(
+        t("api.notFound", { resource: "Tuition" }),
+        "NOT_FOUND",
+        404,
+      );
     }
 
     if (tuition.status === "PAID") {
-      return errorResponse(
-        t("api.tuitionFullyPaid"),
-        "VALIDATION_ERROR",
-        400,
-      );
+      return errorResponse(t("api.tuitionFullyPaid"), "VALIDATION_ERROR", 400);
     }
 
     // Process payment

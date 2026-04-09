@@ -24,7 +24,11 @@ export async function GET(
   });
 
   if (!academicYear) {
-    return errorResponse(t("api.notFound", { resource: "Academic year" }), "NOT_FOUND", 404);
+    return errorResponse(
+      t("api.notFound", { resource: "Academic year" }),
+      "NOT_FOUND",
+      404,
+    );
   }
 
   return successResponse(academicYear);
@@ -45,7 +49,11 @@ export async function PUT(
     const existing = await prisma.academicYear.findUnique({ where: { id } });
 
     if (!existing) {
-      return errorResponse(t("api.notFound", { resource: "Academic year" }), "NOT_FOUND", 404);
+      return errorResponse(
+        t("api.notFound", { resource: "Academic year" }),
+        "NOT_FOUND",
+        404,
+      );
     }
 
     if (body.year && body.year !== existing.year) {
@@ -94,12 +102,19 @@ export async function DELETE(
   });
 
   if (!existing) {
-    return errorResponse(t("api.notFound", { resource: "Academic year" }), "NOT_FOUND", 404);
+    return errorResponse(
+      t("api.notFound", { resource: "Academic year" }),
+      "NOT_FOUND",
+      404,
+    );
   }
 
   if (existing._count.classAcademics > 0) {
     return errorResponse(
-      t("api.cannotDelete", { resource: "academic year", dependency: "classes" }),
+      t("api.cannotDelete", {
+        resource: "academic year",
+        dependency: "classes",
+      }),
       "VALIDATION_ERROR",
       400,
     );
@@ -107,5 +122,7 @@ export async function DELETE(
 
   await prisma.academicYear.delete({ where: { id } });
 
-  return successResponse({ message: t("api.deleteSuccess", { resource: "Academic year" }) });
+  return successResponse({
+    message: t("api.deleteSuccess", { resource: "Academic year" }),
+  });
 }

@@ -97,7 +97,11 @@ export async function POST(request: NextRequest) {
     });
 
     if (!student) {
-      return errorResponse(t("api.notFound", { resource: "Student" }), "NOT_FOUND", 404);
+      return errorResponse(
+        t("api.notFound", { resource: "Student" }),
+        "NOT_FOUND",
+        404,
+      );
     }
 
     // Check if class exists
@@ -106,7 +110,11 @@ export async function POST(request: NextRequest) {
     });
 
     if (!classAcademic) {
-      return errorResponse(t("api.notFound", { resource: "Class" }), "NOT_FOUND", 404);
+      return errorResponse(
+        t("api.notFound", { resource: "Class" }),
+        "NOT_FOUND",
+        404,
+      );
     }
 
     const idempotencyKey = generateIdempotencyKey(

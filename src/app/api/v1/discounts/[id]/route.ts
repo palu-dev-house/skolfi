@@ -37,7 +37,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   });
 
   if (!discount) {
-    return errorResponse(t("api.notFound", { resource: "Discount" }), "NOT_FOUND", 404);
+    return errorResponse(
+      t("api.notFound", { resource: "Discount" }),
+      "NOT_FOUND",
+      404,
+    );
   }
 
   // Get usage statistics
@@ -93,7 +97,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!existingDiscount) {
-      return errorResponse(t("api.notFound", { resource: "Discount" }), "NOT_FOUND", 404);
+      return errorResponse(
+        t("api.notFound", { resource: "Discount" }),
+        "NOT_FOUND",
+        404,
+      );
     }
 
     // Build update data
@@ -134,11 +142,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     if (targetPeriods !== undefined) {
       if (!Array.isArray(targetPeriods) || targetPeriods.length === 0) {
-        return errorResponse(
-          t("api.periodRequired"),
-          "VALIDATION_ERROR",
-          400,
-        );
+        return errorResponse(t("api.periodRequired"), "VALIDATION_ERROR", 400);
       }
       updateData.targetPeriods = targetPeriods;
     }
@@ -193,7 +197,11 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!discount) {
-      return errorResponse(t("api.notFound", { resource: "Discount" }), "NOT_FOUND", 404);
+      return errorResponse(
+        t("api.notFound", { resource: "Discount" }),
+        "NOT_FOUND",
+        404,
+      );
     }
 
     // Remove discount from all tuitions first

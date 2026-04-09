@@ -5,7 +5,10 @@ export const scholarshipSchema = z.object({
   classAcademicId: z.string().min(1),
   nominal: z.coerce.number().positive(),
   scholarshipName: z.string().min(1),
-  scholarshipType: z.enum(["Academic", "Sports", "Arts", "NeedBased", "Merit", "Other"]).optional().default("Academic"),
+  scholarshipType: z
+    .enum(["Academic", "Sports", "Arts", "NeedBased", "Merit", "Other"])
+    .optional()
+    .default("Academic"),
   isFullScholarship: z.boolean().optional().default(false),
 });
 

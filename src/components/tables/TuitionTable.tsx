@@ -166,7 +166,9 @@ export default function TuitionTable() {
             placeholder={t("tuition.searchStudent")}
             leftSection={<IconSearch size={16} />}
             value={studentSearch}
-            onChange={(e) => setParams({ studentSearch: e.currentTarget.value, page: 1 })}
+            onChange={(e) =>
+              setParams({ studentSearch: e.currentTarget.value, page: 1 })
+            }
           />
         </Group>
       </Paper>

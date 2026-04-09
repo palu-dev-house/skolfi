@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const discountSchema = z.object({
   name: z.string().min(1),
+  description: z.string().optional(),
   discountAmount: z.coerce.number().positive(),
   reason: z.string().optional(),
   academicYearId: z.string().min(1),

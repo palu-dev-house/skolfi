@@ -20,7 +20,11 @@ export async function POST(
   });
 
   if (!existing) {
-    return errorResponse(t("api.notFound", { resource: "Employee" }), "NOT_FOUND", 404);
+    return errorResponse(
+      t("api.notFound", { resource: "Employee" }),
+      "NOT_FOUND",
+      404,
+    );
   }
 
   const hashedPassword = await bcrypt.hash("123456", 10);

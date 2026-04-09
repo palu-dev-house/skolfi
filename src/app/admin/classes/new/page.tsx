@@ -39,7 +39,10 @@ export default function NewClassPage() {
 
   return (
     <>
-      <PageHeader title={t("class.add")} description={t("class.addDescription")} />
+      <PageHeader
+        title={t("class.add")}
+        description={t("class.addDescription")}
+      />
       <Paper withBorder p="lg" maw={500}>
         <ClassAcademicForm
           onSubmit={handleSubmit}

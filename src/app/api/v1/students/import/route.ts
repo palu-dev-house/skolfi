@@ -113,6 +113,10 @@ export async function POST(request: NextRequest) {
     return successResponse({ imported, updated, errors });
   } catch (error) {
     console.error("Import students error:", error);
-    return errorResponse(t("api.importFailed", { resource: "students" }), "SERVER_ERROR", 500);
+    return errorResponse(
+      t("api.importFailed", { resource: "students" }),
+      "SERVER_ERROR",
+      500,
+    );
   }
 }

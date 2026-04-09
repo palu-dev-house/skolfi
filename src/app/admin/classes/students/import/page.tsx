@@ -12,6 +12,7 @@ import {
   Table,
   Text,
 } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import {
   IconAlertCircle,
   IconArrowLeft,
@@ -93,7 +94,8 @@ export default function ImportStudentClassesPage() {
     academicYearsData?.academicYears.map((ay) => ({
       value: ay.id,
       label:
-        ay.year + (ay.isActive ? ` (${t("academicYear.statuses.active")})` : ""),
+        ay.year +
+        (ay.isActive ? ` (${t("academicYear.statuses.active")})` : ""),
     })) || [];
 
   return (
@@ -177,10 +179,12 @@ export default function ImportStudentClassesPage() {
                     size="lg"
                     leftSection={<IconCheck size={14} />}
                   >
-                    {t("student.importedCount", {
-                      count: result.imported,
-                      updated: 0,
-                    }).split(",")[0]}
+                    {
+                      t("student.importedCount", {
+                        count: result.imported,
+                        updated: 0,
+                      }).split(",")[0]
+                    }
                     : {result.imported}
                   </Badge>
                 </Group>

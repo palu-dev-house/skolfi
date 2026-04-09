@@ -27,7 +27,11 @@ export async function GET(
   });
 
   if (!employee) {
-    return errorResponse(t("api.notFound", { resource: "Employee" }), "NOT_FOUND", 404);
+    return errorResponse(
+      t("api.notFound", { resource: "Employee" }),
+      "NOT_FOUND",
+      404,
+    );
   }
 
   return successResponse(employee);
@@ -52,7 +56,11 @@ export async function PUT(
     });
 
     if (!existing) {
-      return errorResponse(t("api.notFound", { resource: "Employee" }), "NOT_FOUND", 404);
+      return errorResponse(
+        t("api.notFound", { resource: "Employee" }),
+        "NOT_FOUND",
+        404,
+      );
     }
 
     if (email && email !== existing.email) {
@@ -60,7 +68,11 @@ export async function PUT(
         where: { email },
       });
       if (emailTaken) {
-        return errorResponse(t("api.alreadyExists", { resource: "Email" }), "DUPLICATE_ENTRY", 409);
+        return errorResponse(
+          t("api.alreadyExists", { resource: "Email" }),
+          "DUPLICATE_ENTRY",
+          409,
+        );
       }
     }
 
@@ -103,18 +115,20 @@ export async function DELETE(
   });
 
   if (!existing) {
-    return errorResponse(t("api.notFound", { resource: "Employee" }), "NOT_FOUND", 404);
+    return errorResponse(
+      t("api.notFound", { resource: "Employee" }),
+      "NOT_FOUND",
+      404,
+    );
   }
 
   if (auth.employeeId === id) {
-    return errorResponse(
-      t("api.cannotDeleteSelf"),
-      "VALIDATION_ERROR",
-      400,
-    );
+    return errorResponse(t("api.cannotDeleteSelf"), "VALIDATION_ERROR", 400);
   }
 
   await prisma.employee.delete({ where: { employeeId: id } });
 
-  return successResponse({ message: t("api.deleteSuccess", { resource: "Employee" }) });
+  return successResponse({
+    message: t("api.deleteSuccess", { resource: "Employee" }),
+  });
 }

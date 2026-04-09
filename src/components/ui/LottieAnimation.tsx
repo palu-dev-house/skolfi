@@ -20,7 +20,7 @@ export function LottieAnimation({
   loop = true,
 }: LottieAnimationProps) {
   const [data, setData] = useState(null);
-  const pathname = `/lotties/${type}.json`
+  const pathname = `/lotties/${type}.json`;
   useEffect(() => {
     fetch(pathname)
       .then((res) => res.json())
@@ -48,7 +48,7 @@ export function LottieAnimation({
 }
 
 export function LoadingAnimation() {
-  return <LottieAnimation type="loading"  />;
+  return <LottieAnimation type="loading" />;
 }
 
 export function SuccessAnimation({

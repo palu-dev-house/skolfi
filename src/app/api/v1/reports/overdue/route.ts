@@ -39,7 +39,10 @@ export async function GET(request: NextRequest) {
     );
 
     // Group by student
-    const overdueByStudent = groupOverdueByStudent(overdueItems, studentDetails);
+    const overdueByStudent = groupOverdueByStudent(
+      overdueItems,
+      studentDetails,
+    );
 
     // Calculate summary
     const summary = calculateOverdueSummary(overdueItems);

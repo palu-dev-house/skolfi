@@ -80,7 +80,9 @@ export async function DELETE(
     const { id } = await params;
     await deleteBankAccount(id);
 
-    return successResponse({ message: t("api.deleteSuccess", { resource: "Bank account" }) });
+    return successResponse({
+      message: t("api.deleteSuccess", { resource: "Bank account" }),
+    });
   } catch (error) {
     console.error("Delete bank account error:", error);
     if (error instanceof Error) {

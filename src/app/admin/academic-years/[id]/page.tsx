@@ -58,7 +58,9 @@ export default function EditAcademicYearPage({
     <>
       <PageHeader
         title={t("academicYear.edit")}
-        description={t("academicYear.editDescription", { year: academicYear.year })}
+        description={t("academicYear.editDescription", {
+          year: academicYear.year,
+        })}
       />
       <Paper withBorder p="lg" maw={500}>
         <AcademicYearForm

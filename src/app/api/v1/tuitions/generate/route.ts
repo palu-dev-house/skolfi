@@ -52,7 +52,11 @@ export async function POST(request: NextRequest) {
     });
 
     if (!classAcademic) {
-      return errorResponse(t("api.notFound", { resource: "Class" }), "NOT_FOUND", 404);
+      return errorResponse(
+        t("api.notFound", { resource: "Class" }),
+        "NOT_FOUND",
+        404,
+      );
     }
 
     // Get students - either specified ones or all students in the class

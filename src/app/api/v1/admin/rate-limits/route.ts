@@ -37,11 +37,7 @@ export async function POST(request: NextRequest) {
     const { action, identifier } = body;
 
     if (!action || !identifier) {
-      return errorResponse(
-        t("api.requiredFields"),
-        "VALIDATION_ERROR",
-        400,
-      );
+      return errorResponse(t("api.requiredFields"), "VALIDATION_ERROR", 400);
     }
 
     await resetRateLimit(action, identifier);

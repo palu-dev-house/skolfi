@@ -130,19 +130,25 @@ export default function PaymentTable() {
             placeholder={t("payment.searchStudent")}
             leftSection={<IconSearch size={16} />}
             value={studentSearch}
-            onChange={(e) => setParams({ studentSearch: e.currentTarget.value, page: 1 })}
+            onChange={(e) =>
+              setParams({ studentSearch: e.currentTarget.value, page: 1 })
+            }
           />
           <TextInput
             type="date"
             placeholder={t("payment.fromDate")}
             value={dateFrom}
-            onChange={(e) => setParams({ dateFrom: e.currentTarget.value, page: 1 })}
+            onChange={(e) =>
+              setParams({ dateFrom: e.currentTarget.value, page: 1 })
+            }
           />
           <TextInput
             type="date"
             placeholder={t("payment.toDate")}
             value={dateTo}
-            onChange={(e) => setParams({ dateTo: e.currentTarget.value, page: 1 })}
+            onChange={(e) =>
+              setParams({ dateTo: e.currentTarget.value, page: 1 })
+            }
           />
         </Group>
       </Paper>

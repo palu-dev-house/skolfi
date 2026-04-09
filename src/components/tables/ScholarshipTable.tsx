@@ -118,7 +118,9 @@ export default function ScholarshipTable() {
               { value: "false", label: t("scholarship.types.PARTIAL") },
             ]}
             value={isFullScholarship}
-            onChange={(value) => setParams({ isFullScholarship: value, page: 1 })}
+            onChange={(value) =>
+              setParams({ isFullScholarship: value, page: 1 })
+            }
             clearable
             w={200}
           />

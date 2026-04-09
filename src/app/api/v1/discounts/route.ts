@@ -98,7 +98,11 @@ export async function POST(request: NextRequest) {
     });
 
     if (!academicYear) {
-      return errorResponse(t("api.notFound", { resource: "Academic year" }), "NOT_FOUND", 404);
+      return errorResponse(
+        t("api.notFound", { resource: "Academic year" }),
+        "NOT_FOUND",
+        404,
+      );
     }
 
     // Check if class exists (if provided)
@@ -108,16 +112,16 @@ export async function POST(request: NextRequest) {
       });
 
       if (!classAcademic) {
-        return errorResponse(t("api.notFound", { resource: "Class" }), "NOT_FOUND", 404);
+        return errorResponse(
+          t("api.notFound", { resource: "Class" }),
+          "NOT_FOUND",
+          404,
+        );
       }
 
       // Verify class belongs to the academic year
       if (classAcademic.academicYearId !== academicYearId) {
-        return errorResponse(
-          t("api.classNotInYear"),
-          "VALIDATION_ERROR",
-          400,
-        );
+        return errorResponse(t("api.classNotInYear"), "VALIDATION_ERROR", 400);
       }
     }
 

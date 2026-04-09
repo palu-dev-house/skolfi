@@ -42,13 +42,8 @@ export async function POST(request: NextRequest) {
     const parsed = await parseWithLocale(bankAccountSchema, body, request);
     if (!parsed.success) return parsed.response;
 
-    const {
-      bankName,
-      bankCode,
-      accountNumber,
-      accountName,
-      isActive,
-    } = parsed.data;
+    const { bankName, bankCode, accountNumber, accountName, isActive } =
+      parsed.data;
 
     const logoUrl = body.logoUrl;
     const displayOrder = body.displayOrder;

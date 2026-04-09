@@ -23,7 +23,9 @@ export function useQueryParams() {
       }
 
       const query = params.toString();
-      router.replace(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
+      router.replace(`${pathname}${query ? `?${query}` : ""}`, {
+        scroll: false,
+      });
     },
     [router, pathname, searchParams],
   );

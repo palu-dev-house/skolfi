@@ -17,7 +17,11 @@ export async function GET(
   const student = await prisma.student.findUnique({ where: { nis } });
 
   if (!student) {
-    return errorResponse(t("api.notFound", { resource: "Student" }), "NOT_FOUND", 404);
+    return errorResponse(
+      t("api.notFound", { resource: "Student" }),
+      "NOT_FOUND",
+      404,
+    );
   }
 
   return successResponse(student);
@@ -38,7 +42,11 @@ export async function PUT(
     const existing = await prisma.student.findUnique({ where: { nis } });
 
     if (!existing) {
-      return errorResponse(t("api.notFound", { resource: "Student" }), "NOT_FOUND", 404);
+      return errorResponse(
+        t("api.notFound", { resource: "Student" }),
+        "NOT_FOUND",
+        404,
+      );
     }
 
     if (body.nik && body.nik !== existing.nik) {
@@ -46,7 +54,11 @@ export async function PUT(
         where: { nik: body.nik },
       });
       if (nikTaken) {
-        return errorResponse(t("api.alreadyExists", { resource: "NIK" }), "DUPLICATE_ENTRY", 409);
+        return errorResponse(
+          t("api.alreadyExists", { resource: "NIK" }),
+          "DUPLICATE_ENTRY",
+          409,
+        );
       }
     }
 
@@ -83,10 +95,16 @@ export async function DELETE(
 
   const existing = await prisma.student.findUnique({ where: { nis } });
   if (!existing) {
-    return errorResponse(t("api.notFound", { resource: "Student" }), "NOT_FOUND", 404);
+    return errorResponse(
+      t("api.notFound", { resource: "Student" }),
+      "NOT_FOUND",
+      404,
+    );
   }
 
   await prisma.student.delete({ where: { nis } });
 
-  return successResponse({ message: t("api.deleteSuccess", { resource: "Student" }) });
+  return successResponse({
+    message: t("api.deleteSuccess", { resource: "Student" }),
+  });
 }

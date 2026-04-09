@@ -23,7 +23,11 @@ export async function GET(
   });
 
   if (!classAcademic) {
-    return errorResponse(t("api.notFound", { resource: "Class" }), "NOT_FOUND", 404);
+    return errorResponse(
+      t("api.notFound", { resource: "Class" }),
+      "NOT_FOUND",
+      404,
+    );
   }
 
   const studentClasses = await prisma.studentClass.findMany({

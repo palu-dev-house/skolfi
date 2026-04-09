@@ -37,15 +37,15 @@ export async function POST(request: NextRequest) {
     });
 
     if (!discount) {
-      return errorResponse(t("api.notFound", { resource: "Discount" }), "NOT_FOUND", 404);
+      return errorResponse(
+        t("api.notFound", { resource: "Discount" }),
+        "NOT_FOUND",
+        404,
+      );
     }
 
     if (!discount.isActive) {
-      return errorResponse(
-        t("api.discountInactive"),
-        "VALIDATION_ERROR",
-        400,
-      );
+      return errorResponse(t("api.discountInactive"), "VALIDATION_ERROR", 400);
     }
 
     // Preview mode - show what would be affected

@@ -169,9 +169,7 @@ export default function DiscountTable() {
       notifications.show({
         title: t("common.error"),
         message:
-          error instanceof Error
-            ? error.message
-            : t("discount.previewError"),
+          error instanceof Error ? error.message : t("discount.previewError"),
         color: "red",
       });
     }

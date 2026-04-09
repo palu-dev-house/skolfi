@@ -57,16 +57,25 @@ export async function POST(request: NextRequest) {
     const parsed = await parseWithLocale(studentSchema, body, request);
     if (!parsed.success) return parsed.response;
 
-    const { nis, nik, name, address, parentName, parentPhone, startJoinDate } = parsed.data;
+    const { nis, nik, name, address, parentName, parentPhone, startJoinDate } =
+      parsed.data;
 
     const existingNis = await prisma.student.findUnique({ where: { nis } });
     if (existingNis) {
-      return errorResponse(t("api.alreadyExists", { resource: "NIS" }), "DUPLICATE_ENTRY", 409);
+      return errorResponse(
+        t("api.alreadyExists", { resource: "NIS" }),
+        "DUPLICATE_ENTRY",
+        409,
+      );
     }
 
     const existingNik = await prisma.student.findUnique({ where: { nik } });
     if (existingNik) {
-      return errorResponse(t("api.alreadyExists", { resource: "NIK" }), "DUPLICATE_ENTRY", 409);
+      return errorResponse(
+        t("api.alreadyExists", { resource: "NIK" }),
+        "DUPLICATE_ENTRY",
+        409,
+      );
     }
 
     // Get current user for accountCreatedBy

@@ -93,7 +93,11 @@ export async function POST(request: NextRequest) {
     });
 
     if (!academicYear) {
-      return errorResponse(t("api.notFound", { resource: "Academic year" }), "NOT_FOUND", 404);
+      return errorResponse(
+        t("api.notFound", { resource: "Academic year" }),
+        "NOT_FOUND",
+        404,
+      );
     }
 
     const existing = await prisma.classAcademic.findUnique({
@@ -107,11 +111,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (existing) {
-      return errorResponse(
-        t("api.classAlreadyExists"),
-        "DUPLICATE_ENTRY",
-        409,
-      );
+      return errorResponse(t("api.classAlreadyExists"), "DUPLICATE_ENTRY", 409);
     }
 
     const className = generateClassName(grade, section, academicYear.year);

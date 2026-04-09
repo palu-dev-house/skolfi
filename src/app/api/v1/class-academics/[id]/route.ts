@@ -24,7 +24,11 @@ export async function GET(
   });
 
   if (!classAcademic) {
-    return errorResponse(t("api.notFound", { resource: "Class" }), "NOT_FOUND", 404);
+    return errorResponse(
+      t("api.notFound", { resource: "Class" }),
+      "NOT_FOUND",
+      404,
+    );
   }
 
   return successResponse(classAcademic);
@@ -48,7 +52,11 @@ export async function PUT(
     });
 
     if (!existing) {
-      return errorResponse(t("api.notFound", { resource: "Class" }), "NOT_FOUND", 404);
+      return errorResponse(
+        t("api.notFound", { resource: "Class" }),
+        "NOT_FOUND",
+        404,
+      );
     }
 
     const grade = body.grade ?? existing.grade;
@@ -64,7 +72,11 @@ export async function PUT(
         where: { id: body.academicYearId },
       });
       if (!newYear) {
-        return errorResponse(t("api.notFound", { resource: "Academic year" }), "NOT_FOUND", 404);
+        return errorResponse(
+          t("api.notFound", { resource: "Academic year" }),
+          "NOT_FOUND",
+          404,
+        );
       }
       academicYear = newYear;
     }
@@ -162,7 +174,11 @@ export async function DELETE(
   });
 
   if (!existing) {
-    return errorResponse(t("api.notFound", { resource: "Class" }), "NOT_FOUND", 404);
+    return errorResponse(
+      t("api.notFound", { resource: "Class" }),
+      "NOT_FOUND",
+      404,
+    );
   }
 
   if (existing._count.tuitions > 0) {
@@ -175,5 +191,7 @@ export async function DELETE(
 
   await prisma.classAcademic.delete({ where: { id } });
 
-  return successResponse({ message: t("api.deleteSuccess", { resource: "Class" }) });
+  return successResponse({
+    message: t("api.deleteSuccess", { resource: "Class" }),
+  });
 }

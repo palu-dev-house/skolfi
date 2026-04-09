@@ -18,6 +18,7 @@ import {
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import { IconAlertCircle, IconCheck, IconUser } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -28,7 +29,6 @@ import {
   type StudentTuition,
   useStudentTuitions,
 } from "@/hooks/api/useStudentTuitions";
-import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query-keys";
 
 function getInitials(name: string): string {

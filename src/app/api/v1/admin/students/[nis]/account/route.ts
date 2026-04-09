@@ -54,7 +54,9 @@ export async function DELETE(
 
     await softDeleteAccount(nis, session.employeeId, reason);
 
-    return successResponse({ message: t("api.deleteSuccess", { resource: "Account" }) });
+    return successResponse({
+      message: t("api.deleteSuccess", { resource: "Account" }),
+    });
   } catch (error) {
     console.error("Delete student account error:", error);
     if (error instanceof Error) {

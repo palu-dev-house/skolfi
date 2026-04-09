@@ -32,7 +32,11 @@ export async function GET(
   });
 
   if (!scholarship) {
-    return errorResponse(t("api.notFound", { resource: "Scholarship" }), "NOT_FOUND", 404);
+    return errorResponse(
+      t("api.notFound", { resource: "Scholarship" }),
+      "NOT_FOUND",
+      404,
+    );
   }
 
   return successResponse(scholarship);
@@ -54,7 +58,11 @@ export async function DELETE(
     });
 
     if (!scholarship) {
-      return errorResponse(t("api.notFound", { resource: "Scholarship" }), "NOT_FOUND", 404);
+      return errorResponse(
+        t("api.notFound", { resource: "Scholarship" }),
+        "NOT_FOUND",
+        404,
+      );
     }
 
     // Note: Deleting scholarship does NOT revert auto-paid tuitions

@@ -3,7 +3,10 @@ import { requireAuth, requireRole } from "@/lib/api-auth";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
-import { studentClassAssignSchema, studentClassRemoveSchema } from "@/lib/validations";
+import {
+  studentClassAssignSchema,
+  studentClassRemoveSchema,
+} from "@/lib/validations";
 import { parseWithLocale } from "@/lib/validations/parse-with-locale";
 
 // GET - List student-class assignments with filters
@@ -110,7 +113,11 @@ export async function POST(request: NextRequest) {
   });
 
   if (!classAcademic) {
-    return errorResponse(t("api.notFound", { resource: "Class" }), "NOT_FOUND", 404);
+    return errorResponse(
+      t("api.notFound", { resource: "Class" }),
+      "NOT_FOUND",
+      404,
+    );
   }
 
   // Verify all students exist
@@ -147,11 +154,7 @@ export async function POST(request: NextRequest) {
   );
 
   if (toAssign.length === 0) {
-    return errorResponse(
-      t("api.allStudentsAssigned"),
-      "DUPLICATE_ENTRY",
-      409,
-    );
+    return errorResponse(t("api.allStudentsAssigned"), "DUPLICATE_ENTRY", 409);
   }
 
   // Create assignments

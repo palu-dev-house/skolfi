@@ -13,9 +13,24 @@ import { useTranslations } from "next-intl";
 
 const navItems = [
   { href: "/portal", labelKey: "nav.home", icon: IconHome, color: "blue" },
-  { href: "/portal/payment", labelKey: "nav.payment", icon: IconCreditCard, color: "green" },
-  { href: "/portal/history", labelKey: "nav.history", icon: IconHistory, color: "violet" },
-  { href: "/portal/change-password", labelKey: "nav.settings", icon: IconSettings, color: "orange" },
+  {
+    href: "/portal/payment",
+    labelKey: "nav.payment",
+    icon: IconCreditCard,
+    color: "green",
+  },
+  {
+    href: "/portal/history",
+    labelKey: "nav.history",
+    icon: IconHistory,
+    color: "violet",
+  },
+  {
+    href: "/portal/change-password",
+    labelKey: "nav.settings",
+    icon: IconSettings,
+    color: "orange",
+  },
 ];
 
 export function BottomNav() {

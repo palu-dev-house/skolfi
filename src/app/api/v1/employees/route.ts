@@ -73,7 +73,11 @@ export async function POST(request: NextRequest) {
 
     const existing = await prisma.employee.findUnique({ where: { email } });
     if (existing) {
-      return errorResponse(t("api.alreadyExists", { resource: "Email" }), "DUPLICATE_ENTRY", 409);
+      return errorResponse(
+        t("api.alreadyExists", { resource: "Email" }),
+        "DUPLICATE_ENTRY",
+        409,
+      );
     }
 
     const hashedPassword = await bcrypt.hash("123456", 10);

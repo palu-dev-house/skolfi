@@ -25,7 +25,11 @@ export async function POST(request: NextRequest) {
     });
 
     if (!employee) {
-      return errorResponse(t("api.notFound", { resource: "Employee" }), "NOT_FOUND", 404);
+      return errorResponse(
+        t("api.notFound", { resource: "Employee" }),
+        "NOT_FOUND",
+        404,
+      );
     }
 
     // Verify current password

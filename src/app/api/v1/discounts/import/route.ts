@@ -163,6 +163,10 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Import discounts error:", error);
-    return errorResponse(t("api.importFailed", { resource: "discounts" }), "SERVER_ERROR", 500);
+    return errorResponse(
+      t("api.importFailed", { resource: "discounts" }),
+      "SERVER_ERROR",
+      500,
+    );
   }
 }

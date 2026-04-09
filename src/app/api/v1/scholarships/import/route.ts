@@ -155,6 +155,10 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Import scholarships error:", error);
-    return errorResponse(t("api.importFailed", { resource: "scholarships" }), "SERVER_ERROR", 500);
+    return errorResponse(
+      t("api.importFailed", { resource: "scholarships" }),
+      "SERVER_ERROR",
+      500,
+    );
   }
 }
