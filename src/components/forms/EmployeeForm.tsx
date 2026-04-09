@@ -3,6 +3,8 @@
 import { Button, Select, Stack, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useTranslations } from "next-intl";
+import { employeeSchema } from "@/lib/validations";
+import { zodResolver } from "@/lib/validations/mantine-zod-resolver";
 
 interface EmployeeFormValues {
   name: string;
@@ -31,12 +33,7 @@ export default function EmployeeForm({
       email: initialData?.email || "",
       role: initialData?.role || "CASHIER",
     },
-    validate: {
-      name: (value) =>
-        value.length < 1 ? t("employee.nameRequired") : null,
-      email: (value) =>
-        /^\S+@\S+$/.test(value) ? null : t("employee.emailInvalid"),
-    },
+    validate: zodResolver(employeeSchema, t),
   });
 
   return (

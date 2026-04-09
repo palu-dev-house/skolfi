@@ -21,8 +21,8 @@ import {
   IconInfoCircle,
 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import { useClassAcademics } from "@/hooks/api/useClassAcademics";
 import { useCreateScholarship } from "@/hooks/api/useScholarships";
@@ -292,9 +292,7 @@ export default function ScholarshipForm() {
             color="yellow"
             variant="light"
           >
-            <Text size="sm">
-              {t("scholarship.selectClassHint")}
-            </Text>
+            <Text size="sm">{t("scholarship.selectClassHint")}</Text>
           </Alert>
         )}
 

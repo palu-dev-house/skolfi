@@ -11,6 +11,8 @@ import {
 import { useForm } from "@mantine/form";
 import { useTranslations } from "next-intl";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
+import { classAcademicSchema } from "@/lib/validations";
+import { zodResolver } from "@/lib/validations/mantine-zod-resolver";
 
 interface ClassAcademicFormValues {
   academicYearId: string;
@@ -44,14 +46,7 @@ export default function ClassAcademicForm({
       grade: initialData?.grade || 1,
       section: initialData?.section || "",
     },
-    validate: {
-      academicYearId: (value) =>
-        !value ? t("class.academicYearRequired") : null,
-      grade: (value) =>
-        value < 1 || value > 12 ? t("class.gradeRange") : null,
-      section: (value) =>
-        value.length < 1 ? t("class.sectionRequired") : null,
-    },
+    validate: zodResolver(classAcademicSchema, t),
   });
 
   const academicYearOptions =

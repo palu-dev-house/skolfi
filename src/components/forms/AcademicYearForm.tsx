@@ -4,6 +4,8 @@ import { Button, Checkbox, Stack, TextInput } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { useTranslations } from "next-intl";
+import { academicYearSchema } from "@/lib/validations";
+import { zodResolver } from "@/lib/validations/mantine-zod-resolver";
 
 interface AcademicYearFormValues {
   year: string;
@@ -46,20 +48,7 @@ export default function AcademicYearForm({
       endDate: initialData?.endDate ? new Date(initialData.endDate) : null,
       isActive: initialData?.isActive || false,
     },
-    validate: {
-      year: (value) => {
-        if (!value) return t("academicYear.yearRequired");
-        if (!/^\d{4}\/\d{4}$/.test(value))
-          return t("academicYear.yearFormat");
-        const [start, end] = value.split("/").map(Number);
-        if (end !== start + 1) return t("academicYear.yearEndMismatch");
-        return null;
-      },
-      startDate: (value) =>
-        !value ? t("academicYear.startDateRequired") : null,
-      endDate: (value) =>
-        !value ? t("academicYear.endDateRequired") : null,
-    },
+    validate: zodResolver(academicYearSchema, t),
   });
 
   const handleYearChange = (year: string) => {

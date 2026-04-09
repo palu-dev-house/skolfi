@@ -20,8 +20,8 @@ import {
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconInfoCircle, IconPercentage } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useEffect, useState } from "react";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import { useClassAcademics } from "@/hooks/api/useClassAcademics";
 import {
@@ -45,7 +45,10 @@ export default function DiscountForm({ discountId }: DiscountFormProps) {
 
   const REASON_PRESETS = [
     { value: "COVID Relief", label: t("discount.reasons.COVIDRelief") },
-    { value: "School Anniversary", label: t("discount.reasons.SchoolAnniversary") },
+    {
+      value: "School Anniversary",
+      label: t("discount.reasons.SchoolAnniversary"),
+    },
     { value: "Economic Support", label: t("discount.reasons.EconomicSupport") },
     { value: "Early Payment", label: t("discount.reasons.EarlyPayment") },
     { value: "Sibling Discount", label: t("discount.reasons.SiblingDiscount") },

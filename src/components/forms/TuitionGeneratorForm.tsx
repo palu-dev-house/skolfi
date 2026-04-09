@@ -22,8 +22,8 @@ import {
   IconReceipt,
 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import type { PaymentFrequency } from "@/generated/prisma/client";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import { useClassAcademics } from "@/hooks/api/useClassAcademics";
@@ -386,9 +386,7 @@ export default function TuitionGeneratorForm() {
           color="blue"
           variant="light"
         >
-          <Text size="sm">
-            {t("tuition.generationNote")}
-          </Text>
+          <Text size="sm">{t("tuition.generationNote")}</Text>
         </Alert>
 
         {applicableDiscounts && applicableDiscounts.length > 0 && (
@@ -399,9 +397,7 @@ export default function TuitionGeneratorForm() {
             title={t("tuition.discountsWillApply")}
           >
             <Stack gap="xs">
-              <Text size="sm">
-                {t("tuition.autoApplyDiscounts")}
-              </Text>
+              <Text size="sm">{t("tuition.autoApplyDiscounts")}</Text>
               {applicableDiscounts.map((discount) => (
                 <Group key={discount.id} gap="xs">
                   <Badge color="green" variant="light">

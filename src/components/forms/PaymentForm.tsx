@@ -27,8 +27,8 @@ import {
   IconUser,
 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
 import type { PaymentStatus } from "@/generated/prisma/client";
 import { useCreatePayment } from "@/hooks/api/usePayments";
 import { useStudents } from "@/hooks/api/useStudents";
@@ -209,9 +209,7 @@ export default function PaymentForm() {
 
         {unpaidTuitions.length === 0 && studentNis && !loadingTuitions && (
           <Alert icon={<IconCheck size={18} />} color="green" variant="light">
-            <Text size="sm">
-              {t("payment.allComplete")}
-            </Text>
+            <Text size="sm">{t("payment.allComplete")}</Text>
           </Alert>
         )}
 

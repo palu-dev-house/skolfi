@@ -4,6 +4,8 @@ import { Button, Stack, Textarea, TextInput } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { useTranslations } from "next-intl";
+import { studentSchema } from "@/lib/validations";
+import { zodResolver } from "@/lib/validations/mantine-zod-resolver";
 
 interface StudentFormValues {
   nis: string;
@@ -58,20 +60,7 @@ export default function StudentForm({
         ? new Date(initialData.startJoinDate).toISOString()
         : null,
     },
-    validate: {
-      nis: (value) => (value.length < 1 ? t("student.nisRequired") : null),
-      nik: (value) =>
-        value.length !== 16 ? t("student.nikDigits") : null,
-      name: (value) => (value.length < 1 ? t("student.nameRequired") : null),
-      address: (value) =>
-        value.length < 1 ? t("student.addressRequired") : null,
-      parentName: (value) =>
-        value.length < 1 ? t("student.parentNameRequired") : null,
-      parentPhone: (value) =>
-        value.length < 10 ? t("student.phoneMinDigits") : null,
-      startJoinDate: (value) =>
-        !value ? t("student.startDateRequired") : null,
-    },
+    validate: zodResolver(studentSchema, t),
   });
 
   const handleSubmit = (values: StudentFormValues) => {
