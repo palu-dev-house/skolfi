@@ -20,7 +20,6 @@
 
 // Import to initialize all cron jobs
 import "./cleanup-cron";
-import "./payment-reminder-cron";
 // import "./payment-checker-cron"; // IMAP checker - add when implementing
 
 console.log("[Cron] All cron jobs initialized");
