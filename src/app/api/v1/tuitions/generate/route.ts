@@ -10,6 +10,10 @@ import {
   getRecordCountForFrequency,
 } from "@/lib/business-logic/tuition-generator";
 import { getServerT } from "@/lib/i18n-server";
+import {
+  generateIdempotencyKey,
+  withIdempotency,
+} from "@/lib/middleware/idempotency";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: NextRequest) {
@@ -86,113 +90,128 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate tuition records using the specified payment frequency
-    const tuitionsToCreate = generateTuitions({
-      classAcademicId,
-      frequency: paymentFrequency,
-      feeAmount,
-      periodDiscounts,
-      students: students.map((s) => ({
-        nis: s.nis,
-        startJoinDate: s.startJoinDate,
-      })),
-      academicYear: {
-        startDate: classAcademic.academicYear.startDate,
-        endDate: classAcademic.academicYear.endDate,
-      },
-    });
-
-    // Check for existing tuitions to avoid duplicates (using period instead of month)
-    const existingTuitions = await prisma.tuition.findMany({
-      where: {
-        classAcademicId,
-        studentNis: { in: students.map((s) => s.nis) },
-      },
-      select: {
-        studentNis: true,
-        period: true,
-        year: true,
-      },
-    });
-
-    const existingKeys = new Set(
-      existingTuitions.map((t) => `${t.studentNis}-${t.period}-${t.year}`),
+    const idempotencyKey = generateIdempotencyKey(
+      auth.employeeId,
+      "generate_tuitions",
+      { classAcademicId },
     );
+    const { isDuplicate, result } = await withIdempotency(
+      idempotencyKey,
+      async () => {
+        // Generate tuition records using the specified payment frequency
+        const tuitionsToCreate = generateTuitions({
+          classAcademicId,
+          frequency: paymentFrequency,
+          feeAmount,
+          periodDiscounts,
+          students: students.map((s) => ({
+            nis: s.nis,
+            startJoinDate: s.startJoinDate,
+          })),
+          academicYear: {
+            startDate: classAcademic.academicYear.startDate,
+            endDate: classAcademic.academicYear.endDate,
+          },
+        });
 
-    const newTuitions = tuitionsToCreate.filter(
-      (t) => !existingKeys.has(`${t.studentNis}-${t.period}-${t.year}`),
-    );
-
-    const skippedCount = tuitionsToCreate.length - newTuitions.length;
-
-    // Fetch applicable discounts for this class
-    const applicableDiscounts = await getApplicableDiscounts(
-      classAcademicId,
-      classAcademic.academicYearId,
-      prisma,
-    );
-
-    // Create new tuitions with discount applied
-    if (newTuitions.length > 0) {
-      await prisma.tuition.createMany({
-        data: newTuitions.map((t) => {
-          // Calculate discount for this period
-          const { discountAmount, discountId } = calculatePeriodDiscount(
-            t.period,
-            applicableDiscounts,
+        // Check for existing tuitions to avoid duplicates (using period instead of month)
+        const existingTuitions = await prisma.tuition.findMany({
+          where: {
             classAcademicId,
-          );
+            studentNis: { in: students.map((s) => s.nis) },
+          },
+          select: {
+            studentNis: true,
+            period: true,
+            year: true,
+          },
+        });
 
-          return {
-            classAcademicId: t.classAcademicId,
-            studentNis: t.studentNis,
-            period: t.period,
-            month: t.month, // For backward compatibility with MONTHLY frequency
-            year: t.year,
-            feeAmount: t.feeAmount,
-            dueDate: t.dueDate,
-            status: t.status,
-            discountAmount,
-            discountId,
-          };
-        }),
-      });
-    }
+        const existingKeys = new Set(
+          existingTuitions.map((t) => `${t.studentNis}-${t.period}-${t.year}`),
+        );
 
-    // Calculate statistics
-    const studentsWithFullYear = students.filter(
-      (s) => s.startJoinDate <= classAcademic.academicYear.startDate,
-    ).length;
-    const studentsWithPartialYear = students.length - studentsWithFullYear;
-    const recordsPerStudent = getRecordCountForFrequency(paymentFrequency);
+        const newTuitions = tuitionsToCreate.filter(
+          (t) => !existingKeys.has(`${t.studentNis}-${t.period}-${t.year}`),
+        );
 
-    // Calculate discount summary
-    const discountsApplied =
-      applicableDiscounts.length > 0
-        ? applicableDiscounts.map((d) => ({
-            id: d.id,
-            name: d.name,
-            amount: Number(d.discountAmount),
-            targetPeriods: d.targetPeriods,
-            scope: d.classAcademicId ? "Class-specific" : "School-wide",
-          }))
-        : [];
+        const skippedCount = tuitionsToCreate.length - newTuitions.length;
 
-    return successResponse({
-      generated: newTuitions.length,
-      skipped: skippedCount,
-      details: {
-        totalStudents: students.length,
-        studentsWithFullYear,
-        studentsWithPartialYear,
-        className: classAcademic.className,
-        academicYear: classAcademic.academicYear.year,
-        paymentFrequency,
-        feeAmount,
-        recordsPerStudent,
-        discountsApplied,
+        // Fetch applicable discounts for this class
+        const applicableDiscounts = await getApplicableDiscounts(
+          classAcademicId,
+          classAcademic.academicYearId,
+          prisma,
+        );
+
+        // Create new tuitions with discount applied
+        if (newTuitions.length > 0) {
+          await prisma.tuition.createMany({
+            data: newTuitions.map((t) => {
+              // Calculate discount for this period
+              const { discountAmount, discountId } = calculatePeriodDiscount(
+                t.period,
+                applicableDiscounts,
+                classAcademicId,
+              );
+
+              return {
+                classAcademicId: t.classAcademicId,
+                studentNis: t.studentNis,
+                period: t.period,
+                month: t.month, // For backward compatibility with MONTHLY frequency
+                year: t.year,
+                feeAmount: t.feeAmount,
+                dueDate: t.dueDate,
+                status: t.status,
+                discountAmount,
+                discountId,
+              };
+            }),
+          });
+        }
+
+        // Calculate statistics
+        const studentsWithFullYear = students.filter(
+          (s) => s.startJoinDate <= classAcademic.academicYear.startDate,
+        ).length;
+        const studentsWithPartialYear = students.length - studentsWithFullYear;
+        const recordsPerStudent = getRecordCountForFrequency(paymentFrequency);
+
+        // Calculate discount summary
+        const discountsApplied =
+          applicableDiscounts.length > 0
+            ? applicableDiscounts.map((d) => ({
+                id: d.id,
+                name: d.name,
+                amount: Number(d.discountAmount),
+                targetPeriods: d.targetPeriods,
+                scope: d.classAcademicId ? "Class-specific" : "School-wide",
+              }))
+            : [];
+
+        return {
+          generated: newTuitions.length,
+          skipped: skippedCount,
+          details: {
+            totalStudents: students.length,
+            studentsWithFullYear,
+            studentsWithPartialYear,
+            className: classAcademic.className,
+            academicYear: classAcademic.academicYear.year,
+            paymentFrequency,
+            feeAmount,
+            recordsPerStudent,
+            discountsApplied,
+          },
+        };
       },
-    });
+    );
+
+    if (isDuplicate) {
+      return successResponse({ ...result, _idempotent: true });
+    }
+    return successResponse(result);
   } catch (error) {
     console.error("Generate tuitions error:", error);
     return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);

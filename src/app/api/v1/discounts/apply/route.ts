@@ -6,6 +6,10 @@ import {
   previewDiscountApplication,
 } from "@/lib/business-logic/discount-processor";
 import { getServerT } from "@/lib/i18n-server";
+import {
+  generateIdempotencyKey,
+  withIdempotency,
+} from "@/lib/middleware/idempotency";
 import { prisma } from "@/lib/prisma";
 import { discountApplySchema } from "@/lib/validations";
 import { parseWithLocale } from "@/lib/validations/parse-with-locale";
@@ -80,24 +84,38 @@ export async function POST(request: NextRequest) {
     }
 
     // Apply the discount
-    const results = await applyDiscountToTuitions(discountId, prisma);
+    const idempotencyKey = generateIdempotencyKey(
+      auth.employeeId,
+      "apply_discount",
+      { discountId },
+    );
+    const { isDuplicate, result } = await withIdempotency(
+      idempotencyKey,
+      async () => {
+        const results = await applyDiscountToTuitions(discountId, prisma);
+        return {
+          applied: true,
+          discount: {
+            id: discount.id,
+            name: discount.name,
+            discountAmount: Number(discount.discountAmount),
+          },
+          results: {
+            tuitionsUpdated: results.length,
+            totalDiscountApplied: results.reduce(
+              (sum, r) => sum + r.discountAmount,
+              0,
+            ),
+            details: results.slice(0, 100), // Limit details to first 100
+          },
+        };
+      },
+    );
 
-    return successResponse({
-      applied: true,
-      discount: {
-        id: discount.id,
-        name: discount.name,
-        discountAmount: Number(discount.discountAmount),
-      },
-      results: {
-        tuitionsUpdated: results.length,
-        totalDiscountApplied: results.reduce(
-          (sum, r) => sum + r.discountAmount,
-          0,
-        ),
-        details: results.slice(0, 100), // Limit details to first 100
-      },
-    });
+    if (isDuplicate) {
+      return successResponse({ ...result, _idempotent: true });
+    }
+    return successResponse(result);
   } catch (error) {
     console.error("Apply discount error:", error);
     const message =

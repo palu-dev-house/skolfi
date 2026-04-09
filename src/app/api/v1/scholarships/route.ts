@@ -7,6 +7,10 @@ import {
   getClassFeeAmount,
 } from "@/lib/business-logic/scholarship-processor";
 import { getServerT } from "@/lib/i18n-server";
+import {
+  generateIdempotencyKey,
+  withIdempotency,
+} from "@/lib/middleware/idempotency";
 import { prisma } from "@/lib/prisma";
 import { scholarshipSchema } from "@/lib/validations";
 import { parseWithLocale } from "@/lib/validations/parse-with-locale";
@@ -105,67 +109,76 @@ export async function POST(request: NextRequest) {
       return errorResponse(t("api.notFound", { resource: "Class" }), "NOT_FOUND", 404);
     }
 
-    // Get fee amount from existing tuitions
-    const feeAmount = await getClassFeeAmount(classAcademicId, prisma);
-
-    // Get existing scholarships for this student+class to calculate total
-    const existingScholarships = await prisma.scholarship.findMany({
-      where: { studentNis, classAcademicId },
-    });
-    const existingTotal = existingScholarships.reduce(
-      (sum, s) => sum + Number(s.nominal),
-      0,
+    const idempotencyKey = generateIdempotencyKey(
+      auth.employeeId,
+      "create_scholarship",
+      { studentNis, classAcademicId, nominal },
     );
-    const newTotal = existingTotal + nominal;
+    const { isDuplicate, result } = await withIdempotency(
+      idempotencyKey,
+      async () => {
+        // Get fee amount from existing tuitions
+        const feeAmount = await getClassFeeAmount(classAcademicId, prisma);
 
-    // Determine if this makes it a full scholarship (total >= fee)
-    // Only mark as full if we know the actual fee and scholarship covers it
-    const isFullScholarship = feeAmount ? newTotal >= feeAmount : false;
+        // Get existing scholarships for this student+class to calculate total
+        const existingScholarships = await prisma.scholarship.findMany({
+          where: { studentNis, classAcademicId },
+        });
+        const existingTotal = existingScholarships.reduce(
+          (sum, s) => sum + Number(s.nominal),
+          0,
+        );
+        const newTotal = existingTotal + nominal;
 
-    // Create scholarship
-    const scholarship = await prisma.scholarship.create({
-      data: {
-        studentNis,
-        classAcademicId,
-        name: name || "Scholarship",
-        nominal,
-        isFullScholarship,
-      },
-      include: {
-        student: { select: { nis: true, name: true } },
-        classAcademic: { select: { className: true } },
-      },
-    });
+        // Determine if this makes it a full scholarship (total >= fee)
+        // Only mark as full if we know the actual fee and scholarship covers it
+        const isFullScholarship = feeAmount ? newTotal >= feeAmount : false;
 
-    // Apply scholarship (auto-pay tuitions if total scholarships cover the fee)
-    let applicationResult = null;
-    if (isFullScholarship && feeAmount) {
-      // Get admin employee for system payment
-      const adminEmployee = await prisma.employee.findFirst({
-        where: { role: "ADMIN" },
-      });
-
-      if (adminEmployee) {
-        applicationResult = await applyScholarship(
-          {
+        // Create scholarship
+        const scholarship = await prisma.scholarship.create({
+          data: {
             studentNis,
             classAcademicId,
-            nominal: newTotal, // Use total scholarship amount
-            monthlyFee: feeAmount,
+            name: name || "Scholarship",
+            nominal,
+            isFullScholarship,
           },
-          prisma,
-          adminEmployee.employeeId,
-        );
-      }
-    }
+          include: {
+            student: { select: { nis: true, name: true } },
+            classAcademic: { select: { className: true } },
+          },
+        });
 
-    return successResponse(
-      {
-        scholarship,
-        applicationResult,
+        // Apply scholarship (auto-pay tuitions if total scholarships cover the fee)
+        let applicationResult = null;
+        if (isFullScholarship && feeAmount) {
+          // Get admin employee for system payment
+          const adminEmployee = await prisma.employee.findFirst({
+            where: { role: "ADMIN" },
+          });
+
+          if (adminEmployee) {
+            applicationResult = await applyScholarship(
+              {
+                studentNis,
+                classAcademicId,
+                nominal: newTotal, // Use total scholarship amount
+                monthlyFee: feeAmount,
+              },
+              prisma,
+              adminEmployee.employeeId,
+            );
+          }
+        }
+
+        return { scholarship, applicationResult };
       },
-      201,
     );
+
+    if (isDuplicate) {
+      return successResponse({ ...result, _idempotent: true });
+    }
+    return successResponse(result, 201);
   } catch (error) {
     console.error("Create scholarship error:", error);
     return errorResponse(t("api.internalError"), "SERVER_ERROR", 500);

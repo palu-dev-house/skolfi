@@ -2,6 +2,10 @@ import type { NextRequest } from "next/server";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { cancelPaymentRequest } from "@/lib/business-logic/payment-request";
 import { getServerT } from "@/lib/i18n-server";
+import {
+  generateIdempotencyKey,
+  withIdempotency,
+} from "@/lib/middleware/idempotency";
 import { getStudentSessionFromRequest } from "@/lib/student-auth";
 
 export async function POST(
@@ -16,8 +20,22 @@ export async function POST(
     }
 
     const { id } = await params;
-    const result = await cancelPaymentRequest(id, session.studentNis);
 
+    const idempotencyKey = generateIdempotencyKey(
+      session.studentNis,
+      "cancel_payment",
+      { paymentRequestId: id },
+    );
+    const { isDuplicate, result } = await withIdempotency(
+      idempotencyKey,
+      async () => {
+        return cancelPaymentRequest(id, session.studentNis);
+      },
+    );
+
+    if (isDuplicate) {
+      return successResponse({ ...result, _idempotent: true });
+    }
     return successResponse(result);
   } catch (error) {
     console.error("Cancel payment request error:", error);
