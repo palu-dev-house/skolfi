@@ -136,6 +136,28 @@ export function useCreatePayment() {
   });
 }
 
+export function useBulkReversePayments() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { data } = await apiClient.post<{
+        success: boolean;
+        data: { reversed: number };
+      }>("/payments/bulk-reverse", { ids });
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.payments.lists(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.tuitions.lists(),
+      });
+    },
+  });
+}
+
 export function useDeletePayment() {
   const queryClient = useQueryClient();
 

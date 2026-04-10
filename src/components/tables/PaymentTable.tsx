@@ -3,6 +3,8 @@
 import {
   ActionIcon,
   Badge,
+  Button,
+  Checkbox,
   Group,
   NumberFormatter,
   Paper,
@@ -20,18 +22,25 @@ import {
   IconDiscount,
   IconFilter,
   IconGift,
+  IconRefresh,
   IconSearch,
   IconTrash,
+  IconX,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import ColumnSettingsDrawer, {
   useColumnSettings,
 } from "@/components/ui/ColumnSettingsDrawer";
 import TablePagination from "@/components/ui/TablePagination";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import { useClassAcademics } from "@/hooks/api/useClassAcademics";
-import { useDeletePayment, usePayments } from "@/hooks/api/usePayments";
+import {
+  useBulkReversePayments,
+  useDeletePayment,
+  usePayments,
+} from "@/hooks/api/usePayments";
 import { useAuth } from "@/hooks/useAuth";
 import { useQueryParams } from "@/hooks/useQueryParams";
 import { getMonthDisplayName } from "@/lib/business-logic/tuition-generator";
@@ -54,7 +63,7 @@ export default function PaymentTable() {
     academicYearId: activeYear?.id,
   });
 
-  const { data, isLoading } = usePayments({
+  const { data, isLoading, refetch, isFetching } = usePayments({
     page,
     limit: 10,
     classAcademicId: classAcademicId || undefined,
@@ -63,7 +72,70 @@ export default function PaymentTable() {
     paymentDateTo: dateTo || undefined,
   });
 
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   const deletePayment = useDeletePayment();
+  const bulkReverse = useBulkReversePayments();
+
+  const paymentIds = data?.payments.map((p) => p.id) || [];
+  const allSelected =
+    paymentIds.length > 0 && paymentIds.every((id) => selectedIds.has(id));
+  const someSelected = paymentIds.some((id) => selectedIds.has(id));
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paymentIds));
+    }
+  };
+
+  const toggleOne = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkReverse = () => {
+    const ids = Array.from(selectedIds);
+    modals.openConfirmModal({
+      title: t("payment.bulk.reverseTitle"),
+      children: (
+        <Text size="sm">
+          {t("payment.bulk.reverseConfirm", { count: ids.length })}
+        </Text>
+      ),
+      labels: {
+        confirm: t("payment.reverseButton"),
+        cancel: t("common.cancel"),
+      },
+      confirmProps: { color: "red" },
+      onConfirm: () => {
+        bulkReverse.mutate(ids, {
+          onSuccess: (result) => {
+            notifications.show({
+              title: t("common.success"),
+              message: t("payment.bulk.reverseSuccess", {
+                reversed: result.reversed,
+              }),
+              color: "green",
+            });
+            setSelectedIds(new Set());
+          },
+          onError: (error) => {
+            notifications.show({
+              title: t("common.error"),
+              message: error.message,
+              color: "red",
+            });
+          },
+        });
+      },
+    });
+  };
 
   const handleDelete = (id: string, studentName: string, amount: string) => {
     modals.openConfirmModal({
@@ -171,18 +243,61 @@ export default function PaymentTable() {
               setParams({ dateTo: e.currentTarget.value, page: 1 })
             }
           />
+          <Group gap="xs" style={{ flexGrow: 0 }}>
+            <ActionIcon variant="default" size="lg" onClick={() => refetch()} loading={isFetching}>
+              <IconRefresh size={18} />
+            </ActionIcon>
+            <ColumnSettingsDrawer tableId="payments" columnDefs={columnDefs} />
+          </Group>
         </Group>
       </Paper>
 
-      <Group justify="flex-end">
-        <ColumnSettingsDrawer tableId="payments" columnDefs={columnDefs} />
-      </Group>
+      {isAdmin && selectedIds.size > 0 && (
+        <Paper withBorder p="sm" bg="blue.0">
+          <Group justify="space-between">
+            <Group gap="sm">
+              <Text size="sm" fw={500}>
+                {t("payment.bulk.selected", { count: selectedIds.size })}
+              </Text>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                onClick={() => setSelectedIds(new Set())}
+              >
+                <IconX size={14} />
+              </ActionIcon>
+            </Group>
+            <Group gap="xs">
+              <Button
+                size="xs"
+                variant="light"
+                color="red"
+                leftSection={<IconTrash size={14} />}
+                onClick={handleBulkReverse}
+                loading={bulkReverse.isPending}
+              >
+                {t("payment.bulk.reverse")}
+              </Button>
+            </Group>
+          </Group>
+        </Paper>
+      )}
 
       <Paper withBorder>
         <Table.ScrollContainer minWidth={900}>
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
+                {isAdmin && (
+                  <Table.Th w={40}>
+                    <Checkbox
+                      checked={allSelected}
+                      indeterminate={someSelected && !allSelected}
+                      onChange={toggleAll}
+                      size="xs"
+                    />
+                  </Table.Th>
+                )}
                 {orderedKeys.map((key) => {
                   switch (key) {
                     case "date":
@@ -229,6 +344,11 @@ export default function PaymentTable() {
               {isLoading &&
                 Array.from({ length: 5 }).map((_, i) => (
                   <Table.Tr key={`skeleton-${i}`}>
+                    {isAdmin && (
+                      <Table.Td>
+                        <Skeleton height={20} width={20} />
+                      </Table.Td>
+                    )}
                     {Array.from({ length: orderedKeys.length }).map((_, j) => (
                       <Table.Td key={`skeleton-cell-${j}`}>
                         <Skeleton height={20} />
@@ -238,7 +358,9 @@ export default function PaymentTable() {
                 ))}
               {!isLoading && data?.payments.length === 0 && (
                 <Table.Tr>
-                  <Table.Td colSpan={orderedKeys.length}>
+                  <Table.Td
+                    colSpan={orderedKeys.length + (isAdmin ? 1 : 0)}
+                  >
                     <Text ta="center" c="dimmed" py="md">
                       {t("payment.notFound")}
                     </Text>
@@ -246,7 +368,23 @@ export default function PaymentTable() {
                 </Table.Tr>
               )}
               {data?.payments.map((payment) => (
-                <Table.Tr key={payment.id}>
+                <Table.Tr
+                  key={payment.id}
+                  bg={
+                    isAdmin && selectedIds.has(payment.id)
+                      ? "var(--mantine-color-blue-light)"
+                      : undefined
+                  }
+                >
+                  {isAdmin && (
+                    <Table.Td>
+                      <Checkbox
+                        checked={selectedIds.has(payment.id)}
+                        onChange={() => toggleOne(payment.id)}
+                        size="xs"
+                      />
+                    </Table.Td>
+                  )}
                   {orderedKeys.map((key) => {
                     switch (key) {
                       case "date":

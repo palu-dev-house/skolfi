@@ -239,3 +239,25 @@ export function useDeleteTuition() {
     },
   });
 }
+
+export function useMassUpdateTuitions() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      tuitionIds: string[];
+      status: PaymentStatus;
+    }) => {
+      const { data } = await apiClient.put<{
+        success: boolean;
+        data: { updated: number; status: string };
+      }>("/tuitions/mass-update", params);
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.tuitions.lists(),
+      });
+    },
+  });
+}

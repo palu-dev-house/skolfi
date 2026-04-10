@@ -4,7 +4,6 @@ import {
   ActionIcon,
   Alert,
   Badge,
-  Button,
   Card,
   Group,
   Menu,
@@ -172,17 +171,7 @@ export default function StudentAccountsPage() {
 
   return (
     <Stack gap="lg">
-      <Group justify="space-between">
-        <Title order={3}>{t("studentAccount.title")}</Title>
-        <Button
-          leftSection={<IconRefresh size={18} />}
-          variant="outline"
-          onClick={() => refetch()}
-          loading={isLoading}
-        >
-          {t("studentAccount.refresh")}
-        </Button>
-      </Group>
+      <Title order={3}>{t("studentAccount.title")}</Title>
 
       {error && (
         <Alert icon={<IconAlertCircle size={18} />} color="red" variant="light">
@@ -211,6 +200,9 @@ export default function StudentAccountsPage() {
                 setPage(1);
               }}
             />
+            <ActionIcon variant="default" size="lg" onClick={() => refetch()} loading={isLoading}>
+              <IconRefresh size={18} />
+            </ActionIcon>
           </Group>
 
           {isLoading ? (

@@ -174,6 +174,7 @@
       "unpaid": "Unpaid",
       "partial": "Partial",
       "paid": "Paid",
+      "void": "Void",
       "all": "All Status"
     },
     "overdue": "Overdue",
@@ -244,7 +245,17 @@
     "generatedSuccess": "Successfully generated {count} tuition records",
     "paymentConfig": "Payment Configuration",
     "selectAcademicYear": "Select academic year",
-    "selectClassPlaceholder": "Select class"
+    "selectClassPlaceholder": "Select class",
+    "massUpdate": {
+      "title": "Update Payment Status",
+      "confirm": "Are you sure you want to update {count} tuitions to {status}?",
+      "success": "Successfully updated {count} tuitions",
+      "selected": "{count} selected",
+      "markVoid": "Mark as Void",
+      "markUnpaid": "Mark as Unpaid",
+      "markPaid": "Mark as Paid",
+      "cannotVoidWithPayments": "Cannot void tuitions that already have payments"
+    }
   },
   "payment": {
     "title": "Payment",
@@ -375,7 +386,14 @@
     "effectiveFee": "Effective Fee:",
     "scholarshipDeduction": "Scholarship:",
     "discountDeduction": "Discount:",
-    "validationTuitionAmount": "Please select a tuition and enter an amount"
+    "validationTuitionAmount": "Please select a tuition and enter an amount",
+    "bulk": {
+      "selected": "{count} selected",
+      "reverse": "Reverse Selected",
+      "reverseTitle": "Bulk Reverse Payments",
+      "reverseConfirm": "Are you sure you want to reverse {count} payments? This will update tuition statuses accordingly.",
+      "reverseSuccess": "Reversed {reversed} payments"
+    }
   },
   "nav": {
     "home": "Home",
@@ -480,7 +498,15 @@
     "defaultPasswordNote": "Employee created with default password (123456)",
     "notFoundMessage": "Employee not found",
     "editDescription": "Editing {name}",
-    "addDescription": "Create a new employee account"
+    "addDescription": "Create a new employee account",
+    "bulk": {
+      "selected": "{count} selected",
+      "delete": "Delete Selected",
+      "deleteTitle": "Bulk Delete Employees",
+      "deleteConfirm": "Are you sure you want to delete {count} employees? Employees with payment records will be skipped.",
+      "deleteSuccess": "Deleted {deleted} employees",
+      "deleteSkipped": "{count} employees skipped (have payment records): {names}"
+    }
   },
   "student": {
     "title": "Students",
@@ -553,7 +579,22 @@
     "chooseFile": "Choose .xlsx file",
     "processImport": "Process Import",
     "importedCount": "Imported: {count}, Updated: {updated}",
-    "rowErrors": "{count} rows had errors"
+    "rowErrors": "{count} rows had errors",
+    "bulk": {
+      "selected": "{count} selected",
+      "selectAtLeastOne": "Select at least one student",
+      "noUpdates": "No updates provided",
+      "deleteTitle": "Bulk Delete Students",
+      "deleteConfirm": "Are you sure you want to delete {count} students? Students with payment records will be skipped.",
+      "deleteSuccess": "Deleted {deleted} students",
+      "deleteSkipped": "{count} students skipped (have payment records): {names}",
+      "updateJoinDate": "Update Join Date",
+      "updateTitle": "Bulk Update Students",
+      "updateConfirm": "Update join date for {count} students?",
+      "updateSuccess": "Updated {count} students",
+      "delete": "Delete Selected",
+      "update": "Update Join Date"
+    }
   },
   "academicYear": {
     "title": "Academic Years",
@@ -691,7 +732,15 @@
     "importClassesDescription": "Import academic classes from Excel file",
     "importClassesSuccess": "Imported {count} classes",
     "importStudentsDescription": "Import student records from Excel file",
-    "importStudentsSuccess": "Imported {imported}, updated {updated} students"
+    "importStudentsSuccess": "Imported {imported}, updated {updated} students",
+    "bulk": {
+      "selected": "{count} selected",
+      "delete": "Delete Selected",
+      "deleteTitle": "Bulk Delete Classes",
+      "deleteConfirm": "Are you sure you want to delete {count} classes? Classes with students or tuitions will be skipped.",
+      "deleteSuccess": "Deleted {deleted} classes",
+      "deleteSkipped": "{count} classes skipped (have students/tuitions): {names}"
+    }
   },
   "scholarship": {
     "title": "Scholarships",
@@ -768,7 +817,20 @@
     "processImport": "Process Import",
     "instructions": "Instructions:",
     "rowErrors": "{count} rows had errors:",
-    "andMoreErrors": "... and {count} more errors"
+    "andMoreErrors": "... and {count} more errors",
+    "bulk": {
+      "selected": "{count} selected",
+      "delete": "Delete Selected",
+      "deleteTitle": "Bulk Delete Scholarships",
+      "deleteConfirm": "Are you sure you want to delete {count} scholarships?",
+      "deleteSuccess": "Deleted {deleted} scholarships",
+      "updateAmount": "Update Amount",
+      "updateAmountTitle": "Bulk Update Scholarship Amount",
+      "updateAmountConfirm": "Update amount for {count} scholarships?",
+      "updateSuccess": "Updated {count} scholarships",
+      "markFull": "Mark as Full",
+      "markPartial": "Mark as Partial"
+    }
   },
   "discount": {
     "title": "Discounts",
@@ -869,7 +931,21 @@
     "instructions": "Instructions:",
     "rowErrors": "{count} rows had errors:",
     "andMoreErrors": "... and {count} more errors",
-    "tuitionsAffected": "Tuitions affected: {count}"
+    "tuitionsAffected": "Tuitions affected: {count}",
+    "bulk": {
+      "selected": "{count} selected",
+      "delete": "Delete Selected",
+      "deleteTitle": "Bulk Delete Discounts",
+      "deleteConfirm": "Are you sure you want to delete {count} discounts?",
+      "deleteSuccess": "Deleted {deleted} discounts",
+      "deleteSkipped": "{count} discounts skipped (applied to tuitions): {names}",
+      "updateAmount": "Update Amount",
+      "updateAmountTitle": "Bulk Update Discount Amount",
+      "updateAmountConfirm": "Update amount for {count} discounts?",
+      "updateSuccess": "Updated {count} discounts",
+      "activate": "Activate",
+      "deactivate": "Deactivate"
+    }
   },
   "studentAccount": {
     "title": "Student Accounts",
@@ -940,7 +1016,29 @@
       "totalPaid": "Total Paid",
       "totalUnpaid": "Total Unpaid",
       "percentage": "Payment Percentage",
-      "filterByYear": "Filter by Academic Year"
+      "filterByYear": "Filter by Academic Year",
+      "paidTuitions": "Paid Tuitions",
+      "partialPayments": "Partial Payments",
+      "unpaidTuitions": "Unpaid Tuitions",
+      "paymentProgress": "Overall Payment Progress",
+      "totalFees": "Total Fees",
+      "scholarships": "Scholarships",
+      "discounts": "Discounts",
+      "netAmountDue": "Net Amount Due",
+      "totalCollected": "Total Collected",
+      "outstanding": "Outstanding",
+      "collectionRate": "Collection Rate",
+      "afterScholarships": "after scholarships",
+      "selectYear": "Select Academic Year",
+      "students": "Students",
+      "tuitions": "Tuitions",
+      "paid": "Paid",
+      "partial": "Partial",
+      "unpaid": "Unpaid",
+      "scholarshipDiscount": "Scholarship Discount",
+      "discountAmount": "Discount Amount",
+      "collected": "Collected",
+      "noData": "No data available for this academic year"
     },
     "studentsWithOverdue": "Students with Overdue",
     "totalOverdueRecords": "Total Overdue Records",
@@ -1072,6 +1170,12 @@
     "history": "Payment History",
     "allPaid": "All tuitions are paid!",
     "maintenance": "Online payment is currently under maintenance. Please try again later."
+  },
+  "history": {
+    "totalFee": "Total Fee",
+    "totalPaid": "Total Paid",
+    "remaining": "Remaining",
+    "allYears": "All Academic Years"
   },
   "paymentSettings": {
     "title": "Payment Settings",

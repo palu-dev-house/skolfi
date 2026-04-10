@@ -68,8 +68,8 @@ export async function createSnapTransaction(
         .toISOString()
         .replace("T", " ")
         .replace(/\.\d+Z$/, " +0700"),
-      unit: "hour",
-      duration: 24,
+      unit: "minute",
+      duration: 10, // 5 min payment + 5 min buffer
     },
   };
 

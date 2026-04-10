@@ -75,6 +75,8 @@ export default function StudentDashboardPage() {
         return "green";
       case "PARTIAL":
         return "yellow";
+      case "VOID":
+        return "gray";
       default:
         return "red";
     }
@@ -91,12 +93,16 @@ export default function StudentDashboardPage() {
     }
   };
 
-  const totalUnpaid = tuitions
+  const activeTuitions = tuitions.filter((t) => t.status !== "VOID");
+
+  const totalUnpaid = activeTuitions
     .filter((t) => t.status !== "PAID")
     .reduce((sum, t) => sum + t.remainingAmount, 0);
 
-  const paidCount = tuitions.filter((t) => t.status === "PAID").length;
-  const pendingCount = tuitions.filter((t) => t.status !== "PAID").length;
+  const paidCount = activeTuitions.filter((t) => t.status === "PAID").length;
+  const pendingCount = activeTuitions.filter(
+    (t) => t.status !== "PAID",
+  ).length;
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -105,13 +111,13 @@ export default function StudentDashboardPage() {
   return (
     <Stack gap="lg">
       {/* Welcome Header */}
-      <Card p="lg" radius="md" bg="blue.6">
+      <Card p="lg" radius="md" withBorder>
         <Group justify="space-between" align="flex-start">
           <Box>
-            <Text size="lg" fw={600} c="white">
+            <Text size="lg" fw={600}>
               {t("dashboard.summary")}
             </Text>
-            <Text size="sm" c="white" opacity={0.85}>
+            <Text size="sm" c="dimmed">
               {groupedTuitions.length > 0
                 ? t("dashboard.registeredClasses", {
                     count: groupedTuitions.length,
@@ -119,8 +125,8 @@ export default function StudentDashboardPage() {
                 : t("dashboard.noDataYet")}
             </Text>
           </Box>
-          <ThemeIcon size={48} radius="xl" variant="white" color="blue">
-            <IconCalendar size={24} />
+          <ThemeIcon size={42} radius="xl" variant="light" color="dark">
+            <IconCalendar size={20} />
           </ThemeIcon>
         </Group>
       </Card>
@@ -417,19 +423,17 @@ export default function StudentDashboardPage() {
         />
       )}
 
-      {/* Sticky Pay Button */}
+      {/* Pay Now Link */}
       {totalUnpaid > 0 && (
-        <Card pos="sticky" px={0} bg="transparent" bottom={0}>
-          <Button
-            component={Link}
-            href="/portal/payment"
-            size="lg"
-            radius="md"
-            leftSection={<IconCreditCard size={20} />}
-          >
-            {t("dashboard.payNow")}
-          </Button>
-        </Card>
+        <Button
+          component={Link}
+          href="/portal/payment"
+          size="lg"
+          radius="md"
+          leftSection={<IconCreditCard size={20} />}
+        >
+          {t("dashboard.payNow")}
+        </Button>
       )}
     </Stack>
   );

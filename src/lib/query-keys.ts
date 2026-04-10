@@ -32,7 +32,7 @@ export interface TuitionFilters {
   limit?: number;
   classAcademicId?: string;
   studentNis?: string;
-  status?: "UNPAID" | "PAID" | "PARTIAL";
+  status?: "UNPAID" | "PAID" | "PARTIAL" | "VOID";
   period?: string;
   month?: string; // Backward compatibility
   year?: number;

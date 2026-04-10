@@ -2,6 +2,8 @@
 
 import {
   ActionIcon,
+  Button,
+  Checkbox,
   Group,
   Paper,
   Skeleton,
@@ -10,17 +12,31 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
-import { IconEdit, IconSearch, IconTrash } from "@tabler/icons-react";
+import {
+  IconCalendar,
+  IconEdit,
+  IconRefresh,
+  IconSearch,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import ColumnSettingsDrawer, {
   useColumnSettings,
 } from "@/components/ui/ColumnSettingsDrawer";
 import TablePagination from "@/components/ui/TablePagination";
-import { useDeleteStudent, useStudents } from "@/hooks/api/useStudents";
+import {
+  useBulkDeleteStudents,
+  useBulkUpdateStudents,
+  useDeleteStudent,
+  useStudents,
+} from "@/hooks/api/useStudents";
 import { useQueryParams } from "@/hooks/useQueryParams";
 
 export default function StudentTable() {
@@ -29,6 +45,8 @@ export default function StudentTable() {
   const { setParams, getParam, getNumParam } = useQueryParams();
   const page = getNumParam("page", 1)!;
   const search = getParam("search", "") ?? "";
+
+  const [selectedNis, setSelectedNis] = useState<Set<string>>(new Set());
 
   const columnDefs = [
     { key: "nis", label: t("student.nis") },
@@ -39,18 +57,114 @@ export default function StudentTable() {
     { key: "actions", label: t("common.actions") },
   ];
 
-  const { visibleKeys, orderedKeys } = useColumnSettings(
-    "students",
-    columnDefs,
-  );
+  const { orderedKeys } = useColumnSettings("students", columnDefs);
 
-  const { data, isLoading } = useStudents({
+  const { data, isLoading, refetch, isFetching } = useStudents({
     page,
     limit: 10,
     search: search || undefined,
   });
 
   const deleteStudent = useDeleteStudent();
+  const bulkDelete = useBulkDeleteStudents();
+  const bulkUpdate = useBulkUpdateStudents();
+
+  const studentNisList = data?.students.map((s) => s.nis) || [];
+  const allSelected =
+    studentNisList.length > 0 &&
+    studentNisList.every((nis) => selectedNis.has(nis));
+  const someSelected = studentNisList.some((nis) => selectedNis.has(nis));
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedNis(new Set());
+    } else {
+      setSelectedNis(new Set(studentNisList));
+    }
+  };
+
+  const toggleOne = (nis: string) => {
+    setSelectedNis((prev) => {
+      const next = new Set(prev);
+      if (next.has(nis)) next.delete(nis);
+      else next.add(nis);
+      return next;
+    });
+  };
+
+  const handleBulkDelete = () => {
+    const nisList = Array.from(selectedNis);
+    modals.openConfirmModal({
+      title: t("student.bulk.deleteTitle"),
+      children: (
+        <Text size="sm">
+          {t("student.bulk.deleteConfirm", { count: nisList.length })}
+        </Text>
+      ),
+      labels: { confirm: t("common.delete"), cancel: t("common.cancel") },
+      confirmProps: { color: "red" },
+      onConfirm: () => {
+        bulkDelete.mutate(nisList, {
+          onSuccess: (result) => {
+            notifications.show({
+              title: t("common.success"),
+              message: t("student.bulk.deleteSuccess", {
+                deleted: result.deleted,
+              }),
+              color: "green",
+            });
+            if (result.skipped.length > 0) {
+              notifications.show({
+                title: t("common.warning"),
+                message: t("student.bulk.deleteSkipped", {
+                  count: result.skipped.length,
+                  names: result.skipped.map((s) => s.name).join(", "),
+                }),
+                color: "orange",
+                autoClose: 8000,
+              });
+            }
+            setSelectedNis(new Set());
+          },
+          onError: (error) => {
+            notifications.show({
+              title: t("common.error"),
+              message: error.message,
+              color: "red",
+            });
+          },
+        });
+      },
+    });
+  };
+
+  const handleBulkUpdateJoinDate = () => {
+    const nisList = Array.from(selectedNis);
+
+    modals.open({
+      title: t("student.bulk.updateTitle"),
+      children: (
+        <BulkUpdateJoinDateForm
+          nisList={nisList}
+          onSuccess={(count) => {
+            setSelectedNis(new Set());
+            notifications.show({
+              title: t("common.success"),
+              message: t("student.bulk.updateSuccess", { count }),
+              color: "green",
+            });
+          }}
+          onError={(msg) => {
+            notifications.show({
+              title: t("common.error"),
+              message: msg,
+              color: "red",
+            });
+          }}
+        />
+      ),
+    });
+  };
 
   const handleDelete = (nis: string, name: string) => {
     modals.openConfirmModal({
@@ -99,14 +213,65 @@ export default function StudentTable() {
           }}
           style={{ flex: 1 }}
         />
+        <ActionIcon variant="default" size="lg" onClick={() => refetch()} loading={isFetching}>
+          <IconRefresh size={18} />
+        </ActionIcon>
         <ColumnSettingsDrawer tableId="students" columnDefs={columnDefs} />
       </Group>
+
+      {selectedNis.size > 0 && (
+        <Paper withBorder p="sm" bg="blue.0">
+          <Group justify="space-between">
+            <Group gap="sm">
+              <Text size="sm" fw={500}>
+                {t("student.bulk.selected", { count: selectedNis.size })}
+              </Text>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                onClick={() => setSelectedNis(new Set())}
+              >
+                <IconX size={14} />
+              </ActionIcon>
+            </Group>
+            <Group gap="xs">
+              <Button
+                size="xs"
+                variant="light"
+                leftSection={<IconCalendar size={14} />}
+                onClick={handleBulkUpdateJoinDate}
+                loading={bulkUpdate.isPending}
+              >
+                {t("student.bulk.update")}
+              </Button>
+              <Button
+                size="xs"
+                variant="light"
+                color="red"
+                leftSection={<IconTrash size={14} />}
+                onClick={handleBulkDelete}
+                loading={bulkDelete.isPending}
+              >
+                {t("student.bulk.delete")}
+              </Button>
+            </Group>
+          </Group>
+        </Paper>
+      )}
 
       <Paper withBorder>
         <Table.ScrollContainer minWidth={700}>
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
+                <Table.Th w={40}>
+                  <Checkbox
+                    checked={allSelected}
+                    indeterminate={someSelected && !allSelected}
+                    onChange={toggleAll}
+                    size="xs"
+                  />
+                </Table.Th>
                 {orderedKeys.map((key) => {
                   switch (key) {
                     case "nis":
@@ -141,6 +306,9 @@ export default function StudentTable() {
               {isLoading &&
                 Array.from({ length: 5 }).map((_, i) => (
                   <Table.Tr key={`skeleton-${i}`}>
+                    <Table.Td>
+                      <Skeleton height={20} width={20} />
+                    </Table.Td>
                     {Array.from({ length: orderedKeys.length }).map((_, j) => (
                       <Table.Td key={`skeleton-cell-${j}`}>
                         <Skeleton height={20} />
@@ -150,7 +318,7 @@ export default function StudentTable() {
                 ))}
               {!isLoading && data?.students.length === 0 && (
                 <Table.Tr>
-                  <Table.Td colSpan={orderedKeys.length}>
+                  <Table.Td colSpan={orderedKeys.length + 1}>
                     <Text ta="center" c="dimmed" py="md">
                       {t("student.notFound")}
                     </Text>
@@ -158,7 +326,21 @@ export default function StudentTable() {
                 </Table.Tr>
               )}
               {data?.students.map((student) => (
-                <Table.Tr key={student.nis}>
+                <Table.Tr
+                  key={student.nis}
+                  bg={
+                    selectedNis.has(student.nis)
+                      ? "var(--mantine-color-blue-light)"
+                      : undefined
+                  }
+                >
+                  <Table.Td>
+                    <Checkbox
+                      checked={selectedNis.has(student.nis)}
+                      onChange={() => toggleOne(student.nis)}
+                      size="xs"
+                    />
+                  </Table.Td>
                   {orderedKeys.map((key) => {
                     switch (key) {
                       case "nis":
@@ -222,6 +404,67 @@ export default function StudentTable() {
           onChange={(p) => setParams({ page: p })}
         />
       )}
+    </Stack>
+  );
+}
+
+function BulkUpdateJoinDateForm({
+  nisList,
+  onSuccess,
+  onError,
+}: {
+  nisList: string[];
+  onSuccess: (count: number) => void;
+  onError: (msg: string) => void;
+}) {
+  const t = useTranslations();
+  const [date, setDate] = useState<Date | null>(null);
+  const bulkUpdate = useBulkUpdateStudents();
+
+  return (
+    <Stack gap="md">
+      <Text size="sm">
+        {t("student.bulk.updateConfirm", { count: nisList.length })}
+      </Text>
+      <DatePickerInput
+        label={t("student.joinDate")}
+        placeholder={t("student.joinDate")}
+        leftSection={<IconCalendar size={16} />}
+        value={date}
+        onChange={(val) => setDate(val as Date | null)}
+        valueFormat="DD/MM/YYYY"
+      />
+      <Group justify="flex-end" gap="xs">
+        <Button variant="default" onClick={() => modals.closeAll()}>
+          {t("common.cancel")}
+        </Button>
+        <Button
+          disabled={!date}
+          loading={bulkUpdate.isPending}
+          onClick={() => {
+            if (!date) return;
+            bulkUpdate.mutate(
+              {
+                nisList,
+                updates: {
+                  startJoinDate: dayjs(date).format("YYYY-MM-DD"),
+                },
+              },
+              {
+                onSuccess: (result) => {
+                  modals.closeAll();
+                  onSuccess(result.updated);
+                },
+                onError: (error) => {
+                  onError(error.message);
+                },
+              },
+            );
+          }}
+        >
+          {t("common.save")}
+        </Button>
+      </Group>
     </Stack>
   );
 }

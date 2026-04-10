@@ -3,6 +3,8 @@
 import {
   ActionIcon,
   Badge,
+  Button,
+  Checkbox,
   Group,
   Paper,
   Select,
@@ -14,14 +16,23 @@ import {
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
-import { IconEdit, IconKey, IconSearch, IconTrash } from "@tabler/icons-react";
+import {
+  IconEdit,
+  IconKey,
+  IconRefresh,
+  IconSearch,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import ColumnSettingsDrawer, {
   useColumnSettings,
 } from "@/components/ui/ColumnSettingsDrawer";
 import TablePagination from "@/components/ui/TablePagination";
 import {
+  useBulkDeleteEmployees,
   useDeleteEmployee,
   useEmployees,
   useResetEmployeePassword,
@@ -47,15 +58,86 @@ export default function EmployeeTable() {
     columnDefs,
   );
 
-  const { data, isLoading } = useEmployees({
+  const { data, isLoading, refetch, isFetching } = useEmployees({
     page,
     limit: 10,
     search: search || undefined,
     role: (roleFilter as "ADMIN" | "CASHIER") || undefined,
   });
 
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   const deleteEmployee = useDeleteEmployee();
   const resetPassword = useResetEmployeePassword();
+  const bulkDelete = useBulkDeleteEmployees();
+
+  const employeeIds = data?.employees.map((e) => e.employeeId) || [];
+  const allSelected =
+    employeeIds.length > 0 && employeeIds.every((id) => selectedIds.has(id));
+  const someSelected = employeeIds.some((id) => selectedIds.has(id));
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(employeeIds));
+    }
+  };
+
+  const toggleOne = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkDelete = () => {
+    const ids = Array.from(selectedIds);
+    modals.openConfirmModal({
+      title: t("employee.bulk.deleteTitle"),
+      children: (
+        <Text size="sm">
+          {t("employee.bulk.deleteConfirm", { count: ids.length })}
+        </Text>
+      ),
+      labels: { confirm: t("common.delete"), cancel: t("common.cancel") },
+      confirmProps: { color: "red" },
+      onConfirm: () => {
+        bulkDelete.mutate(ids, {
+          onSuccess: (result) => {
+            notifications.show({
+              title: t("common.success"),
+              message: t("employee.bulk.deleteSuccess", {
+                deleted: result.deleted,
+              }),
+              color: "green",
+            });
+            if (result.skipped.length > 0) {
+              notifications.show({
+                title: t("common.warning"),
+                message: t("employee.bulk.deleteSkipped", {
+                  count: result.skipped.length,
+                  names: result.skipped.map((s) => s.name).join(", "),
+                }),
+                color: "orange",
+                autoClose: 8000,
+              });
+            }
+            setSelectedIds(new Set());
+          },
+          onError: (error) => {
+            notifications.show({
+              title: t("common.error"),
+              message: error.message,
+              color: "red",
+            });
+          },
+        });
+      },
+    });
+  };
 
   const handleDelete = (id: string, name: string) => {
     modals.openConfirmModal({
@@ -150,14 +232,56 @@ export default function EmployeeTable() {
           clearable
           w={160}
         />
+        <ActionIcon variant="default" size="lg" onClick={() => refetch()} loading={isFetching}>
+          <IconRefresh size={18} />
+        </ActionIcon>
         <ColumnSettingsDrawer tableId="employees" columnDefs={columnDefs} />
       </Group>
+
+      {selectedIds.size > 0 && (
+        <Paper withBorder p="sm" bg="blue.0">
+          <Group justify="space-between">
+            <Group gap="sm">
+              <Text size="sm" fw={500}>
+                {t("employee.bulk.selected", { count: selectedIds.size })}
+              </Text>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                onClick={() => setSelectedIds(new Set())}
+              >
+                <IconX size={14} />
+              </ActionIcon>
+            </Group>
+            <Group gap="xs">
+              <Button
+                size="xs"
+                variant="light"
+                color="red"
+                leftSection={<IconTrash size={14} />}
+                onClick={handleBulkDelete}
+                loading={bulkDelete.isPending}
+              >
+                {t("employee.bulk.delete")}
+              </Button>
+            </Group>
+          </Group>
+        </Paper>
+      )}
 
       <Paper withBorder>
         <Table.ScrollContainer minWidth={500}>
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
+                <Table.Th w={40}>
+                  <Checkbox
+                    checked={allSelected}
+                    indeterminate={someSelected && !allSelected}
+                    onChange={toggleAll}
+                    size="xs"
+                  />
+                </Table.Th>
                 {orderedKeys.map((key) => {
                   switch (key) {
                     case "name":
@@ -188,6 +312,9 @@ export default function EmployeeTable() {
               {isLoading &&
                 Array.from({ length: 5 }).map((_, i) => (
                   <Table.Tr key={`skeleton-${i}`}>
+                    <Table.Td>
+                      <Skeleton height={20} width={20} />
+                    </Table.Td>
                     {Array.from({ length: orderedKeys.length }).map((_, j) => (
                       <Table.Td key={`skeleton-cell-${j}`}>
                         <Skeleton height={20} />
@@ -197,7 +324,7 @@ export default function EmployeeTable() {
                 ))}
               {!isLoading && data?.employees.length === 0 && (
                 <Table.Tr>
-                  <Table.Td colSpan={orderedKeys.length}>
+                  <Table.Td colSpan={orderedKeys.length + 1}>
                     <Text ta="center" c="dimmed" py="md">
                       {t("employee.notFound")}
                     </Text>
@@ -205,7 +332,21 @@ export default function EmployeeTable() {
                 </Table.Tr>
               )}
               {data?.employees.map((employee) => (
-                <Table.Tr key={employee.employeeId}>
+                <Table.Tr
+                  key={employee.employeeId}
+                  bg={
+                    selectedIds.has(employee.employeeId)
+                      ? "var(--mantine-color-blue-light)"
+                      : undefined
+                  }
+                >
+                  <Table.Td>
+                    <Checkbox
+                      checked={selectedIds.has(employee.employeeId)}
+                      onChange={() => toggleOne(employee.employeeId)}
+                      size="xs"
+                    />
+                  </Table.Td>
                   {orderedKeys.map((key) => {
                     switch (key) {
                       case "name":

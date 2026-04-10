@@ -3,6 +3,8 @@
 import {
   ActionIcon,
   Badge,
+  Button,
+  Checkbox,
   Group,
   Paper,
   Select,
@@ -17,18 +19,22 @@ import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import {
   IconEdit,
+  IconRefresh,
   IconSearch,
   IconTrash,
   IconUsers,
+  IconX,
 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import ColumnSettingsDrawer, {
   useColumnSettings,
 } from "@/components/ui/ColumnSettingsDrawer";
 import TablePagination from "@/components/ui/TablePagination";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import {
+  useBulkDeleteClassAcademics,
   useClassAcademics,
   useDeleteClassAcademic,
 } from "@/hooks/api/useClassAcademics";
@@ -57,14 +63,85 @@ export default function ClassAcademicTable() {
 
   const { data: academicYearsData } = useAcademicYears({ limit: 100 });
 
-  const { data, isLoading } = useClassAcademics({
+  const { data, isLoading, refetch, isFetching } = useClassAcademics({
     page,
     limit: 10,
     search: search || undefined,
     academicYearId: academicYearFilter || undefined,
   });
 
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   const deleteClass = useDeleteClassAcademic();
+  const bulkDelete = useBulkDeleteClassAcademics();
+
+  const classIds = data?.classes.map((c) => c.id) || [];
+  const allSelected =
+    classIds.length > 0 && classIds.every((id) => selectedIds.has(id));
+  const someSelected = classIds.some((id) => selectedIds.has(id));
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(classIds));
+    }
+  };
+
+  const toggleOne = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkDelete = () => {
+    const ids = Array.from(selectedIds);
+    modals.openConfirmModal({
+      title: t("class.bulk.deleteTitle"),
+      children: (
+        <Text size="sm">
+          {t("class.bulk.deleteConfirm", { count: ids.length })}
+        </Text>
+      ),
+      labels: { confirm: t("common.delete"), cancel: t("common.cancel") },
+      confirmProps: { color: "red" },
+      onConfirm: () => {
+        bulkDelete.mutate(ids, {
+          onSuccess: (result) => {
+            notifications.show({
+              title: t("common.success"),
+              message: t("class.bulk.deleteSuccess", {
+                deleted: result.deleted,
+              }),
+              color: "green",
+            });
+            if (result.skipped.length > 0) {
+              notifications.show({
+                title: t("common.warning"),
+                message: t("class.bulk.deleteSkipped", {
+                  count: result.skipped.length,
+                  names: result.skipped.map((s) => s.className).join(", "),
+                }),
+                color: "orange",
+                autoClose: 8000,
+              });
+            }
+            setSelectedIds(new Set());
+          },
+          onError: (error) => {
+            notifications.show({
+              title: t("common.error"),
+              message: error.message,
+              color: "red",
+            });
+          },
+        });
+      },
+    });
+  };
 
   const handleDelete = (id: string, className: string) => {
     modals.openConfirmModal({
@@ -129,17 +206,59 @@ export default function ClassAcademicTable() {
           searchable
           w={200}
         />
+        <ActionIcon variant="default" size="lg" onClick={() => refetch()} loading={isFetching}>
+          <IconRefresh size={18} />
+        </ActionIcon>
         <ColumnSettingsDrawer
           tableId="classAcademics"
           columnDefs={columnDefs}
         />
       </Group>
 
+      {selectedIds.size > 0 && (
+        <Paper withBorder p="sm" bg="blue.0">
+          <Group justify="space-between">
+            <Group gap="sm">
+              <Text size="sm" fw={500}>
+                {t("class.bulk.selected", { count: selectedIds.size })}
+              </Text>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                onClick={() => setSelectedIds(new Set())}
+              >
+                <IconX size={14} />
+              </ActionIcon>
+            </Group>
+            <Group gap="xs">
+              <Button
+                size="xs"
+                variant="light"
+                color="red"
+                leftSection={<IconTrash size={14} />}
+                onClick={handleBulkDelete}
+                loading={bulkDelete.isPending}
+              >
+                {t("class.bulk.delete")}
+              </Button>
+            </Group>
+          </Group>
+        </Paper>
+      )}
+
       <Paper withBorder>
         <Table.ScrollContainer minWidth={700}>
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
+                <Table.Th w={40}>
+                  <Checkbox
+                    checked={allSelected}
+                    indeterminate={someSelected && !allSelected}
+                    onChange={toggleAll}
+                    size="xs"
+                  />
+                </Table.Th>
                 {orderedKeys.map((key) => {
                   switch (key) {
                     case "name":
@@ -174,6 +293,9 @@ export default function ClassAcademicTable() {
               {isLoading &&
                 Array.from({ length: 5 }).map((_, i) => (
                   <Table.Tr key={`skeleton-${i}`}>
+                    <Table.Td>
+                      <Skeleton height={20} width={20} />
+                    </Table.Td>
                     {Array.from({ length: orderedKeys.length }).map((_, j) => (
                       <Table.Td key={`skeleton-cell-${j}`}>
                         <Skeleton height={20} />
@@ -183,7 +305,7 @@ export default function ClassAcademicTable() {
                 ))}
               {!isLoading && data?.classes.length === 0 && (
                 <Table.Tr>
-                  <Table.Td colSpan={orderedKeys.length}>
+                  <Table.Td colSpan={orderedKeys.length + 1}>
                     <Text ta="center" c="dimmed" py="md">
                       {t("class.notFound")}
                     </Text>
@@ -191,7 +313,21 @@ export default function ClassAcademicTable() {
                 </Table.Tr>
               )}
               {data?.classes.map((cls) => (
-                <Table.Tr key={cls.id}>
+                <Table.Tr
+                  key={cls.id}
+                  bg={
+                    selectedIds.has(cls.id)
+                      ? "var(--mantine-color-blue-light)"
+                      : undefined
+                  }
+                >
+                  <Table.Td>
+                    <Checkbox
+                      checked={selectedIds.has(cls.id)}
+                      onChange={() => toggleOne(cls.id)}
+                      size="xs"
+                    />
+                  </Table.Td>
                   {orderedKeys.map((key) => {
                     switch (key) {
                       case "name":

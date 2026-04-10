@@ -20,6 +20,7 @@ enum PaymentStatus {
   UNPAID
   PAID
   PARTIAL
+  VOID
 }
 
 enum Month {

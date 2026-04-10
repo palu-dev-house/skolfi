@@ -12,7 +12,7 @@ export interface StudentTuition {
   scholarshipAmount: string;
   discountAmount: string;
   paidAmount: string;
-  status: "UNPAID" | "PARTIAL" | "PAID";
+  status: "UNPAID" | "PARTIAL" | "PAID" | "VOID";
   dueDate: string;
   className: string;
   academicYear: string;

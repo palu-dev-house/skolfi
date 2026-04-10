@@ -140,6 +140,47 @@ export function useDeleteScholarship() {
   });
 }
 
+export function useBulkDeleteScholarships() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { data } = await apiClient.post<{
+        success: boolean;
+        data: { deleted: number };
+      }>("/scholarships/bulk-delete", { ids });
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.scholarships.lists(),
+      });
+    },
+  });
+}
+
+export function useBulkUpdateScholarships() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: {
+      ids: string[];
+      updates: { nominal?: number; isFullScholarship?: boolean };
+    }) => {
+      const { data } = await apiClient.put<{
+        success: boolean;
+        data: { updated: number };
+      }>("/scholarships/bulk-update", payload);
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.scholarships.lists(),
+      });
+    },
+  });
+}
+
 export function useImportScholarships() {
   const queryClient = useQueryClient();
 

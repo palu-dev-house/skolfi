@@ -3,6 +3,8 @@
 import {
   ActionIcon,
   Badge,
+  Button,
+  Checkbox,
   Group,
   NumberFormatter,
   Paper,
@@ -16,9 +18,16 @@ import {
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
-import { IconFilter, IconSearch, IconTrash } from "@tabler/icons-react";
+import {
+  IconFilter,
+  IconRefresh,
+  IconSearch,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import ColumnSettingsDrawer, {
   useColumnSettings,
 } from "@/components/ui/ColumnSettingsDrawer";
@@ -26,7 +35,11 @@ import TablePagination from "@/components/ui/TablePagination";
 import type { PaymentStatus } from "@/generated/prisma/client";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import { useClassAcademics } from "@/hooks/api/useClassAcademics";
-import { useDeleteTuition, useTuitions } from "@/hooks/api/useTuitions";
+import {
+  useDeleteTuition,
+  useMassUpdateTuitions,
+  useTuitions,
+} from "@/hooks/api/useTuitions";
 import { useQueryParams } from "@/hooks/useQueryParams";
 import {
   getPeriodDisplayName,
@@ -37,6 +50,7 @@ const STATUS_COLORS: Record<PaymentStatus, string> = {
   UNPAID: "red",
   PARTIAL: "yellow",
   PAID: "green",
+  VOID: "gray",
 };
 
 export default function TuitionTable() {
@@ -48,6 +62,8 @@ export default function TuitionTable() {
   const period = getParam("period") ?? null;
   const studentSearch = getParam("studentSearch", "") ?? "";
 
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   const { data: academicYearsData } = useAcademicYears({ limit: 100 });
   const activeYear = academicYearsData?.academicYears.find((ay) => ay.isActive);
 
@@ -56,7 +72,7 @@ export default function TuitionTable() {
     academicYearId: activeYear?.id,
   });
 
-  const { data, isLoading } = useTuitions({
+  const { data, isLoading, refetch, isFetching } = useTuitions({
     page,
     limit: 10,
     classAcademicId: classAcademicId || undefined,
@@ -66,6 +82,7 @@ export default function TuitionTable() {
   });
 
   const deleteTuition = useDeleteTuition();
+  const massUpdate = useMassUpdateTuitions();
 
   const columnDefs = [
     { key: "student", label: t("tuition.student") },
@@ -80,6 +97,74 @@ export default function TuitionTable() {
   ];
 
   const { orderedKeys } = useColumnSettings("tuitions", columnDefs);
+
+  const tuitionIds = data?.tuitions.map((t) => t.id) || [];
+  const allSelected =
+    tuitionIds.length > 0 && tuitionIds.every((id) => selectedIds.has(id));
+  const someSelected = tuitionIds.some((id) => selectedIds.has(id));
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(tuitionIds));
+    }
+  };
+
+  const toggleOne = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleMassUpdate = (newStatus: PaymentStatus) => {
+    const ids = Array.from(selectedIds);
+    const statusLabel = t(`tuition.status.${newStatus.toLowerCase()}`);
+
+    modals.openConfirmModal({
+      title: t("tuition.massUpdate.title"),
+      children: (
+        <Text size="sm">
+          {t("tuition.massUpdate.confirm", {
+            count: ids.length,
+            status: statusLabel,
+          })}
+        </Text>
+      ),
+      labels: { confirm: t("common.confirm"), cancel: t("common.cancel") },
+      confirmProps: { color: newStatus === "VOID" ? "gray" : "blue" },
+      onConfirm: () => {
+        massUpdate.mutate(
+          { tuitionIds: ids, status: newStatus },
+          {
+            onSuccess: (result) => {
+              notifications.show({
+                title: t("common.success"),
+                message: t("tuition.massUpdate.success", {
+                  count: result.updated,
+                }),
+                color: "green",
+              });
+              setSelectedIds(new Set());
+            },
+            onError: (error) => {
+              notifications.show({
+                title: t("common.error"),
+                message: error.message,
+                color: "red",
+              });
+            },
+          },
+        );
+      },
+    });
+  };
 
   const handleDelete = (id: string, studentName: string, monthName: string) => {
     modals.openConfirmModal({
@@ -166,6 +251,7 @@ export default function TuitionTable() {
               { value: "UNPAID", label: t("tuition.status.unpaid") },
               { value: "PARTIAL", label: t("tuition.status.partial") },
               { value: "PAID", label: t("tuition.status.paid") },
+              { value: "VOID", label: t("tuition.status.void") },
             ]}
             value={status}
             onChange={(value) => setParams({ status: value, page: 1 })}
@@ -186,19 +272,80 @@ export default function TuitionTable() {
             onChange={(e) =>
               setParams({ studentSearch: e.currentTarget.value, page: 1 })
             }
+            style={{ flexGrow: 0 }}
           />
+          <Group gap="xs" style={{ flexGrow: 0 }}>
+            <ActionIcon variant="default" size="lg" onClick={() => refetch()} loading={isFetching}>
+              <IconRefresh size={18} />
+            </ActionIcon>
+            <ColumnSettingsDrawer tableId="tuitions" columnDefs={columnDefs} />
+          </Group>
         </Group>
       </Paper>
 
-      <Group justify="flex-end">
-        <ColumnSettingsDrawer tableId="tuitions" columnDefs={columnDefs} />
-      </Group>
+      {selectedIds.size > 0 && (
+        <Paper withBorder p="sm" bg="blue.0">
+          <Group justify="space-between">
+            <Group gap="sm">
+              <Text size="sm" fw={500}>
+                {t("tuition.massUpdate.selected", {
+                  count: selectedIds.size,
+                })}
+              </Text>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                onClick={() => setSelectedIds(new Set())}
+              >
+                <IconX size={14} />
+              </ActionIcon>
+            </Group>
+            <Group gap="xs">
+              <Button
+                size="xs"
+                variant="light"
+                color="gray"
+                onClick={() => handleMassUpdate("VOID")}
+                loading={massUpdate.isPending}
+              >
+                {t("tuition.massUpdate.markVoid")}
+              </Button>
+              <Button
+                size="xs"
+                variant="light"
+                color="red"
+                onClick={() => handleMassUpdate("UNPAID")}
+                loading={massUpdate.isPending}
+              >
+                {t("tuition.massUpdate.markUnpaid")}
+              </Button>
+              <Button
+                size="xs"
+                variant="light"
+                color="green"
+                onClick={() => handleMassUpdate("PAID")}
+                loading={massUpdate.isPending}
+              >
+                {t("tuition.massUpdate.markPaid")}
+              </Button>
+            </Group>
+          </Group>
+        </Paper>
+      )}
 
       <Paper withBorder>
         <Table.ScrollContainer minWidth={900}>
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
+                <Table.Th w={40}>
+                  <Checkbox
+                    checked={allSelected}
+                    indeterminate={someSelected && !allSelected}
+                    onChange={toggleAll}
+                    size="xs"
+                  />
+                </Table.Th>
                 {orderedKeys.map((key) => {
                   switch (key) {
                     case "student":
@@ -255,6 +402,9 @@ export default function TuitionTable() {
               {isLoading &&
                 Array.from({ length: 5 }).map((_, i) => (
                   <Table.Tr key={`skeleton-${i}`}>
+                    <Table.Td>
+                      <Skeleton height={20} width={20} />
+                    </Table.Td>
                     {Array.from({ length: orderedKeys.length }).map((_, j) => (
                       <Table.Td key={`skeleton-cell-${j}`}>
                         <Skeleton height={20} />
@@ -264,7 +414,7 @@ export default function TuitionTable() {
                 ))}
               {!isLoading && data?.tuitions.length === 0 && (
                 <Table.Tr>
-                  <Table.Td colSpan={orderedKeys.length}>
+                  <Table.Td colSpan={orderedKeys.length + 1}>
                     <Text ta="center" c="dimmed" py="md">
                       {t("tuition.notFound")}
                     </Text>
@@ -272,7 +422,21 @@ export default function TuitionTable() {
                 </Table.Tr>
               )}
               {data?.tuitions.map((tuition) => (
-                <Table.Tr key={tuition.id}>
+                <Table.Tr
+                  key={tuition.id}
+                  bg={
+                    selectedIds.has(tuition.id)
+                      ? "var(--mantine-color-blue-light)"
+                      : undefined
+                  }
+                >
+                  <Table.Td>
+                    <Checkbox
+                      checked={selectedIds.has(tuition.id)}
+                      onChange={() => toggleOne(tuition.id)}
+                      size="xs"
+                    />
+                  </Table.Td>
                   {orderedKeys.map((key) => {
                     switch (key) {
                       case "student":

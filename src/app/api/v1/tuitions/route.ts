@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (status) {
-    where.status = status as "UNPAID" | "PAID" | "PARTIAL";
+    where.status = status as "UNPAID" | "PAID" | "PARTIAL" | "VOID";
   }
 
   if (period) {

@@ -230,6 +230,50 @@ export function useDeleteDiscount() {
   });
 }
 
+export function useBulkDeleteDiscounts() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { data } = await apiClient.post<{
+        success: boolean;
+        data: {
+          deleted: number;
+          skipped: Array<{ id: string; name: string }>;
+        };
+      }>("/discounts/bulk-delete", { ids });
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.discounts.lists(),
+      });
+    },
+  });
+}
+
+export function useBulkUpdateDiscounts() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: {
+      ids: string[];
+      updates: { discountAmount?: number; isActive?: boolean };
+    }) => {
+      const { data } = await apiClient.put<{
+        success: boolean;
+        data: { updated: number };
+      }>("/discounts/bulk-update", payload);
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.discounts.lists(),
+      });
+    },
+  });
+}
+
 export function useApplyDiscountPreview() {
   return useMutation({
     mutationFn: async (discountId: string) => {

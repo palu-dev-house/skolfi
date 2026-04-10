@@ -24,11 +24,13 @@ import {
   IconGift,
   IconUsers,
 } from "@tabler/icons-react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import { useClassSummary } from "@/hooks/api/useReports";
 
 export default function ClassSummaryCards() {
+  const t = useTranslations();
   const [academicYearId, setAcademicYearId] = useState<string | null>(null);
 
   const { data: academicYearsData } = useAcademicYears({ limit: 100 });
@@ -41,7 +43,7 @@ export default function ClassSummaryCards() {
   const academicYearOptions =
     academicYearsData?.academicYears.map((ay) => ({
       value: ay.id,
-      label: `${ay.year}${ay.isActive ? " (Active)" : ""}`,
+      label: `${ay.year}${ay.isActive ? ` (${t("common.active")})` : ""}`,
     })) || [];
 
   // Use effective fees (after scholarships) for percentage calculation
@@ -62,7 +64,7 @@ export default function ClassSummaryCards() {
               </ThemeIcon>
               <div>
                 <Text size="xs" c="dimmed">
-                  Total Students
+                  {t("report.classSummary.totalStudents")}
                 </Text>
                 <Text size="xl" fw={700}>
                   {data.totals.totalStudents}
@@ -77,7 +79,7 @@ export default function ClassSummaryCards() {
               </ThemeIcon>
               <div>
                 <Text size="xs" c="dimmed">
-                  Paid Tuitions
+                  {t("report.classSummary.paidTuitions")}
                 </Text>
                 <Text size="xl" fw={700} c="green">
                   {data.totals.paid}
@@ -92,7 +94,7 @@ export default function ClassSummaryCards() {
               </ThemeIcon>
               <div>
                 <Text size="xs" c="dimmed">
-                  Partial Payments
+                  {t("report.classSummary.partialPayments")}
                 </Text>
                 <Text size="xl" fw={700} c="yellow">
                   {data.totals.partial}
@@ -107,7 +109,7 @@ export default function ClassSummaryCards() {
               </ThemeIcon>
               <div>
                 <Text size="xs" c="dimmed">
-                  Unpaid Tuitions
+                  {t("report.classSummary.unpaidTuitions")}
                 </Text>
                 <Text size="xl" fw={700} c="red">
                   {data.totals.unpaid}
@@ -122,11 +124,11 @@ export default function ClassSummaryCards() {
       {data && (
         <Card withBorder>
           <Stack gap="md">
-            <Text fw={600}>Overall Payment Progress</Text>
+            <Text fw={600}>{t("report.classSummary.paymentProgress")}</Text>
             <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }}>
               <div>
                 <Text size="xs" c="dimmed">
-                  Total Fees
+                  {t("report.classSummary.totalFees")}
                 </Text>
                 <Text size="lg" fw={600}>
                   <NumberFormatter
@@ -142,7 +144,7 @@ export default function ClassSummaryCards() {
                   <Group gap={4}>
                     <IconGift size={14} color="var(--mantine-color-teal-6)" />
                     <Text size="xs" c="dimmed">
-                      Scholarships
+                      {t("report.classSummary.scholarships")}
                     </Text>
                   </Group>
                   <Text size="lg" fw={600} c="teal">
@@ -165,7 +167,7 @@ export default function ClassSummaryCards() {
                       color="var(--mantine-color-green-6)"
                     />
                     <Text size="xs" c="dimmed">
-                      Discounts
+                      {t("report.classSummary.discounts")}
                     </Text>
                   </Group>
                   <Text size="lg" fw={600} c="green">
@@ -182,8 +184,8 @@ export default function ClassSummaryCards() {
               <div>
                 <Text size="xs" c="dimmed">
                   {data.totals.totalScholarships > 0
-                    ? "Net Amount Due"
-                    : "Total Collected"}
+                    ? t("report.classSummary.netAmountDue")
+                    : t("report.classSummary.totalCollected")}
                 </Text>
                 <Text
                   size="lg"
@@ -204,7 +206,7 @@ export default function ClassSummaryCards() {
               </div>
               <div>
                 <Text size="xs" c="dimmed">
-                  Total Collected
+                  {t("report.classSummary.totalCollected")}
                 </Text>
                 <Text size="lg" fw={600} c="green">
                   <NumberFormatter
@@ -217,7 +219,7 @@ export default function ClassSummaryCards() {
               </div>
               <div>
                 <Text size="xs" c="dimmed">
-                  Outstanding
+                  {t("report.classSummary.outstanding")}
                 </Text>
                 <Text size="lg" fw={600} c="red">
                   <NumberFormatter
@@ -232,8 +234,9 @@ export default function ClassSummaryCards() {
             <div>
               <Group justify="space-between" mb={4}>
                 <Text size="sm" c="dimmed">
-                  Collection Rate{" "}
-                  {data.totals.totalScholarships > 0 && "(after scholarships)"}
+                  {t("report.classSummary.collectionRate")}
+                  {data.totals.totalScholarships > 0 &&
+                    ` (${t("report.classSummary.afterScholarships")})`}
                 </Text>
                 <Text size="sm" fw={600}>
                   {overallPercentage.toFixed(1)}%
@@ -259,7 +262,7 @@ export default function ClassSummaryCards() {
       <Paper withBorder p="md">
         <Group gap="md">
           <Select
-            placeholder="Select Academic Year"
+            placeholder={t("report.classSummary.selectYear")}
             leftSection={<IconFilter size={16} />}
             data={academicYearOptions}
             value={academicYearId}
@@ -320,7 +323,7 @@ export default function ClassSummaryCards() {
                   <SimpleGrid cols={2}>
                     <div>
                       <Text size="xs" c="dimmed">
-                        Students
+                        {t("report.classSummary.students")}
                       </Text>
                       <Text size="sm" fw={500}>
                         {cls.statistics.totalStudents}
@@ -328,7 +331,7 @@ export default function ClassSummaryCards() {
                     </div>
                     <div>
                       <Text size="xs" c="dimmed">
-                        Tuitions
+                        {t("report.classSummary.tuitions")}
                       </Text>
                       <Text size="sm" fw={500}>
                         {cls.statistics.totalTuitions}
@@ -338,13 +341,13 @@ export default function ClassSummaryCards() {
 
                   <Group gap="xs" wrap="wrap">
                     <Badge color="green" variant="light" size="sm">
-                      Paid: {cls.statistics.paid}
+                      {t("report.classSummary.paid")}: {cls.statistics.paid}
                     </Badge>
                     <Badge color="yellow" variant="light" size="sm">
-                      Partial: {cls.statistics.partial}
+                      {t("report.classSummary.partial")}: {cls.statistics.partial}
                     </Badge>
                     <Badge color="red" variant="light" size="sm">
-                      Unpaid: {cls.statistics.unpaid}
+                      {t("report.classSummary.unpaid")}: {cls.statistics.unpaid}
                     </Badge>
                     {hasScholarship && (
                       <Badge
@@ -353,7 +356,7 @@ export default function ClassSummaryCards() {
                         size="sm"
                         leftSection={<IconGift size={10} />}
                       >
-                        Scholarship
+                        {t("report.classSummary.scholarships")}
                       </Badge>
                     )}
                     {hasDiscount && (
@@ -363,7 +366,7 @@ export default function ClassSummaryCards() {
                         size="sm"
                         leftSection={<IconDiscount size={10} />}
                       >
-                        Scholarship
+                        {t("report.classSummary.discounts")}
                       </Badge>
                     )}
                   </Group>
@@ -383,7 +386,7 @@ export default function ClassSummaryCards() {
                   {hasScholarship && (
                     <Group justify="space-between">
                       <Text size="xs" c="dimmed">
-                        Scholarship Discount:
+                        {t("report.classSummary.scholarshipDiscount")}:
                       </Text>
                       <Text size="xs" fw={500} c="teal">
                         -
@@ -400,7 +403,7 @@ export default function ClassSummaryCards() {
                   {hasDiscount && (
                     <Group justify="space-between">
                       <Text size="xs" c="dimmed">
-                        Discount Discount:
+                        {t("report.classSummary.discountAmount")}:
                       </Text>
                       <Text size="xs" fw={500} c="green">
                         -
@@ -417,7 +420,7 @@ export default function ClassSummaryCards() {
                   <SimpleGrid cols={2}>
                     <div>
                       <Text size="xs" c="dimmed">
-                        Collected
+                        {t("report.classSummary.collected")}
                       </Text>
                       <Text size="sm" fw={500} c="green">
                         <NumberFormatter
@@ -430,7 +433,7 @@ export default function ClassSummaryCards() {
                     </div>
                     <div>
                       <Text size="xs" c="dimmed">
-                        Outstanding
+                        {t("report.classSummary.outstanding")}
                       </Text>
                       <Text size="sm" fw={500} c="red">
                         <NumberFormatter
@@ -455,9 +458,7 @@ export default function ClassSummaryCards() {
             <ThemeIcon size={60} color="gray" variant="light">
               <IconCash size={30} />
             </ThemeIcon>
-            <Text c="dimmed">
-              No class data found for the selected academic year
-            </Text>
+            <Text c="dimmed">{t("report.classSummary.noData")}</Text>
           </Stack>
         </Paper>
       )}

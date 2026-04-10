@@ -12,4 +12,10 @@ export const tuitionUpdateSchema = z.object({
   dueDate: z.coerce.date().optional(),
 });
 
+export const tuitionMassUpdateSchema = z.object({
+  tuitionIds: z.array(z.string().uuid()).min(1, "Select at least one tuition"),
+  status: z.enum(["UNPAID", "PAID", "PARTIAL", "VOID"]),
+});
+
 export type TuitionGenerateInput = z.infer<typeof tuitionGenerateSchema>;
+export type TuitionMassUpdateInput = z.infer<typeof tuitionMassUpdateSchema>;

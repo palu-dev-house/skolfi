@@ -1,6 +1,22 @@
 "use client";
 
 import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
   ActionIcon,
   Button,
   Drawer,
@@ -11,9 +27,8 @@ import {
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
-  IconArrowDown,
-  IconArrowUp,
   IconColumns,
+  IconGripVertical,
   IconRefresh,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
@@ -53,6 +68,65 @@ export function useColumnSettings(tableId: string, columnDefs: ColumnDef[]) {
   return { visibleKeys, orderedKeys };
 }
 
+interface SortableItemProps {
+  col: ColumnConfig;
+  label: string;
+  onToggle: (key: string) => void;
+}
+
+function SortableItem({ col, label, onToggle }: SortableItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: col.key });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1 : 0,
+    borderRadius: "var(--mantine-radius-sm)",
+  };
+
+  return (
+    <Group
+      ref={setNodeRef}
+      style={style}
+      justify="space-between"
+      wrap="nowrap"
+      py={6}
+      px={4}
+      bg={isDragging ? "gray.0" : undefined}
+      bd={isDragging ? "1px solid var(--mantine-color-gray-3)" : undefined}
+    >
+      <Group gap="xs" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+        <ActionIcon
+          variant="subtle"
+          color="gray"
+          size="sm"
+          style={{ cursor: "grab", touchAction: "none" }}
+          {...attributes}
+          {...listeners}
+        >
+          <IconGripVertical size={16} />
+        </ActionIcon>
+        <Text size="sm" truncate>
+          {label}
+        </Text>
+      </Group>
+      <Switch
+        checked={col.visible}
+        onChange={() => onToggle(col.key)}
+        size="sm"
+      />
+    </Group>
+  );
+}
+
 export default function ColumnSettingsDrawer({
   tableId,
   columnDefs,
@@ -65,7 +139,15 @@ export default function ColumnSettingsDrawer({
   const defaults = toDefaults(columnDefs);
   const columns = getColumns(tableId, defaults);
 
-  // Ensure columns are saved on first interaction
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
   const ensureStored = () => {
     const stored = useTableSettingsStore.getState().tables[tableId];
     if (!stored) {
@@ -78,9 +160,16 @@ export default function ColumnSettingsDrawer({
     toggleColumn(tableId, key);
   };
 
-  const handleMove = (fromIndex: number, toIndex: number) => {
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
     ensureStored();
-    reorderColumns(tableId, fromIndex, toIndex);
+    const oldIndex = columns.findIndex((c) => c.key === active.id);
+    const newIndex = columns.findIndex((c) => c.key === over.id);
+    if (oldIndex !== -1 && newIndex !== -1) {
+      reorderColumns(tableId, oldIndex, newIndex);
+    }
   };
 
   const labelMap = new Map(columnDefs.map((d) => [d.key, d.label]));
@@ -98,39 +187,26 @@ export default function ColumnSettingsDrawer({
         position="right"
         size="sm"
       >
-        <Stack gap="xs">
-          {columns.map((col, index) => (
-            <Group key={col.key} justify="space-between" wrap="nowrap">
-              <Group gap="xs" wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
-                <Stack gap={0}>
-                  <ActionIcon
-                    variant="subtle"
-                    size="xs"
-                    disabled={index === 0}
-                    onClick={() => handleMove(index, index - 1)}
-                  >
-                    <IconArrowUp size={14} />
-                  </ActionIcon>
-                  <ActionIcon
-                    variant="subtle"
-                    size="xs"
-                    disabled={index === columns.length - 1}
-                    onClick={() => handleMove(index, index + 1)}
-                  >
-                    <IconArrowDown size={14} />
-                  </ActionIcon>
-                </Stack>
-                <Text size="sm" truncate>
-                  {labelMap.get(col.key) || col.key}
-                </Text>
-              </Group>
-              <Switch
-                checked={col.visible}
-                onChange={() => handleToggle(col.key)}
-                size="sm"
-              />
-            </Group>
-          ))}
+        <Stack gap={4}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={columns.map((c) => c.key)}
+              strategy={verticalListSortingStrategy}
+            >
+              {columns.map((col) => (
+                <SortableItem
+                  key={col.key}
+                  col={col}
+                  label={labelMap.get(col.key) || col.key}
+                  onToggle={handleToggle}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
 
           <Button
             variant="light"

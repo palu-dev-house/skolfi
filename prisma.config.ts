@@ -1,9 +1,15 @@
 import path from "node:path";
-import dotenv from "dotenv";
 import { defineConfig } from "prisma/config";
 
-dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
-dotenv.config();
+// Load .env.local for local development (not needed in production)
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const dotenv = require("dotenv");
+  dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
+  dotenv.config();
+} catch {
+  // dotenv not available in production build - env vars are set by the platform
+}
 
 export default defineConfig({
   schema: "prisma/schema.prisma",

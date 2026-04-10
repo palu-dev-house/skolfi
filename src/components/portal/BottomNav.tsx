@@ -12,24 +12,13 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 const navItems = [
-  { href: "/portal", labelKey: "nav.home", icon: IconHome, color: "blue" },
-  {
-    href: "/portal/payment",
-    labelKey: "nav.payment",
-    icon: IconCreditCard,
-    color: "green",
-  },
-  {
-    href: "/portal/history",
-    labelKey: "nav.history",
-    icon: IconHistory,
-    color: "violet",
-  },
+  { href: "/portal", labelKey: "nav.home", icon: IconHome },
+  { href: "/portal/payment", labelKey: "nav.payment", icon: IconCreditCard },
+  { href: "/portal/history", labelKey: "nav.history", icon: IconHistory },
   {
     href: "/portal/change-password",
     labelKey: "nav.settings",
     icon: IconSettings,
-    color: "orange",
   },
 ];
 
@@ -68,7 +57,7 @@ export function BottomNav() {
                 height: "100%",
                 minHeight: 44,
                 color: isActive
-                  ? `var(--mantine-color-${item.color}-6)`
+                  ? "var(--mantine-color-blue-6)"
                   : "var(--mantine-color-gray-6)",
               }}
             >

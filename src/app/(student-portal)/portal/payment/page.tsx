@@ -14,6 +14,7 @@ import {
   Paper,
   SimpleGrid,
   Stack,
+  Tabs,
   Text,
   Title,
 } from "@mantine/core";
@@ -21,7 +22,9 @@ import { modals } from "@mantine/modals";
 import {
   IconAlertCircle,
   IconCreditCard,
+  IconHistory,
   IconLoader,
+  IconReceipt,
   IconX,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
@@ -92,7 +95,10 @@ export default function PaymentPage() {
 
   // Unpaid tuitions available for payment
   const payableTuitions = useMemo(
-    () => tuitions.filter((t) => t.status !== "PAID" && t.remainingAmount > 0),
+    () =>
+      tuitions.filter(
+        (t) => t.status !== "PAID" && t.status !== "VOID" && t.remainingAmount > 0,
+      ),
     [tuitions],
   );
 
@@ -205,6 +211,15 @@ export default function PaymentPage() {
     );
   }
 
+  const allSelected =
+    payableTuitions.length > 0 &&
+    selectedIds.size === payableTuitions.length;
+  const someSelected = selectedIds.size > 0 && !allSelected;
+
+  const completedPayments = onlinePayments.filter(
+    (p) => p.status !== "PENDING",
+  );
+
   return (
     <Stack gap="lg">
       {config?.snapJsUrl && (
@@ -217,226 +232,265 @@ export default function PaymentPage() {
 
       <Title order={3}>{t("onlinePayment.title")}</Title>
 
-      {/* Active Pending Payment */}
-      {pendingPayment && (
-        <Card
-          withBorder
-          p="lg"
-          style={{ borderLeft: "4px solid var(--mantine-color-yellow-6)" }}
-        >
-          <Stack gap="md">
-            <Group justify="space-between">
-              <Group gap="xs">
-                <IconLoader size={20} />
-                <Text fw={600}>{t("onlinePayment.pendingPayment")}</Text>
-              </Group>
-              <Badge color="yellow" variant="light">
-                {t("onlinePayment.waitingPayment")}
+      <Tabs defaultValue="payment">
+        <Tabs.List>
+          <Tabs.Tab
+            value="payment"
+            leftSection={<IconReceipt size={16} />}
+          >
+            {t("payment.title")}
+          </Tabs.Tab>
+          <Tabs.Tab
+            value="history"
+            leftSection={<IconHistory size={16} />}
+          >
+            {t("onlinePayment.history")}
+            {completedPayments.length > 0 && (
+              <Badge size="xs" ml={6} variant="filled" color="gray">
+                {completedPayments.length}
               </Badge>
-            </Group>
+            )}
+          </Tabs.Tab>
+        </Tabs.List>
 
-            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
-              <Stack gap={2}>
-                <Text size="xs" c="dimmed">
-                  {t("onlinePayment.orderId")}
-                </Text>
-                <Text size="sm" fw={500}>
-                  {pendingPayment.orderId}
-                </Text>
-              </Stack>
-              <Stack gap={2}>
-                <Text size="xs" c="dimmed">
-                  {t("onlinePayment.amount")}
-                </Text>
-                <Text size="sm" fw={700} c="blue">
-                  <NumberFormatter
-                    value={Number(pendingPayment.grossAmount)}
-                    prefix="Rp "
-                    thousandSeparator="."
-                    decimalSeparator=","
-                  />
-                </Text>
-              </Stack>
-              {pendingPayment.expiryTime && (
-                <Stack gap={2}>
-                  <Text size="xs" c="dimmed">
-                    {t("onlinePayment.expiresAt")}
-                  </Text>
-                  <Text size="sm">
-                    {dayjs(pendingPayment.expiryTime).format(
-                      "DD/MM/YYYY HH:mm",
-                    )}
-                  </Text>
-                </Stack>
-              )}
-            </SimpleGrid>
-
-            <Divider />
-
-            <Text size="xs" c="dimmed" fw={600}>
-              {t("onlinePayment.items")}:
-            </Text>
-            {pendingPayment.items.map((item) => (
-              <Group key={item.id} justify="space-between">
-                <Text size="sm">
-                  {item.tuition.classAcademic.className} - {item.tuition.period}{" "}
-                  {item.tuition.year}
-                </Text>
-                <Text size="sm" fw={500}>
-                  <NumberFormatter
-                    value={Number(item.amount)}
-                    prefix="Rp "
-                    thousandSeparator="."
-                    decimalSeparator=","
-                  />
-                </Text>
-              </Group>
-            ))}
-
-            <Group>
-              <Button
-                onClick={handleRetrySnap}
-                disabled={!snapReady}
-                leftSection={<IconCreditCard size={18} />}
+        <Tabs.Panel value="payment" pt="md">
+          <Stack gap="md">
+            {/* Active Pending Payment */}
+            {pendingPayment && (
+              <Card
+                withBorder
+                p="lg"
+                style={{
+                  borderLeft: "4px solid var(--mantine-color-yellow-6)",
+                }}
               >
-                {t("onlinePayment.continuePayment")}
-              </Button>
-              <Button
-                variant="light"
-                color="red"
-                leftSection={<IconX size={18} />}
-                onClick={() => handleCancelPayment(pendingPayment.id)}
-                loading={cancelPayment.isPending}
-              >
-                {t("onlinePayment.cancelPayment")}
-              </Button>
-            </Group>
-          </Stack>
-        </Card>
-      )}
-
-      {/* Tuition Selection (only if no pending payment) */}
-      {!pendingPayment && (
-        <>
-          {payableTuitions.length === 0 ? (
-            <Card withBorder>
-              <EmptyAnimation message={t("onlinePayment.allPaid")} />
-            </Card>
-          ) : (
-            <>
-              <Card withBorder p="md">
                 <Stack gap="md">
                   <Group justify="space-between">
-                    <Text fw={600}>{t("onlinePayment.selectTuitions")}</Text>
-                    <Button variant="subtle" size="xs" onClick={selectAll}>
-                      {selectedIds.size === payableTuitions.length
-                        ? t("common.deselectAll")
-                        : t("common.selectAll")}
-                    </Button>
+                    <Group gap="xs">
+                      <IconLoader size={20} />
+                      <Text fw={600}>
+                        {t("onlinePayment.pendingPayment")}
+                      </Text>
+                    </Group>
+                    <Badge color="yellow" variant="light">
+                      {t("onlinePayment.waitingPayment")}
+                    </Badge>
                   </Group>
 
-                  {payableTuitions.map((tuition) => (
-                    <TuitionCheckItem
-                      key={tuition.id}
-                      tuition={tuition}
-                      checked={selectedIds.has(tuition.id)}
-                      onChange={() => toggleSelection(tuition.id)}
-                    />
-                  ))}
-                </Stack>
-              </Card>
-
-              {/* Summary & Pay */}
-              {selectedIds.size > 0 && (
-                <Card
-                  pos="sticky"
-                  bottom={0}
-                  withBorder
-                  p="md"
-                  bg="white"
-                  style={{ zIndex: 100 }}
-                >
-                  <Group justify="space-between">
-                    <Box>
-                      <Text size="sm" c="dimmed">
-                        {t("onlinePayment.totalSelected", {
-                          count: selectedIds.size,
-                        })}
+                  <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
+                    <Stack gap={2}>
+                      <Text size="xs" c="dimmed">
+                        {t("onlinePayment.orderId")}
                       </Text>
-                      <Text size="lg" fw={700} c="blue">
+                      <Text size="sm" fw={500}>
+                        {pendingPayment.orderId}
+                      </Text>
+                    </Stack>
+                    <Stack gap={2}>
+                      <Text size="xs" c="dimmed">
+                        {t("onlinePayment.amount")}
+                      </Text>
+                      <Text size="sm" fw={700} c="blue">
                         <NumberFormatter
-                          value={selectedTotal}
+                          value={Number(pendingPayment.grossAmount)}
                           prefix="Rp "
                           thousandSeparator="."
                           decimalSeparator=","
                         />
                       </Text>
-                    </Box>
+                    </Stack>
+                    {pendingPayment.expiryTime && (
+                      <Stack gap={2}>
+                        <Text size="xs" c="dimmed">
+                          {t("onlinePayment.expiresAt")}
+                        </Text>
+                        <Text size="sm">
+                          {dayjs(pendingPayment.expiryTime).format(
+                            "DD/MM/YYYY HH:mm",
+                          )}
+                        </Text>
+                      </Stack>
+                    )}
+                  </SimpleGrid>
+
+                  <Divider />
+
+                  <Text size="xs" c="dimmed" fw={600}>
+                    {t("onlinePayment.items")}:
+                  </Text>
+                  {pendingPayment.items.map((item) => (
+                    <Group key={item.id} justify="space-between">
+                      <Text size="sm">
+                        {item.tuition.classAcademic.className} -{" "}
+                        {item.tuition.period} {item.tuition.year}
+                      </Text>
+                      <Text size="sm" fw={500}>
+                        <NumberFormatter
+                          value={Number(item.amount)}
+                          prefix="Rp "
+                          thousandSeparator="."
+                          decimalSeparator=","
+                        />
+                      </Text>
+                    </Group>
+                  ))}
+
+                  <Group>
                     <Button
-                      size="md"
-                      leftSection={<IconCreditCard size={20} />}
-                      onClick={handleCreatePayment}
-                      loading={createPayment.isPending}
+                      onClick={handleRetrySnap}
                       disabled={!snapReady}
+                      leftSection={<IconCreditCard size={18} />}
                     >
-                      {t("onlinePayment.payNow")}
+                      {t("onlinePayment.continuePayment")}
+                    </Button>
+                    <Button
+                      variant="light"
+                      color="red"
+                      leftSection={<IconX size={18} />}
+                      onClick={() =>
+                        handleCancelPayment(pendingPayment.id)
+                      }
+                      loading={cancelPayment.isPending}
+                    >
+                      {t("onlinePayment.cancelPayment")}
                     </Button>
                   </Group>
-
-                  {createPayment.isError && (
-                    <Alert
-                      color="red"
-                      variant="light"
-                      mt="sm"
-                      icon={<IconAlertCircle size={16} />}
-                    >
-                      {createPayment.error instanceof Error
-                        ? createPayment.error.message
-                        : t("common.error")}
-                    </Alert>
-                  )}
-                </Card>
-              )}
-            </>
-          )}
-        </>
-      )}
-
-      {/* Payment History */}
-      {onlinePayments.length > 0 && (
-        <>
-          <Title order={4} mt="md">
-            {t("onlinePayment.history")}
-          </Title>
-          {onlinePayments
-            .filter((p) => p.status !== "PENDING")
-            .map((payment) => (
-              <Card key={payment.id} withBorder p="md">
-                <Group justify="space-between" mb="xs">
-                  <Text size="sm" fw={500}>
-                    {payment.orderId}
-                  </Text>
-                  <Badge color={getStatusColor(payment.status)} variant="light">
-                    {payment.status}
-                  </Badge>
-                </Group>
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed">
-                    {dayjs(payment.createdAt).format("DD/MM/YYYY HH:mm")}
-                  </Text>
-                  <Text size="sm" fw={600}>
-                    <NumberFormatter
-                      value={Number(payment.grossAmount)}
-                      prefix="Rp "
-                      thousandSeparator="."
-                      decimalSeparator=","
-                    />
-                  </Text>
-                </Group>
+                </Stack>
               </Card>
-            ))}
-        </>
-      )}
+            )}
+
+            {/* Tuition Selection (only if no pending payment) */}
+            {!pendingPayment && (
+              <>
+                {payableTuitions.length === 0 ? (
+                  <Card withBorder>
+                    <EmptyAnimation
+                      message={t("onlinePayment.allPaid")}
+                    />
+                  </Card>
+                ) : (
+                  <>
+                    <Card withBorder p="md">
+                      <Stack gap="md">
+                        <Group justify="space-between">
+                          <Text fw={600}>
+                            {t("onlinePayment.selectTuitions")}
+                          </Text>
+                          <Checkbox
+                            label={t("common.selectAll")}
+                            checked={allSelected}
+                            indeterminate={someSelected}
+                            onChange={selectAll}
+                            size="sm"
+                          />
+                        </Group>
+
+                        {payableTuitions.map((tuition) => (
+                          <TuitionCheckItem
+                            key={tuition.id}
+                            tuition={tuition}
+                            checked={selectedIds.has(tuition.id)}
+                            onChange={() => toggleSelection(tuition.id)}
+                          />
+                        ))}
+                      </Stack>
+                    </Card>
+
+                    {/* Summary & Pay - fixed on mobile, sticky on desktop */}
+                    {selectedIds.size > 0 && (
+                      <Card
+                        withBorder
+                        p="md"
+                        bg="white"
+                        className="pay-footer"
+                      >
+                        <Group justify="space-between">
+                          <Box>
+                            <Text size="sm" c="dimmed">
+                              {t("onlinePayment.totalSelected", {
+                                count: selectedIds.size,
+                              })}
+                            </Text>
+                            <Text size="lg" fw={700} c="blue">
+                              <NumberFormatter
+                                value={selectedTotal}
+                                prefix="Rp "
+                                thousandSeparator="."
+                                decimalSeparator=","
+                              />
+                            </Text>
+                          </Box>
+                          <Button
+                            size="md"
+                            leftSection={<IconCreditCard size={20} />}
+                            onClick={handleCreatePayment}
+                            loading={createPayment.isPending}
+                            disabled={!snapReady}
+                          >
+                            {t("onlinePayment.payNow")}
+                          </Button>
+                        </Group>
+
+                        {createPayment.isError && (
+                          <Alert
+                            color="red"
+                            variant="light"
+                            mt="sm"
+                            icon={<IconAlertCircle size={16} />}
+                          >
+                            {createPayment.error instanceof Error
+                              ? createPayment.error.message
+                              : t("common.error")}
+                          </Alert>
+                        )}
+                      </Card>
+                    )}
+                  </>
+                )}
+              </>
+            )}
+          </Stack>
+        </Tabs.Panel>
+
+        <Tabs.Panel value="history" pt="md">
+          <Stack gap="md">
+            {completedPayments.length === 0 ? (
+              <Card withBorder>
+                <EmptyAnimation message={t("payment.noHistory")} />
+              </Card>
+            ) : (
+              completedPayments.map((payment) => (
+                <Card key={payment.id} withBorder p="md">
+                  <Group justify="space-between" mb="xs">
+                    <Text size="sm" fw={500}>
+                      {payment.orderId}
+                    </Text>
+                    <Badge
+                      color={getStatusColor(payment.status)}
+                      variant="light"
+                    >
+                      {payment.status}
+                    </Badge>
+                  </Group>
+                  <Group justify="space-between">
+                    <Text size="sm" c="dimmed">
+                      {dayjs(payment.createdAt).format("DD/MM/YYYY HH:mm")}
+                    </Text>
+                    <Text size="sm" fw={600}>
+                      <NumberFormatter
+                        value={Number(payment.grossAmount)}
+                        prefix="Rp "
+                        thousandSeparator="."
+                        decimalSeparator=","
+                      />
+                    </Text>
+                  </Group>
+                </Card>
+              ))
+            )}
+          </Stack>
+        </Tabs.Panel>
+      </Tabs>
     </Stack>
   );
 }

@@ -133,6 +133,46 @@ export function useDeleteStudent() {
   });
 }
 
+export function useBulkDeleteStudents() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (nisList: string[]) => {
+      const { data } = await apiClient.post<{
+        success: boolean;
+        data: {
+          deleted: number;
+          skipped: Array<{ nis: string; name: string }>;
+        };
+      }>("/students/bulk-delete", { nisList });
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.students.lists() });
+    },
+  });
+}
+
+export function useBulkUpdateStudents() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      nisList: string[];
+      updates: { startJoinDate?: string };
+    }) => {
+      const { data } = await apiClient.put<{
+        success: boolean;
+        data: { updated: number };
+      }>("/students/bulk-update", params);
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.students.lists() });
+    },
+  });
+}
+
 export function useImportStudents() {
   const queryClient = useQueryClient();
 

@@ -15,6 +15,7 @@ import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import {
   IconEdit,
+  IconRefresh,
   IconStar,
   IconStarFilled,
   IconTrash,
@@ -52,7 +53,7 @@ export default function AcademicYearTable() {
     columnDefs,
   );
 
-  const { data, isLoading } = useAcademicYears({ page, limit: 10 });
+  const { data, isLoading, refetch, isFetching } = useAcademicYears({ page, limit: 10 });
 
   const deleteAcademicYear = useDeleteAcademicYear();
   const setActive = useSetActiveAcademicYear();
@@ -130,7 +131,10 @@ export default function AcademicYearTable() {
 
   return (
     <Stack gap="md">
-      <Group justify="flex-end">
+      <Group justify="flex-end" gap="xs">
+        <ActionIcon variant="default" size="lg" onClick={() => refetch()} loading={isFetching}>
+          <IconRefresh size={18} />
+        </ActionIcon>
         <ColumnSettingsDrawer tableId="academicYears" columnDefs={columnDefs} />
       </Group>
 

@@ -174,6 +174,7 @@
       "unpaid": "Belum Bayar",
       "partial": "Sebagian",
       "paid": "Lunas",
+      "void": "Batal",
       "all": "Semua Status"
     },
     "overdue": "Jatuh Tempo",
@@ -244,7 +245,17 @@
     "generatedSuccess": "Berhasil membuat {count} tagihan",
     "paymentConfig": "Konfigurasi Pembayaran",
     "selectAcademicYear": "Pilih tahun ajaran",
-    "selectClassPlaceholder": "Pilih kelas"
+    "selectClassPlaceholder": "Pilih kelas",
+    "massUpdate": {
+      "title": "Ubah Status Pembayaran",
+      "confirm": "Apakah Anda yakin ingin mengubah {count} tagihan menjadi {status}?",
+      "success": "Berhasil mengubah {count} tagihan",
+      "selected": "{count} dipilih",
+      "markVoid": "Tandai Batal",
+      "markUnpaid": "Tandai Belum Bayar",
+      "markPaid": "Tandai Lunas",
+      "cannotVoidWithPayments": "Tidak dapat membatalkan tagihan yang sudah memiliki pembayaran"
+    }
   },
   "payment": {
     "title": "Pembayaran",
@@ -375,7 +386,14 @@
     "effectiveFee": "Biaya Efektif:",
     "scholarshipDeduction": "Beasiswa:",
     "discountDeduction": "Diskon:",
-    "validationTuitionAmount": "Harap pilih tagihan dan masukkan jumlah"
+    "validationTuitionAmount": "Harap pilih tagihan dan masukkan jumlah",
+    "bulk": {
+      "selected": "{count} dipilih",
+      "reverse": "Batalkan Terpilih",
+      "reverseTitle": "Batalkan Pembayaran Massal",
+      "reverseConfirm": "Apakah Anda yakin ingin membatalkan {count} pembayaran? Ini akan memperbarui status tagihan.",
+      "reverseSuccess": "Berhasil membatalkan {reversed} pembayaran"
+    }
   },
   "nav": {
     "home": "Beranda",
@@ -480,7 +498,15 @@
     "defaultPasswordNote": "Karyawan dibuat dengan password default (123456)",
     "notFoundMessage": "Karyawan tidak ditemukan",
     "editDescription": "Mengedit {name}",
-    "addDescription": "Buat akun karyawan baru"
+    "addDescription": "Buat akun karyawan baru",
+    "bulk": {
+      "selected": "{count} dipilih",
+      "delete": "Hapus Terpilih",
+      "deleteTitle": "Hapus Karyawan Massal",
+      "deleteConfirm": "Apakah Anda yakin ingin menghapus {count} karyawan? Karyawan dengan riwayat pembayaran akan dilewati.",
+      "deleteSuccess": "Berhasil menghapus {deleted} karyawan",
+      "deleteSkipped": "{count} karyawan dilewati (memiliki riwayat pembayaran): {names}"
+    }
   },
   "student": {
     "title": "Siswa",
@@ -553,7 +579,22 @@
     "chooseFile": "Pilih file .xlsx",
     "processImport": "Proses Import",
     "importedCount": "Diimpor: {count}, Diperbarui: {updated}",
-    "rowErrors": "{count} baris memiliki error"
+    "rowErrors": "{count} baris memiliki error",
+    "bulk": {
+      "selected": "{count} dipilih",
+      "selectAtLeastOne": "Pilih minimal satu siswa",
+      "noUpdates": "Tidak ada perubahan",
+      "deleteTitle": "Hapus Siswa Massal",
+      "deleteConfirm": "Apakah Anda yakin ingin menghapus {count} siswa? Siswa dengan riwayat pembayaran akan dilewati.",
+      "deleteSuccess": "Berhasil menghapus {deleted} siswa",
+      "deleteSkipped": "{count} siswa dilewati (memiliki riwayat pembayaran): {names}",
+      "updateJoinDate": "Ubah Tanggal Masuk",
+      "updateTitle": "Ubah Siswa Massal",
+      "updateConfirm": "Ubah tanggal masuk untuk {count} siswa?",
+      "updateSuccess": "Berhasil mengubah {count} siswa",
+      "delete": "Hapus Terpilih",
+      "update": "Ubah Tanggal Masuk"
+    }
   },
   "academicYear": {
     "title": "Tahun Ajaran",
@@ -691,7 +732,15 @@
     "importClassesDescription": "Import data kelas dari file Excel",
     "importClassesSuccess": "Berhasil mengimpor {count} kelas",
     "importStudentsDescription": "Import data siswa dari file Excel",
-    "importStudentsSuccess": "Berhasil mengimpor {imported}, memperbarui {updated} siswa"
+    "importStudentsSuccess": "Berhasil mengimpor {imported}, memperbarui {updated} siswa",
+    "bulk": {
+      "selected": "{count} dipilih",
+      "delete": "Hapus Terpilih",
+      "deleteTitle": "Hapus Kelas Massal",
+      "deleteConfirm": "Apakah Anda yakin ingin menghapus {count} kelas? Kelas dengan siswa atau tagihan akan dilewati.",
+      "deleteSuccess": "Berhasil menghapus {deleted} kelas",
+      "deleteSkipped": "{count} kelas dilewati (memiliki siswa/tagihan): {names}"
+    }
   },
   "scholarship": {
     "title": "Beasiswa",
@@ -768,7 +817,20 @@
     "processImport": "Proses Import",
     "instructions": "Petunjuk:",
     "rowErrors": "{count} baris memiliki error:",
-    "andMoreErrors": "... dan {count} error lainnya"
+    "andMoreErrors": "... dan {count} error lainnya",
+    "bulk": {
+      "selected": "{count} dipilih",
+      "delete": "Hapus Terpilih",
+      "deleteTitle": "Hapus Beasiswa Massal",
+      "deleteConfirm": "Apakah Anda yakin ingin menghapus {count} beasiswa?",
+      "deleteSuccess": "Berhasil menghapus {deleted} beasiswa",
+      "updateAmount": "Ubah Nominal",
+      "updateAmountTitle": "Ubah Nominal Beasiswa Massal",
+      "updateAmountConfirm": "Ubah nominal untuk {count} beasiswa?",
+      "updateSuccess": "Berhasil mengubah {count} beasiswa",
+      "markFull": "Tandai Penuh",
+      "markPartial": "Tandai Parsial"
+    }
   },
   "discount": {
     "title": "Diskon",
@@ -869,7 +931,21 @@
     "instructions": "Petunjuk:",
     "rowErrors": "{count} baris memiliki error:",
     "andMoreErrors": "... dan {count} error lainnya",
-    "tuitionsAffected": "Tagihan terdampak: {count}"
+    "tuitionsAffected": "Tagihan terdampak: {count}",
+    "bulk": {
+      "selected": "{count} dipilih",
+      "delete": "Hapus Terpilih",
+      "deleteTitle": "Hapus Diskon Massal",
+      "deleteConfirm": "Apakah Anda yakin ingin menghapus {count} diskon?",
+      "deleteSuccess": "Berhasil menghapus {deleted} diskon",
+      "deleteSkipped": "{count} diskon dilewati (diterapkan ke tagihan): {names}",
+      "updateAmount": "Ubah Nominal",
+      "updateAmountTitle": "Ubah Nominal Diskon Massal",
+      "updateAmountConfirm": "Ubah nominal untuk {count} diskon?",
+      "updateSuccess": "Berhasil mengubah {count} diskon",
+      "activate": "Aktifkan",
+      "deactivate": "Nonaktifkan"
+    }
   },
   "studentAccount": {
     "title": "Akun Siswa",
@@ -940,7 +1016,29 @@
       "totalPaid": "Total Terbayar",
       "totalUnpaid": "Total Belum Bayar",
       "percentage": "Persentase Pembayaran",
-      "filterByYear": "Filter berdasarkan Tahun Ajaran"
+      "filterByYear": "Filter berdasarkan Tahun Ajaran",
+      "paidTuitions": "SPP Lunas",
+      "partialPayments": "Pembayaran Sebagian",
+      "unpaidTuitions": "SPP Belum Bayar",
+      "paymentProgress": "Progres Pembayaran Keseluruhan",
+      "totalFees": "Total Tagihan",
+      "scholarships": "Beasiswa",
+      "discounts": "Diskon",
+      "netAmountDue": "Jumlah Bersih",
+      "totalCollected": "Total Terkumpul",
+      "outstanding": "Sisa Tagihan",
+      "collectionRate": "Tingkat Penagihan",
+      "afterScholarships": "setelah beasiswa",
+      "selectYear": "Pilih Tahun Ajaran",
+      "students": "Siswa",
+      "tuitions": "SPP",
+      "paid": "Lunas",
+      "partial": "Sebagian",
+      "unpaid": "Belum Bayar",
+      "scholarshipDiscount": "Potongan Beasiswa",
+      "discountAmount": "Jumlah Diskon",
+      "collected": "Terkumpul",
+      "noData": "Tidak ada data untuk tahun ajaran ini"
     },
     "studentsWithOverdue": "Siswa dengan Tunggakan",
     "totalOverdueRecords": "Total Catatan Tunggakan",
@@ -1072,6 +1170,12 @@
     "history": "Riwayat Pembayaran",
     "allPaid": "Semua tagihan sudah lunas!",
     "maintenance": "Pembayaran online sedang dalam pemeliharaan. Silakan coba lagi nanti."
+  },
+  "history": {
+    "totalFee": "Total Tagihan",
+    "totalPaid": "Total Dibayar",
+    "remaining": "Sisa",
+    "allYears": "Semua Tahun Ajaran"
   },
   "paymentSettings": {
     "title": "Pengaturan Pembayaran",

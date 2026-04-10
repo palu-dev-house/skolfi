@@ -119,6 +119,26 @@ export function useDeleteEmployee() {
   });
 }
 
+export function useBulkDeleteEmployees() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { data } = await apiClient.post<{
+        success: boolean;
+        data: {
+          deleted: number;
+          skipped: Array<{ id: string; name: string }>;
+        };
+      }>("/employees/bulk-delete", { ids });
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.employees.lists() });
+    },
+  });
+}
+
 export function useResetEmployeePassword() {
   return useMutation({
     mutationFn: async (id: string) => {

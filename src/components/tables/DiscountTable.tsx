@@ -3,8 +3,11 @@
 import {
   ActionIcon,
   Badge,
+  Button,
+  Checkbox,
   Group,
   NumberFormatter,
+  NumberInput,
   Paper,
   Select,
   Skeleton,
@@ -16,13 +19,19 @@ import {
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import {
+  IconCheck,
+  IconCurrencyDollar,
   IconEdit,
   IconFilter,
   IconPlayerPlay,
+  IconPlayerStop,
+  IconRefresh,
   IconTrash,
+  IconX,
 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import ColumnSettingsDrawer, {
   useColumnSettings,
 } from "@/components/ui/ColumnSettingsDrawer";
@@ -31,6 +40,8 @@ import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import {
   useApplyDiscount,
   useApplyDiscountPreview,
+  useBulkDeleteDiscounts,
+  useBulkUpdateDiscounts,
   useDeleteDiscount,
   useDiscounts,
 } from "@/hooks/api/useDiscounts";
@@ -51,7 +62,7 @@ export default function DiscountTable() {
   // Set default academic year
   const effectiveAcademicYearId = academicYearId || activeYear?.id;
 
-  const { data, isLoading } = useDiscounts({
+  const { data, isLoading, refetch, isFetching } = useDiscounts({
     page,
     limit: 10,
     academicYearId: effectiveAcademicYearId,
@@ -72,9 +83,134 @@ export default function DiscountTable() {
     columnDefs,
   );
 
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   const deleteDiscount = useDeleteDiscount();
   const applyPreview = useApplyDiscountPreview();
   const applyDiscount = useApplyDiscount();
+  const bulkDelete = useBulkDeleteDiscounts();
+  const bulkUpdate = useBulkUpdateDiscounts();
+
+  const discountIds = data?.discounts.map((d) => d.id) || [];
+  const allSelected =
+    discountIds.length > 0 && discountIds.every((id) => selectedIds.has(id));
+  const someSelected = discountIds.some((id) => selectedIds.has(id));
+
+  const toggleAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(discountIds));
+    }
+  };
+
+  const toggleOne = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkDelete = () => {
+    const ids = Array.from(selectedIds);
+    modals.openConfirmModal({
+      title: t("discount.bulk.deleteTitle"),
+      children: (
+        <Text size="sm">
+          {t("discount.bulk.deleteConfirm", { count: ids.length })}
+        </Text>
+      ),
+      labels: { confirm: t("common.delete"), cancel: t("common.cancel") },
+      confirmProps: { color: "red" },
+      onConfirm: () => {
+        bulkDelete.mutate(ids, {
+          onSuccess: (result) => {
+            notifications.show({
+              title: t("common.success"),
+              message: t("discount.bulk.deleteSuccess", {
+                deleted: result.deleted,
+              }),
+              color: "green",
+            });
+            if (result.skipped.length > 0) {
+              notifications.show({
+                title: t("common.warning"),
+                message: t("discount.bulk.deleteSkipped", {
+                  count: result.skipped.length,
+                  names: result.skipped.map((s) => s.name).join(", "),
+                }),
+                color: "orange",
+                autoClose: 8000,
+              });
+            }
+            setSelectedIds(new Set());
+          },
+          onError: (error) => {
+            notifications.show({
+              title: t("common.error"),
+              message: error.message,
+              color: "red",
+            });
+          },
+        });
+      },
+    });
+  };
+
+  const handleBulkUpdateAmount = () => {
+    const ids = Array.from(selectedIds);
+    modals.open({
+      title: t("discount.bulk.updateAmountTitle"),
+      children: (
+        <BulkUpdateDiscountAmountForm
+          ids={ids}
+          onSuccess={(count) => {
+            setSelectedIds(new Set());
+            notifications.show({
+              title: t("common.success"),
+              message: t("discount.bulk.updateSuccess", { count }),
+              color: "green",
+            });
+          }}
+          onError={(msg) => {
+            notifications.show({
+              title: t("common.error"),
+              message: msg,
+              color: "red",
+            });
+          }}
+        />
+      ),
+    });
+  };
+
+  const handleBulkSetActive = (isActive: boolean) => {
+    const ids = Array.from(selectedIds);
+    bulkUpdate.mutate(
+      { ids, updates: { isActive } },
+      {
+        onSuccess: (result) => {
+          notifications.show({
+            title: t("common.success"),
+            message: t("discount.bulk.updateSuccess", {
+              count: result.updated,
+            }),
+            color: "green",
+          });
+          setSelectedIds(new Set());
+        },
+        onError: (error) => {
+          notifications.show({
+            title: t("common.error"),
+            message: error.message,
+            color: "red",
+          });
+        },
+      },
+    );
+  };
 
   const handleDelete = (id: string, name: string) => {
     modals.openConfirmModal({
@@ -223,15 +359,87 @@ export default function DiscountTable() {
             clearable
             w={150}
           />
+          <ActionIcon variant="default" size="lg" onClick={() => refetch()} loading={isFetching}>
+            <IconRefresh size={18} />
+          </ActionIcon>
           <ColumnSettingsDrawer tableId="discounts" columnDefs={columnDefs} />
         </Group>
       </Paper>
+
+      {selectedIds.size > 0 && (
+        <Paper withBorder p="sm" bg="blue.0">
+          <Group justify="space-between">
+            <Group gap="sm">
+              <Text size="sm" fw={500}>
+                {t("discount.bulk.selected", { count: selectedIds.size })}
+              </Text>
+              <ActionIcon
+                variant="subtle"
+                size="sm"
+                onClick={() => setSelectedIds(new Set())}
+              >
+                <IconX size={14} />
+              </ActionIcon>
+            </Group>
+            <Group gap="xs">
+              <Button
+                size="xs"
+                variant="light"
+                color="blue"
+                leftSection={<IconCurrencyDollar size={14} />}
+                onClick={handleBulkUpdateAmount}
+                loading={bulkUpdate.isPending}
+              >
+                {t("discount.bulk.updateAmount")}
+              </Button>
+              <Button
+                size="xs"
+                variant="light"
+                color="green"
+                leftSection={<IconCheck size={14} />}
+                onClick={() => handleBulkSetActive(true)}
+                loading={bulkUpdate.isPending}
+              >
+                {t("discount.bulk.activate")}
+              </Button>
+              <Button
+                size="xs"
+                variant="light"
+                color="orange"
+                leftSection={<IconPlayerStop size={14} />}
+                onClick={() => handleBulkSetActive(false)}
+                loading={bulkUpdate.isPending}
+              >
+                {t("discount.bulk.deactivate")}
+              </Button>
+              <Button
+                size="xs"
+                variant="light"
+                color="red"
+                leftSection={<IconTrash size={14} />}
+                onClick={handleBulkDelete}
+                loading={bulkDelete.isPending}
+              >
+                {t("discount.bulk.delete")}
+              </Button>
+            </Group>
+          </Group>
+        </Paper>
+      )}
 
       <Paper withBorder>
         <Table.ScrollContainer minWidth={900}>
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
+                <Table.Th w={40}>
+                  <Checkbox
+                    checked={allSelected}
+                    indeterminate={someSelected && !allSelected}
+                    onChange={toggleAll}
+                    size="xs"
+                  />
+                </Table.Th>
                 {orderedKeys.map((key) => {
                   switch (key) {
                     case "name":
@@ -276,6 +484,9 @@ export default function DiscountTable() {
               {isLoading &&
                 Array.from({ length: 5 }).map((_, i) => (
                   <Table.Tr key={`skeleton-${i}`}>
+                    <Table.Td>
+                      <Skeleton height={20} width={20} />
+                    </Table.Td>
                     {Array.from({ length: orderedKeys.length }).map((_, j) => (
                       <Table.Td key={`skeleton-cell-${j}`}>
                         <Skeleton height={20} />
@@ -285,7 +496,7 @@ export default function DiscountTable() {
                 ))}
               {!isLoading && data?.discounts.length === 0 && (
                 <Table.Tr>
-                  <Table.Td colSpan={orderedKeys.length}>
+                  <Table.Td colSpan={orderedKeys.length + 1}>
                     <Text ta="center" c="dimmed" py="md">
                       {t("discount.notFound")}
                     </Text>
@@ -293,7 +504,21 @@ export default function DiscountTable() {
                 </Table.Tr>
               )}
               {data?.discounts.map((discount) => (
-                <Table.Tr key={discount.id}>
+                <Table.Tr
+                  key={discount.id}
+                  bg={
+                    selectedIds.has(discount.id)
+                      ? "var(--mantine-color-blue-light)"
+                      : undefined
+                  }
+                >
+                  <Table.Td>
+                    <Checkbox
+                      checked={selectedIds.has(discount.id)}
+                      onChange={() => toggleOne(discount.id)}
+                      size="xs"
+                    />
+                  </Table.Td>
                   {orderedKeys.map((key) => {
                     switch (key) {
                       case "name":
@@ -444,6 +669,64 @@ export default function DiscountTable() {
           onChange={(p) => setParams({ page: p })}
         />
       )}
+    </Stack>
+  );
+}
+
+function BulkUpdateDiscountAmountForm({
+  ids,
+  onSuccess,
+  onError,
+}: {
+  ids: string[];
+  onSuccess: (count: number) => void;
+  onError: (msg: string) => void;
+}) {
+  const t = useTranslations();
+  const [amount, setAmount] = useState<string | number>("");
+  const bulkUpdate = useBulkUpdateDiscounts();
+
+  return (
+    <Stack gap="md">
+      <Text size="sm">
+        {t("discount.bulk.updateAmountConfirm", { count: ids.length })}
+      </Text>
+      <NumberInput
+        label={t("common.amount")}
+        placeholder={t("discount.amountPlaceholder")}
+        value={amount}
+        onChange={setAmount}
+        min={0}
+        prefix="Rp "
+        thousandSeparator="."
+        decimalSeparator=","
+      />
+      <Group justify="flex-end" gap="xs">
+        <Button variant="default" onClick={() => modals.closeAll()}>
+          {t("common.cancel")}
+        </Button>
+        <Button
+          disabled={!amount || Number(amount) <= 0}
+          loading={bulkUpdate.isPending}
+          onClick={() => {
+            if (!amount || Number(amount) <= 0) return;
+            bulkUpdate.mutate(
+              { ids, updates: { discountAmount: Number(amount) } },
+              {
+                onSuccess: (result) => {
+                  modals.closeAll();
+                  onSuccess(result.updated);
+                },
+                onError: (error) => {
+                  onError(error.message);
+                },
+              },
+            );
+          }}
+        >
+          {t("common.save")}
+        </Button>
+      </Group>
     </Stack>
   );
 }

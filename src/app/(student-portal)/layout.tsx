@@ -35,24 +35,13 @@ import { LoadingAnimation } from "@/components/ui/LottieAnimation";
 import { useStudentLogout, useStudentMe } from "@/hooks/api/useStudentAuth";
 
 const navLinks = [
-  { href: "/portal", labelKey: "nav.home", icon: IconHome, color: "teal" },
-  {
-    href: "/portal/payment",
-    labelKey: "nav.payment",
-    icon: IconCreditCard,
-    color: "teal",
-  },
-  {
-    href: "/portal/history",
-    labelKey: "nav.history",
-    icon: IconHistory,
-    color: "teal",
-  },
+  { href: "/portal", labelKey: "nav.home", icon: IconHome },
+  { href: "/portal/payment", labelKey: "nav.payment", icon: IconCreditCard },
+  { href: "/portal/history", labelKey: "nav.history", icon: IconHistory },
   {
     href: "/portal/change-password",
     labelKey: "nav.changePassword",
     icon: IconKey,
-    color: "teal",
   },
 ];
 
@@ -63,14 +52,6 @@ function getInitials(name: string): string {
     .slice(0, 2)
     .join("")
     .toUpperCase();
-}
-
-function getGreetingKey(): string {
-  const hour = new Date().getHours();
-  if (hour < 11) return "morning";
-  if (hour < 15) return "afternoon";
-  if (hour < 18) return "evening";
-  return "night";
 }
 
 export default function StudentPortalLayout({
@@ -125,7 +106,7 @@ export default function StudentPortalLayout({
           alignItems: "center",
           justifyContent: "center",
           minHeight: "100vh",
-          background: "var(--portal-bg)",
+          background: "var(--mantine-color-gray-0)",
         }}
       >
         <LoadingAnimation />
@@ -136,9 +117,9 @@ export default function StudentPortalLayout({
   return (
     <AppShell
       className="portal-shell"
-      header={{ height: 64 }}
+      header={{ height: 60 }}
       navbar={{
-        width: 260,
+        width: 240,
         breakpoint: "sm",
         collapsed: { mobile: true },
       }}
@@ -147,55 +128,36 @@ export default function StudentPortalLayout({
       {/* Header */}
       <AppShell.Header className="portal-header">
         <Group h="100%" px="md" justify="space-between">
-          <Group gap="sm">
-            <Box
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 10,
-                background: "rgba(255,255,255,0.2)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <IconSchool size={20} color="white" />
-            </Box>
-            <Box visibleFrom="xs">
-              <Text size="sm" fw={700} c="white" lh={1.2}>
-                {t("portal.title")}
-              </Text>
-              <Text size="xs" c="white" opacity={0.75} lh={1.2}>
-                {t("portal.subtitle")}
-              </Text>
-            </Box>
+          <Group gap="xs">
+            <IconSchool size={22} color="white" />
+            <Text size="sm" fw={700} c="white" visibleFrom="xs">
+              {t("portal.title")}
+            </Text>
           </Group>
           <Group gap="sm">
             <Box visibleFrom="sm" ta="right">
-              <Text size="xs" c="white" opacity={0.75}>
-                {t(`portal.greeting.${getGreetingKey()}`)}
-              </Text>
               <Text size="sm" fw={600} c="white">
                 {user?.studentName}
               </Text>
             </Box>
             <Avatar
               radius="xl"
-              size={36}
+              size={32}
+              color="white"
+              variant="transparent"
               styles={{
                 root: {
-                  backgroundColor: "rgba(255,255,255,0.2)",
-                  border: "2px solid rgba(255,255,255,0.3)",
+                  border: "1.5px solid rgba(255,255,255,0.4)",
                   color: "white",
-                  fontWeight: 700,
-                  fontSize: 13,
+                  fontWeight: 600,
+                  fontSize: 12,
                 },
               }}
             >
               {user?.studentName ? (
                 getInitials(user.studentName)
               ) : (
-                <IconUser size={16} />
+                <IconUser size={14} />
               )}
             </Avatar>
             <LanguageSwitcher />
@@ -216,54 +178,28 @@ export default function StudentPortalLayout({
       {/* Sidebar */}
       <AppShell.Navbar className="portal-nav" p="md" component={ScrollArea}>
         <Stack gap="md" style={{ flex: 1 }}>
-          {/* Mobile user card */}
-          <Box hiddenFrom="sm">
-            <Box
-              className="portal-card-accent"
-              p="md"
-              style={{ borderRadius: "var(--portal-radius-sm)" }}
-            >
-              <Group gap="sm" style={{ position: "relative", zIndex: 1 }}>
-                <Avatar
-                  radius="xl"
-                  size="lg"
-                  styles={{
-                    root: {
-                      backgroundColor: "rgba(255,255,255,0.2)",
-                      color: "white",
-                      fontWeight: 700,
-                    },
-                  }}
-                >
-                  {user?.studentName ? (
-                    getInitials(user.studentName)
-                  ) : (
-                    <IconUser size={20} />
-                  )}
-                </Avatar>
-                <Box>
-                  <Text size="xs" c="white" opacity={0.8}>
-                    {t(`portal.greeting.${getGreetingKey()}`)}
-                  </Text>
-                  <Text size="sm" fw={700} c="white">
-                    {user?.studentName}
-                  </Text>
-                  <Text size="xs" c="white" opacity={0.6}>
-                    NIS: {user?.studentNis}
-                  </Text>
-                </Box>
-              </Group>
-            </Box>
+          {/* Mobile user info */}
+          <Box hiddenFrom="sm" pb="sm" mb="sm" bd="0 0 1px 0 solid var(--mantine-color-gray-2)">
+            <Group gap="sm">
+              <Avatar radius="xl" size="md" color="dark">
+                {user?.studentName ? (
+                  getInitials(user.studentName)
+                ) : (
+                  <IconUser size={16} />
+                )}
+              </Avatar>
+              <Box>
+                <Text size="sm" fw={600}>
+                  {user?.studentName}
+                </Text>
+                <Text size="xs" c="dimmed">
+                  NIS: {user?.studentNis}
+                </Text>
+              </Box>
+            </Group>
           </Box>
 
-          <Text
-            size="xs"
-            fw={700}
-            c="dimmed"
-            tt="uppercase"
-            px="xs"
-            style={{ letterSpacing: "0.06em" }}
-          >
+          <Text size="xs" fw={600} c="dimmed" tt="uppercase" px="xs">
             {t("nav.mainMenu")}
           </Text>
 
@@ -278,36 +214,24 @@ export default function StudentPortalLayout({
                   className="portal-nav-item"
                   data-active={isActive}
                   style={{
-                    background: isActive
-                      ? "var(--portal-gradient-subtle)"
-                      : "transparent",
                     borderLeft: isActive
-                      ? "3px solid var(--portal-accent)"
+                      ? "3px solid var(--mantine-color-blue-6)"
                       : "3px solid transparent",
                   }}
                 >
                   <Group gap="sm">
-                    <Box
-                      style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 10,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        background: isActive
-                          ? "var(--portal-gradient)"
-                          : "var(--portal-gradient-subtle)",
-                        color: isActive ? "white" : "var(--portal-accent)",
-                        transition: "all 0.2s ease",
-                      }}
-                    >
-                      <link.icon size={18} />
-                    </Box>
+                    <link.icon
+                      size={18}
+                      color={
+                        isActive
+                          ? "var(--mantine-color-blue-6)"
+                          : "var(--mantine-color-gray-6)"
+                      }
+                    />
                     <Text
                       size="sm"
-                      fw={isActive ? 700 : 500}
-                      c={isActive ? "var(--portal-accent-dark)" : "dark"}
+                      fw={isActive ? 600 : 400}
+                      c={isActive ? "blue.7" : "dark"}
                     >
                       {t(link.labelKey)}
                     </Text>
@@ -333,7 +257,7 @@ export default function StudentPortalLayout({
       </AppShell.Navbar>
 
       <AppShell.Main className="portal-main">
-        <Box pb={{ base: 80, sm: 0 }}>{children}</Box>
+        <Box className="portal-content">{children}</Box>
       </AppShell.Main>
       <BottomNav />
     </AppShell>

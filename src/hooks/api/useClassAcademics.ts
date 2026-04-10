@@ -142,6 +142,28 @@ export function useDeleteClassAcademic() {
   });
 }
 
+export function useBulkDeleteClassAcademics() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { data } = await apiClient.post<{
+        success: boolean;
+        data: {
+          deleted: number;
+          skipped: Array<{ id: string; className: string }>;
+        };
+      }>("/classes/bulk-delete", { ids });
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.classAcademics.lists(),
+      });
+    },
+  });
+}
+
 export function useImportClassAcademics() {
   const queryClient = useQueryClient();
 

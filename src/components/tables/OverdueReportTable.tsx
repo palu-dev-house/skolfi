@@ -20,6 +20,7 @@ import {
   IconDownload,
   IconFilter,
   IconPhone,
+  IconRefresh,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
@@ -58,7 +59,7 @@ export default function OverdueReportTable() {
     grade: grade ? Number(grade) : undefined,
   });
 
-  const { data, isLoading } = useOverdueReport({
+  const { data, isLoading, refetch, isFetching } = useOverdueReport({
     classAcademicId: classAcademicId || undefined,
     grade: grade ? Number(grade) : undefined,
     academicYearId: academicYearId || activeYear?.id,
@@ -170,6 +171,9 @@ export default function OverdueReportTable() {
           >
             {t("exportToExcel")}
           </Button>
+          <ActionIcon variant="default" size="lg" onClick={() => refetch()} loading={isFetching}>
+            <IconRefresh size={18} />
+          </ActionIcon>
         </Group>
       </Paper>
 
