@@ -4,7 +4,6 @@ import {
   ActionIcon,
   Badge,
   Group,
-  Pagination,
   Paper,
   Skeleton,
   Stack,
@@ -23,6 +22,8 @@ import {
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import ColumnSettingsDrawer, { useColumnSettings } from "@/components/ui/ColumnSettingsDrawer";
+import TablePagination from "@/components/ui/TablePagination";
 import {
   useAcademicYears,
   useDeleteAcademicYear,
@@ -35,6 +36,16 @@ export default function AcademicYearTable() {
   const router = useRouter();
   const { setParams, getNumParam } = useQueryParams();
   const page = getNumParam("page", 1)!;
+
+  const columnDefs = [
+    { key: "year", label: t("academicYear.year") },
+    { key: "startDate", label: t("academicYear.startDate") },
+    { key: "endDate", label: t("academicYear.endDate") },
+    { key: "classes", label: t("class.title") },
+    { key: "status", label: t("common.status") },
+    { key: "actions", label: t("common.actions") },
+  ];
+  const { visibleKeys, orderedKeys } = useColumnSettings("academicYears", columnDefs);
 
   const { data, isLoading } = useAcademicYears({ page, limit: 10 });
 
@@ -114,24 +125,33 @@ export default function AcademicYearTable() {
 
   return (
     <Stack gap="md">
+      <Group justify="flex-end">
+        <ColumnSettingsDrawer tableId="academicYears" columnDefs={columnDefs} />
+      </Group>
+
       <Paper withBorder>
         <Table.ScrollContainer minWidth={600}>
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>{t("academicYear.year")}</Table.Th>
-                <Table.Th>{t("academicYear.startDate")}</Table.Th>
-                <Table.Th>{t("academicYear.endDate")}</Table.Th>
-                <Table.Th>{t("class.title")}</Table.Th>
-                <Table.Th>{t("common.status")}</Table.Th>
-                <Table.Th w={140}>{t("common.actions")}</Table.Th>
+                {orderedKeys.map((key) => {
+                  switch (key) {
+                    case "year": return <Table.Th key={key}>{t("academicYear.year")}</Table.Th>;
+                    case "startDate": return <Table.Th key={key}>{t("academicYear.startDate")}</Table.Th>;
+                    case "endDate": return <Table.Th key={key}>{t("academicYear.endDate")}</Table.Th>;
+                    case "classes": return <Table.Th key={key}>{t("class.title")}</Table.Th>;
+                    case "status": return <Table.Th key={key}>{t("common.status")}</Table.Th>;
+                    case "actions": return <Table.Th key={key} w={140}>{t("common.actions")}</Table.Th>;
+                    default: return null;
+                  }
+                })}
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
               {isLoading &&
                 Array.from({ length: 5 }).map((_, i) => (
                   <Table.Tr key={`skeleton-${i}`}>
-                    {Array.from({ length: 6 }).map((_, j) => (
+                    {Array.from({ length: orderedKeys.length }).map((_, j) => (
                       <Table.Td key={`skeleton-cell-${j}`}>
                         <Skeleton height={20} />
                       </Table.Td>
@@ -140,7 +160,7 @@ export default function AcademicYearTable() {
                 ))}
               {!isLoading && data?.academicYears.length === 0 && (
                 <Table.Tr>
-                  <Table.Td colSpan={6}>
+                  <Table.Td colSpan={orderedKeys.length}>
                     <Text ta="center" c="dimmed" py="md">
                       {t("academicYear.notFound")}
                     </Text>
@@ -149,65 +169,82 @@ export default function AcademicYearTable() {
               )}
               {data?.academicYears.map((ay) => (
                 <Table.Tr key={ay.id}>
-                  <Table.Td fw={600}>{ay.year}</Table.Td>
-                  <Table.Td>
-                    {dayjs(ay.startDate).format("DD/MM/YYYY")}
-                  </Table.Td>
-                  <Table.Td>{dayjs(ay.endDate).format("DD/MM/YYYY")}</Table.Td>
-                  <Table.Td>{ay._count?.classAcademics ?? 0}</Table.Td>
-                  <Table.Td>
-                    {ay.isActive ? (
-                      <Badge color="green" variant="light">
-                        {t("academicYear.statuses.active")}
-                      </Badge>
-                    ) : (
-                      <Badge color="gray" variant="light">
-                        {t("academicYear.statuses.inactive")}
-                      </Badge>
-                    )}
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap="xs">
-                      <Tooltip
-                        label={
-                          ay.isActive
-                            ? t("academicYear.active")
-                            : t("academicYear.setActive")
-                        }
-                      >
-                        <ActionIcon
-                          variant="subtle"
-                          color={ay.isActive ? "yellow" : "gray"}
-                          onClick={() =>
-                            !ay.isActive && handleSetActive(ay.id, ay.year)
-                          }
-                          disabled={ay.isActive}
-                        >
+                  {orderedKeys.map((key) => {
+                    switch (key) {
+                      case "year": return <Table.Td key={key} fw={600}>{ay.year}</Table.Td>;
+                      case "startDate": return (
+                        <Table.Td key={key}>
+                          {dayjs(ay.startDate).format("DD/MM/YYYY")}
+                        </Table.Td>
+                      );
+                      case "endDate": return (
+                        <Table.Td key={key}>
+                          {dayjs(ay.endDate).format("DD/MM/YYYY")}
+                        </Table.Td>
+                      );
+                      case "classes": return (
+                        <Table.Td key={key}>{ay._count?.classAcademics ?? 0}</Table.Td>
+                      );
+                      case "status": return (
+                        <Table.Td key={key}>
                           {ay.isActive ? (
-                            <IconStarFilled size={18} />
+                            <Badge color="green" variant="light">
+                              {t("academicYear.statuses.active")}
+                            </Badge>
                           ) : (
-                            <IconStar size={18} />
+                            <Badge color="gray" variant="light">
+                              {t("academicYear.statuses.inactive")}
+                            </Badge>
                           )}
-                        </ActionIcon>
-                      </Tooltip>
-                      <ActionIcon
-                        variant="subtle"
-                        color="blue"
-                        onClick={() =>
-                          router.push(`/admin/academic-years/${ay.id}`)
-                        }
-                      >
-                        <IconEdit size={18} />
-                      </ActionIcon>
-                      <ActionIcon
-                        variant="subtle"
-                        color="red"
-                        onClick={() => handleDelete(ay.id, ay.year)}
-                      >
-                        <IconTrash size={18} />
-                      </ActionIcon>
-                    </Group>
-                  </Table.Td>
+                        </Table.Td>
+                      );
+                      case "actions": return (
+                        <Table.Td key={key}>
+                          <Group gap="xs">
+                            <Tooltip
+                              label={
+                                ay.isActive
+                                  ? t("academicYear.active")
+                                  : t("academicYear.setActive")
+                              }
+                            >
+                              <ActionIcon
+                                variant="subtle"
+                                color={ay.isActive ? "yellow" : "gray"}
+                                onClick={() =>
+                                  !ay.isActive && handleSetActive(ay.id, ay.year)
+                                }
+                                disabled={ay.isActive}
+                              >
+                                {ay.isActive ? (
+                                  <IconStarFilled size={18} />
+                                ) : (
+                                  <IconStar size={18} />
+                                )}
+                              </ActionIcon>
+                            </Tooltip>
+                            <ActionIcon
+                              variant="subtle"
+                              color="blue"
+                              onClick={() =>
+                                router.push(`/admin/academic-years/${ay.id}`)
+                              }
+                            >
+                              <IconEdit size={18} />
+                            </ActionIcon>
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              onClick={() => handleDelete(ay.id, ay.year)}
+                            >
+                              <IconTrash size={18} />
+                            </ActionIcon>
+                          </Group>
+                        </Table.Td>
+                      );
+                      default: return null;
+                    }
+                  })}
                 </Table.Tr>
               ))}
             </Table.Tbody>
@@ -215,14 +252,12 @@ export default function AcademicYearTable() {
         </Table.ScrollContainer>
       </Paper>
 
-      {data && data.pagination.totalPages > 1 && (
-        <Group justify="center">
-          <Pagination
-            total={data.pagination.totalPages}
-            value={page}
-            onChange={(p) => setParams({ page: p })}
-          />
-        </Group>
+      {data && (
+        <TablePagination
+          total={data.pagination.totalPages}
+          value={page}
+          onChange={(p) => setParams({ page: p })}
+        />
       )}
     </Stack>
   );

@@ -28,6 +28,7 @@ import {
 import dayjs from "dayjs";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { Virtuoso } from "react-virtuoso";
 import { EmptyAnimation } from "@/components/ui/LottieAnimation";
 import { DashboardSkeleton } from "@/components/ui/PortalSkeleton";
 import { useStudentTuitions } from "@/hooks/api/useStudentTuitions";
@@ -222,9 +223,11 @@ export default function StudentDashboardPage() {
           <EmptyAnimation message={t("dashboard.noBills")} />
         </Card>
       ) : (
-        <Stack gap="md">
-          {groupedTuitions.map((group) => (
-            <Card key={`${group.academicYear}-${group.className}`} withBorder>
+        <Virtuoso
+          useWindowScroll
+          data={groupedTuitions}
+          itemContent={(_index, group) => (
+            <Card withBorder mb="md">
               <Stack gap="md">
                 <Group justify="space-between" align="center">
                   <Box>
@@ -410,8 +413,8 @@ export default function StudentDashboardPage() {
                 </Box>
               </Stack>
             </Card>
-          ))}
-        </Stack>
+          )}
+        />
       )}
 
       {/* Sticky Pay Button */}

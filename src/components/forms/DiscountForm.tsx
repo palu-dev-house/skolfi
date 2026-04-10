@@ -250,7 +250,7 @@ export default function DiscountForm({ discountId }: DiscountFormProps) {
   const isPending = createDiscount.isPending || updateDiscount.isPending;
 
   return (
-    <Paper withBorder p="lg" maw={600}>
+    <Paper withBorder p="lg">
       <Stack gap="md">
         <TextInput
           label={t("discount.name")}

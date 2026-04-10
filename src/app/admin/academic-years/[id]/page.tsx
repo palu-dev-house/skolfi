@@ -62,7 +62,7 @@ export default function EditAcademicYearPage({
           year: academicYear.year,
         })}
       />
-      <Paper withBorder p="lg" maw={500}>
+      <Paper withBorder p="lg">
         <AcademicYearForm
           initialData={academicYear}
           onSubmit={handleSubmit}

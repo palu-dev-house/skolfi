@@ -5,7 +5,6 @@ import {
   Badge,
   Group,
   NumberFormatter,
-  Pagination,
   Paper,
   Select,
   Skeleton,
@@ -19,6 +18,8 @@ import { notifications } from "@mantine/notifications";
 import { IconFilter, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
+import ColumnSettingsDrawer, { useColumnSettings } from "@/components/ui/ColumnSettingsDrawer";
+import TablePagination from "@/components/ui/TablePagination";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import { useClassAcademics } from "@/hooks/api/useClassAcademics";
 import {
@@ -49,6 +50,16 @@ export default function ScholarshipTable() {
     isFullScholarship:
       isFullScholarship === null ? undefined : isFullScholarship === "true",
   });
+
+  const columnDefs = [
+    { key: "student", label: t("scholarship.student") },
+    { key: "class", label: t("scholarship.class") },
+    { key: "amount", label: t("scholarship.amount") },
+    { key: "type", label: t("scholarship.type") },
+    { key: "created", label: t("scholarship.created") },
+    { key: "actions", label: t("common.actions") },
+  ];
+  const { visibleKeys, orderedKeys } = useColumnSettings("scholarships", columnDefs);
 
   const deleteScholarship = useDeleteScholarship();
 
@@ -124,6 +135,7 @@ export default function ScholarshipTable() {
             clearable
             w={200}
           />
+          <ColumnSettingsDrawer tableId="scholarships" columnDefs={columnDefs} />
         </Group>
       </Paper>
 
@@ -132,21 +144,24 @@ export default function ScholarshipTable() {
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>{t("scholarship.student")}</Table.Th>
-                <Table.Th>{t("scholarship.class")}</Table.Th>
-                <Table.Th ta="right" align="right">
-                  {t("scholarship.amount")}
-                </Table.Th>
-                <Table.Th>{t("scholarship.type")}</Table.Th>
-                <Table.Th>{t("scholarship.created")}</Table.Th>
-                <Table.Th w={80}>{t("common.actions")}</Table.Th>
+                {orderedKeys.map((key) => {
+                  switch (key) {
+                    case "student": return <Table.Th key={key}>{t("scholarship.student")}</Table.Th>;
+                    case "class": return <Table.Th key={key}>{t("scholarship.class")}</Table.Th>;
+                    case "amount": return <Table.Th key={key} ta="right" align="right">{t("scholarship.amount")}</Table.Th>;
+                    case "type": return <Table.Th key={key}>{t("scholarship.type")}</Table.Th>;
+                    case "created": return <Table.Th key={key}>{t("scholarship.created")}</Table.Th>;
+                    case "actions": return <Table.Th key={key} w={80}>{t("common.actions")}</Table.Th>;
+                    default: return null;
+                  }
+                })}
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
               {isLoading &&
                 Array.from({ length: 5 }).map((_, i) => (
                   <Table.Tr key={`skeleton-${i}`}>
-                    {Array.from({ length: 6 }).map((_, j) => (
+                    {Array.from({ length: orderedKeys.length }).map((_, j) => (
                       <Table.Td key={`skeleton-cell-${j}`}>
                         <Skeleton height={20} />
                       </Table.Td>
@@ -155,7 +170,7 @@ export default function ScholarshipTable() {
                 ))}
               {!isLoading && data?.scholarships.length === 0 && (
                 <Table.Tr>
-                  <Table.Td colSpan={6}>
+                  <Table.Td colSpan={orderedKeys.length}>
                     <Text ta="center" c="dimmed" py="md">
                       {t("scholarship.notFound")}
                     </Text>
@@ -164,62 +179,79 @@ export default function ScholarshipTable() {
               )}
               {data?.scholarships.map((scholarship) => (
                 <Table.Tr key={scholarship.id}>
-                  <Table.Td>
-                    <Stack gap={0}>
-                      <Text size="sm" fw={500}>
-                        {scholarship.student?.name}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        {scholarship.studentNis}
-                      </Text>
-                    </Stack>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm">
-                      {scholarship.classAcademic?.className}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td ta="right" align="right">
-                    <NumberFormatter
-                      value={scholarship.nominal}
-                      prefix="Rp "
-                      thousandSeparator="."
-                      decimalSeparator=","
-                    />
-                  </Table.Td>
-                  <Table.Td>
-                    <Badge
-                      color={scholarship.isFullScholarship ? "green" : "blue"}
-                      variant="light"
-                    >
-                      {scholarship.isFullScholarship
-                        ? t("scholarship.full")
-                        : t("scholarship.partial")}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm">
-                      {dayjs(scholarship.createdAt).format("DD/MM/YYYY")}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap="xs">
-                      <Tooltip label={t("common.delete")}>
-                        <ActionIcon
-                          variant="subtle"
-                          color="red"
-                          onClick={() =>
-                            handleDelete(
-                              scholarship.id,
-                              scholarship.student?.name || "",
-                            )
-                          }
-                        >
-                          <IconTrash size={18} />
-                        </ActionIcon>
-                      </Tooltip>
-                    </Group>
-                  </Table.Td>
+                  {orderedKeys.map((key) => {
+                    switch (key) {
+                      case "student": return (
+                        <Table.Td key={key}>
+                          <Stack gap={0}>
+                            <Text size="sm" fw={500}>
+                              {scholarship.student?.name}
+                            </Text>
+                            <Text size="xs" c="dimmed">
+                              {scholarship.studentNis}
+                            </Text>
+                          </Stack>
+                        </Table.Td>
+                      );
+                      case "class": return (
+                        <Table.Td key={key}>
+                          <Text size="sm">
+                            {scholarship.classAcademic?.className}
+                          </Text>
+                        </Table.Td>
+                      );
+                      case "amount": return (
+                        <Table.Td key={key} ta="right" align="right">
+                          <NumberFormatter
+                            value={scholarship.nominal}
+                            prefix="Rp "
+                            thousandSeparator="."
+                            decimalSeparator=","
+                          />
+                        </Table.Td>
+                      );
+                      case "type": return (
+                        <Table.Td key={key}>
+                          <Badge
+                            color={scholarship.isFullScholarship ? "green" : "blue"}
+                            variant="light"
+                          >
+                            {scholarship.isFullScholarship
+                              ? t("scholarship.full")
+                              : t("scholarship.partial")}
+                          </Badge>
+                        </Table.Td>
+                      );
+                      case "created": return (
+                        <Table.Td key={key}>
+                          <Text size="sm">
+                            {dayjs(scholarship.createdAt).format("DD/MM/YYYY")}
+                          </Text>
+                        </Table.Td>
+                      );
+                      case "actions": return (
+                        <Table.Td key={key}>
+                          <Group gap="xs">
+                            <Tooltip label={t("common.delete")}>
+                              <ActionIcon
+                                variant="subtle"
+                                color="red"
+                                onClick={() =>
+                                  handleDelete(
+                                    scholarship.id,
+                                    scholarship.student?.name || "",
+                                  )
+                                }
+                              >
+                                <IconTrash size={18} />
+                              </ActionIcon>
+                            </Tooltip>
+                          </Group>
+                        </Table.Td>
+                      );
+                      default: return null;
+                    }
+                  })}
                 </Table.Tr>
               ))}
             </Table.Tbody>
@@ -227,14 +259,12 @@ export default function ScholarshipTable() {
         </Table.ScrollContainer>
       </Paper>
 
-      {data && data.pagination.totalPages > 1 && (
-        <Group justify="center">
-          <Pagination
-            total={data.pagination.totalPages}
-            value={page}
-            onChange={(p) => setParams({ page: p })}
-          />
-        </Group>
+      {data && (
+        <TablePagination
+          total={data.pagination.totalPages}
+          value={page}
+          onChange={(p) => setParams({ page: p })}
+        />
       )}
     </Stack>
   );

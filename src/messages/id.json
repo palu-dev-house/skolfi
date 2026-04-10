@@ -39,6 +39,10 @@
     "selectAll": "Pilih Semua",
     "required": "Wajib diisi",
     "optional": "Opsional",
+    "previous": "Sebelumnya",
+    "next": "Selanjutnya",
+    "columnSettings": "Pengaturan Kolom",
+    "resetToDefault": "Atur Ulang ke Default",
     "success": "Berhasil",
     "failed": "Gagal",
     "export": "Ekspor",
@@ -435,7 +439,8 @@
     "testTransfer": "Test Transfer",
     "reports": "Laporan",
     "overdueReport": "Laporan Tunggakan",
-    "classSummary": "Ringkasan Kelas"
+    "classSummary": "Ringkasan Kelas",
+    "searchMenu": "Cari menu..."
   },
   "employee": {
     "title": "Karyawan",

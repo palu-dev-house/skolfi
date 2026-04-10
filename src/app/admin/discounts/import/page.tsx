@@ -83,7 +83,7 @@ export default function ImportDiscountsPage() {
         title={t("discount.importTitle")}
         description={t("discount.importPageDescription")}
       />
-      <Paper withBorder p="lg" maw={700}>
+      <Paper withBorder p="lg">
         <Stack gap="md">
           <Alert
             icon={<IconAlertCircle size={18} />}

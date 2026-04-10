@@ -1,6 +1,7 @@
 "use client";
 
-import { NavLink, Stack, Text } from "@mantine/core";
+import { useState, useMemo } from "react";
+import { NavLink, Stack, Text, TextInput } from "@mantine/core";
 import {
   IconAlertTriangle,
   IconBuilding,
@@ -13,6 +14,7 @@ import {
   IconReceipt,
   IconReportAnalytics,
   IconSchool,
+  IconSearch,
   IconUserCircle,
   IconUsers,
 } from "@tabler/icons-react";
@@ -94,6 +96,34 @@ export default function Sidebar() {
 
   const links = user?.role === "ADMIN" ? adminLinks : cashierLinks;
 
+  const [search, setSearch] = useState("");
+
+  const filteredLinks = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return links;
+
+    return links.reduce<NavItem[]>((acc, item) => {
+      const parentMatches = item.label.toLowerCase().includes(query);
+
+      if (item.children) {
+        if (parentMatches) {
+          acc.push(item);
+        } else {
+          const matchingChildren = item.children.filter((child) =>
+            child.label.toLowerCase().includes(query),
+          );
+          if (matchingChildren.length > 0) {
+            acc.push({ ...item, children: matchingChildren });
+          }
+        }
+      } else if (parentMatches) {
+        acc.push(item);
+      }
+
+      return acc;
+    }, []);
+  }, [links, search]);
+
   const isActive = (href: string) => {
     if (href === "/admin/dashboard") {
       return pathname === "/admin" || pathname === "/admin/dashboard";
@@ -108,7 +138,14 @@ export default function Sidebar() {
   return (
     <Stack justify="space-between" h="100%">
       <nav>
-        {links.map((link) => {
+        <TextInput
+          placeholder={t("searchMenu")}
+          leftSection={<IconSearch size={16} />}
+          value={search}
+          onChange={(e) => setSearch(e.currentTarget.value)}
+          mb="xs"
+        />
+        {filteredLinks.map((link) => {
           if (link.children) {
             return (
               <NavLink

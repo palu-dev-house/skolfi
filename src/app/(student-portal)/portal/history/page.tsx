@@ -11,6 +11,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useTranslations } from "next-intl";
+import { Virtuoso } from "react-virtuoso";
 import { EmptyAnimation } from "@/components/ui/LottieAnimation";
 import { PaymentSkeleton } from "@/components/ui/PortalSkeleton";
 import { useStudentTuitions } from "@/hooks/api/useStudentTuitions";
@@ -61,9 +62,11 @@ export default function TransactionHistoryPage() {
       {list.length === 0 ? (
         <EmptyAnimation message={t("payment.noHistory")} />
       ) : (
-        <Stack gap="sm">
-          {list.map((tuition) => (
-            <Card key={tuition.id} withBorder py="sm">
+        <Virtuoso
+          useWindowScroll
+          data={list}
+          itemContent={(_index, tuition) => (
+            <Card withBorder py="sm" mb="sm">
               <Stack gap="xs">
                 <Group justify="space-between" wrap="nowrap">
                   <Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
@@ -107,8 +110,8 @@ export default function TransactionHistoryPage() {
                 </Group>
               </Stack>
             </Card>
-          ))}
-        </Stack>
+          )}
+        />
       )}
     </Stack>
   );

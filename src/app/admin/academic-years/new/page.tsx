@@ -44,7 +44,7 @@ export default function NewAcademicYearPage() {
         title={t("academicYear.add")}
         description={t("academicYear.addDescription")}
       />
-      <Paper withBorder p="lg" maw={500}>
+      <Paper withBorder p="lg">
         <AcademicYearForm
           onSubmit={handleSubmit}
           isLoading={createAcademicYear.isPending}

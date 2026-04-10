@@ -101,7 +101,7 @@ function toRoman(grade: number): string {
 
 async function main() {
   console.log("=== Stress Test Seed ===");
-  console.log("Starting data generation for ~250 students...\n");
+  console.log("Starting data generation for ~300 students (250 current + 50 historical)...\n");
 
   const hashedPassword = await bcrypt.hash("123456", 10);
 
@@ -138,9 +138,31 @@ async function main() {
   console.log(`  Done. ${cashiers.length} cashiers available.`);
 
   // ============================================================
-  // 2. ACADEMIC YEARS
+  // 2. ACADEMIC YEARS (4 total: 2 historical + 2 current)
   // ============================================================
-  console.log("Creating 2 academic years...");
+  console.log("Creating 4 academic years (2 historical + 2 current)...");
+
+  const ay2122 = await prisma.academicYear.upsert({
+    where: { year: "2021/2022" },
+    update: {},
+    create: {
+      year: "2021/2022",
+      startDate: new Date("2021-07-01"),
+      endDate: new Date("2022-06-30"),
+      isActive: false,
+    },
+  });
+
+  const ay2223 = await prisma.academicYear.upsert({
+    where: { year: "2022/2023" },
+    update: {},
+    create: {
+      year: "2022/2023",
+      startDate: new Date("2022-07-01"),
+      endDate: new Date("2023-06-30"),
+      isActive: false,
+    },
+  });
 
   const ay2425 = await prisma.academicYear.upsert({
     where: { year: "2024/2025" },
@@ -164,14 +186,14 @@ async function main() {
     },
   });
 
-  console.log(`  Created: ${ay2425.year}, ${ay2526.year}`);
+  console.log(`  Created: ${ay2122.year}, ${ay2223.year}, ${ay2425.year}, ${ay2526.year}`);
 
   // ============================================================
-  // 3. CLASSES (12 per year = 24 total)
+  // 3. CLASSES (12 per year = 48 total)
   // ============================================================
-  console.log("Creating 24 class academics (grades 1-6, sections A-B, 2 years)...");
+  console.log("Creating 48 class academics (grades 1-6, sections A-B, 4 years)...");
 
-  const academicYears = [ay2425, ay2526];
+  const academicYears = [ay2122, ay2223, ay2425, ay2526];
   const sections = ["A", "B"];
 
   // Track created classes for later use
@@ -217,11 +239,11 @@ async function main() {
   console.log("  Done.");
 
   // ============================================================
-  // 4. STUDENTS (250 total)
+  // SHARED CONSTANTS & HELPERS (used by both historical and current data)
   // ============================================================
-  console.log("Creating 250 students...");
 
-  const STUDENT_COUNT = 250;
+  const BATCH_SIZE = 500;
+  const UPDATE_BATCH = 100;
 
   // Generate unique NIKs
   const usedNiks = new Set<string>();
@@ -234,11 +256,357 @@ async function main() {
     return nik;
   };
 
+  const monthlyPeriods: { period: string; month: string; monthNum: number; calYear: number }[] = [
+    { period: "JULY",      month: "JULY",      monthNum: 7,  calYear: 0 },
+    { period: "AUGUST",    month: "AUGUST",    monthNum: 8,  calYear: 0 },
+    { period: "SEPTEMBER", month: "SEPTEMBER", monthNum: 9,  calYear: 0 },
+    { period: "OCTOBER",   month: "OCTOBER",   monthNum: 10, calYear: 0 },
+    { period: "NOVEMBER",  month: "NOVEMBER",  monthNum: 11, calYear: 0 },
+    { period: "DECEMBER",  month: "DECEMBER",  monthNum: 12, calYear: 0 },
+    { period: "JANUARY",   month: "JANUARY",   monthNum: 1,  calYear: 1 },
+    { period: "FEBRUARY",  month: "FEBRUARY",  monthNum: 2,  calYear: 1 },
+    { period: "MARCH",     month: "MARCH",     monthNum: 3,  calYear: 1 },
+    { period: "APRIL",     month: "APRIL",     monthNum: 4,  calYear: 1 },
+    { period: "MAY",       month: "MAY",       monthNum: 5,  calYear: 1 },
+    { period: "JUNE",      month: "JUNE",      monthNum: 6,  calYear: 1 },
+  ];
+
+  type TuitionInput = {
+    classAcademicId: string;
+    studentNis: string;
+    period: string;
+    month: string | null;
+    year: number;
+    feeAmount: number;
+    dueDate: Date;
+  };
+
+  type PaymentInput = {
+    tuitionId: string;
+    employeeId: string;
+    amount: number;
+    paymentDate: Date;
+    notes: string | null;
+  };
+
+  // ============================================================
+  // 4a. HISTORICAL STUDENTS (50 old students from 2021)
+  // ============================================================
+  console.log("Creating 50 historical students (NIS 2021xxx)...");
+
+  const OLD_STUDENT_COUNT = 50;
+
+  const oldStudentInputs = [];
+  for (let i = 1; i <= OLD_STUDENT_COUNT; i++) {
+    const nis = `2021${String(i).padStart(3, "0")}`;
+    const joinDate = new Date(`2021-07-${String(Math.min(randomInt(1, 31), 28)).padStart(2, "0")}`);
+    const parentPhone = generatePhone();
+    const hashedPhone = await bcrypt.hash(parentPhone, 10);
+
+    oldStudentInputs.push({
+      nis,
+      nik: generateUniqueNik(),
+      name: generateStudentName(i + 200), // offset to avoid name collisions with current students
+      address: `Jl. Veteran No. ${randomInt(1, 200)}, RT ${randomInt(1, 15)}/RW ${randomInt(1, 10)}, Jakarta`,
+      parentName: generateParentName(),
+      parentPhone,
+      startJoinDate: joinDate,
+      hasAccount: true,
+      password: hashedPhone,
+      mustChangePassword: true,
+      accountCreatedAt: joinDate,
+      accountCreatedBy: "SEED",
+    });
+  }
+
+  await prisma.student.createMany({
+    data: oldStudentInputs,
+    skipDuplicates: true,
+  });
+
+  const oldStudents = await prisma.student.findMany({
+    where: { nis: { in: oldStudentInputs.map((s) => s.nis) } },
+    select: { nis: true },
+  });
+
+  console.log(`  Created ${oldStudents.length} historical students.`);
+
+  // ============================================================
+  // 4b. HISTORICAL STUDENT-CLASS ASSIGNMENTS
+  // ============================================================
+  console.log("Assigning historical students to classes in 2021/2022 and 2022/2023...");
+
+  const oldStudentNisList = oldStudents.map((s) => s.nis);
+
+  // Build flat list of classes for historical years
+  const classes2122: { id: string; grade: number; section: string; paymentFrequency: string; monthlyFee: number }[] = [];
+  const classes2223: { id: string; grade: number; section: string; paymentFrequency: string; monthlyFee: number }[] = [];
+
+  for (const grade of [1, 2, 3, 4, 5, 6]) {
+    for (const section of ["A", "B"]) {
+      classes2122.push({ ...classMap[ay2122.id][grade][section], grade, section });
+      classes2223.push({ ...classMap[ay2223.id][grade][section], grade, section });
+    }
+  }
+
+  // Assign each old student to one class in 2021/2022 (round-robin)
+  const oldStudentClassAssignment2122: Record<string, { grade: number; section: string; classId: string; paymentFrequency: string; monthlyFee: number }> = {};
+
+  const oldStudentClassData2122 = [];
+  for (let i = 0; i < oldStudentNisList.length; i++) {
+    const cls = classes2122[i % classes2122.length];
+    const studentNis = oldStudentNisList[i];
+    oldStudentClassAssignment2122[studentNis] = {
+      grade: cls.grade,
+      section: cls.section,
+      classId: cls.id,
+      paymentFrequency: cls.paymentFrequency,
+      monthlyFee: cls.monthlyFee,
+    };
+    oldStudentClassData2122.push({
+      studentNis,
+      classAcademicId: cls.id,
+      enrolledAt: new Date("2021-07-15"),
+    });
+  }
+
+  await prisma.studentClass.createMany({
+    data: oldStudentClassData2122,
+    skipDuplicates: true,
+  });
+
+  // Assign each old student to 2022/2023 (promote to next grade, max grade 6)
+  const oldStudentClassData2223 = [];
+  const oldStudentClassAssignment2223: Record<string, { classId: string; paymentFrequency: string; monthlyFee: number }> = {};
+
+  for (const studentNis of oldStudentNisList) {
+    const prev = oldStudentClassAssignment2122[studentNis];
+    const nextGrade = Math.min(prev.grade + 1, 6);
+    const section = prev.section;
+    const cls = classMap[ay2223.id][nextGrade][section];
+    oldStudentClassAssignment2223[studentNis] = {
+      classId: cls.id,
+      paymentFrequency: cls.paymentFrequency,
+      monthlyFee: cls.monthlyFee,
+    };
+    oldStudentClassData2223.push({
+      studentNis,
+      classAcademicId: cls.id,
+      enrolledAt: new Date("2022-07-15"),
+    });
+  }
+
+  await prisma.studentClass.createMany({
+    data: oldStudentClassData2223,
+    skipDuplicates: true,
+  });
+
+  console.log(`  Assigned ${oldStudentNisList.length * 2} historical student-class records (2 years each).`);
+
+  // ============================================================
+  // 4c. HISTORICAL TUITIONS (~30% PAID, ~20% PARTIAL, ~50% UNPAID)
+  // ============================================================
+  console.log("Generating tuitions for historical students...");
+
+  const quarterlyPeriods2122: { period: string; dueDate: Date; calYear: number }[] = [
+    { period: "Q1", dueDate: new Date("2021-09-30"), calYear: 0 },
+    { period: "Q2", dueDate: new Date("2021-12-31"), calYear: 0 },
+    { period: "Q3", dueDate: new Date("2022-03-31"), calYear: 1 },
+    { period: "Q4", dueDate: new Date("2022-06-30"), calYear: 1 },
+  ];
+
+  const quarterlyPeriods2223: { period: string; dueDate: Date; calYear: number }[] = [
+    { period: "Q1", dueDate: new Date("2022-09-30"), calYear: 0 },
+    { period: "Q2", dueDate: new Date("2022-12-31"), calYear: 0 },
+    { period: "Q3", dueDate: new Date("2023-03-31"), calYear: 1 },
+    { period: "Q4", dueDate: new Date("2023-06-30"), calYear: 1 },
+  ];
+
+  const oldTuitionInputs: TuitionInput[] = [];
+
+  for (const studentNis of oldStudentNisList) {
+    // 2021/2022
+    const asgn2122 = oldStudentClassAssignment2122[studentNis];
+    const startYear2122 = 2021;
+    if (asgn2122.paymentFrequency === "MONTHLY") {
+      for (const p of monthlyPeriods) {
+        const dueCalYear = startYear2122 + p.calYear;
+        oldTuitionInputs.push({
+          classAcademicId: asgn2122.classId,
+          studentNis,
+          period: p.period,
+          month: p.month,
+          year: startYear2122,
+          feeAmount: asgn2122.monthlyFee,
+          dueDate: new Date(`${dueCalYear}-${String(p.monthNum).padStart(2, "0")}-10`),
+        });
+      }
+    } else {
+      for (const p of quarterlyPeriods2122) {
+        oldTuitionInputs.push({
+          classAcademicId: asgn2122.classId,
+          studentNis,
+          period: p.period,
+          month: null,
+          year: startYear2122,
+          feeAmount: asgn2122.monthlyFee * 3,
+          dueDate: p.dueDate,
+        });
+      }
+    }
+
+    // 2022/2023
+    const asgn2223 = oldStudentClassAssignment2223[studentNis];
+    const startYear2223 = 2022;
+    if (asgn2223.paymentFrequency === "MONTHLY") {
+      for (const p of monthlyPeriods) {
+        const dueCalYear = startYear2223 + p.calYear;
+        oldTuitionInputs.push({
+          classAcademicId: asgn2223.classId,
+          studentNis,
+          period: p.period,
+          month: p.month,
+          year: startYear2223,
+          feeAmount: asgn2223.monthlyFee,
+          dueDate: new Date(`${dueCalYear}-${String(p.monthNum).padStart(2, "0")}-10`),
+        });
+      }
+    } else {
+      for (const p of quarterlyPeriods2223) {
+        oldTuitionInputs.push({
+          classAcademicId: asgn2223.classId,
+          studentNis,
+          period: p.period,
+          month: null,
+          year: startYear2223,
+          feeAmount: asgn2223.monthlyFee * 3,
+          dueDate: p.dueDate,
+        });
+      }
+    }
+  }
+
+  console.log(`  Generated ${oldTuitionInputs.length} historical tuition records. Inserting in batches...`);
+
+  for (let i = 0; i < oldTuitionInputs.length; i += BATCH_SIZE) {
+    const batch = oldTuitionInputs.slice(i, i + BATCH_SIZE);
+    await prisma.tuition.createMany({
+      data: batch.map((t) => ({
+        classAcademicId: t.classAcademicId,
+        studentNis: t.studentNis,
+        period: t.period,
+        month: t.month as
+          | "JULY" | "AUGUST" | "SEPTEMBER" | "OCTOBER" | "NOVEMBER" | "DECEMBER"
+          | "JANUARY" | "FEBRUARY" | "MARCH" | "APRIL" | "MAY" | "JUNE"
+          | null
+          | undefined,
+        year: t.year,
+        feeAmount: t.feeAmount,
+        dueDate: t.dueDate,
+        status: "UNPAID",
+        paidAmount: 0,
+        scholarshipAmount: 0,
+        discountAmount: 0,
+      })),
+      skipDuplicates: true,
+    });
+    console.log(`  Historical batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(oldTuitionInputs.length / BATCH_SIZE)}`);
+  }
+
+  // ============================================================
+  // 4d. HISTORICAL PAYMENTS (~30% PAID, ~20% PARTIAL, ~50% UNPAID)
+  // ============================================================
+  console.log("Generating payments for historical tuitions...");
+
+  const oldTuitions = await prisma.tuition.findMany({
+    where: { studentNis: { in: oldStudentNisList } },
+    select: {
+      id: true,
+      feeAmount: true,
+      classAcademicId: true,
+      studentNis: true,
+      period: true,
+      year: true,
+    },
+  });
+
+  const oldPaymentInserts: PaymentInput[] = [];
+  const oldTuitionUpdates: { id: string; paidAmount: number; status: "PAID" | "PARTIAL" | "UNPAID" }[] = [];
+
+  for (const tuition of oldTuitions) {
+    const roll = Math.random();
+    const fee = Number(tuition.feeAmount);
+    const cashier = randomItem(cashiers);
+
+    if (roll < 0.30) {
+      // PAID (~30%)
+      const payDate = new Date(2021, randomInt(6, 11), randomInt(1, 28));
+      oldPaymentInserts.push({
+        tuitionId: tuition.id,
+        employeeId: cashier.employeeId,
+        amount: fee,
+        paymentDate: payDate,
+        notes: null,
+      });
+      oldTuitionUpdates.push({ id: tuition.id, paidAmount: fee, status: "PAID" });
+    } else if (roll < 0.50) {
+      // PARTIAL (~20%)
+      const partialRatio = 0.3 + Math.random() * 0.5;
+      const partialAmount = Math.floor(fee * partialRatio / 1000) * 1000;
+      const payDate = new Date(2021, randomInt(6, 11), randomInt(1, 28));
+      oldPaymentInserts.push({
+        tuitionId: tuition.id,
+        employeeId: cashier.employeeId,
+        amount: partialAmount,
+        paymentDate: payDate,
+        notes: "Pembayaran sebagian",
+      });
+      oldTuitionUpdates.push({ id: tuition.id, paidAmount: partialAmount, status: "PARTIAL" });
+    }
+    // else: UNPAID (~50%) — no payment record
+  }
+
+  console.log(`  Inserting ${oldPaymentInserts.length} historical payment records...`);
+
+  for (let i = 0; i < oldPaymentInserts.length; i += BATCH_SIZE) {
+    const batch = oldPaymentInserts.slice(i, i + BATCH_SIZE);
+    await prisma.payment.createMany({
+      data: batch,
+      skipDuplicates: false,
+    });
+    console.log(`  Historical payment batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(oldPaymentInserts.length / BATCH_SIZE)}`);
+  }
+
+  console.log(`  Updating ${oldTuitionUpdates.length} historical tuition statuses...`);
+
+  for (let i = 0; i < oldTuitionUpdates.length; i += UPDATE_BATCH) {
+    const batch = oldTuitionUpdates.slice(i, i + UPDATE_BATCH);
+    await Promise.all(
+      batch.map((u) =>
+        prisma.tuition.update({
+          where: { id: u.id },
+          data: { paidAmount: u.paidAmount, status: u.status },
+        })
+      )
+    );
+  }
+
+  console.log("  Historical data done.\n");
+
+  // ============================================================
+  // 5a. CURRENT STUDENTS (250 total)
+  // ============================================================
+  console.log("Creating 250 students...");
+
+  const STUDENT_COUNT = 250;
+
   const studentInputs = [];
   for (let i = 1; i <= STUDENT_COUNT; i++) {
     const nis = `2024${String(i).padStart(3, "0")}`;
     const joinDay = randomInt(1, 31);
     const joinDate = new Date(`2024-07-${String(Math.min(joinDay, 28)).padStart(2, "0")}`);
+    const parentPhone = generatePhone();
+    const hashedPhone = await bcrypt.hash(parentPhone, 10);
 
     studentInputs.push({
       nis,
@@ -246,9 +614,13 @@ async function main() {
       name: generateStudentName(i - 1),
       address: `Jl. Merdeka No. ${randomInt(1, 200)}, RT ${randomInt(1, 15)}/RW ${randomInt(1, 10)}, Jakarta`,
       parentName: generateParentName(),
-      parentPhone: generatePhone(),
+      parentPhone,
       startJoinDate: joinDate,
-      hasAccount: false,
+      hasAccount: true,
+      password: hashedPhone,
+      mustChangePassword: true,
+      accountCreatedAt: joinDate,
+      accountCreatedBy: "SEED",
     });
   }
 
@@ -265,7 +637,7 @@ async function main() {
   console.log(`  Created ${students.length} students.`);
 
   // ============================================================
-  // 5. STUDENT-CLASS ASSIGNMENTS
+  // 5b. CURRENT STUDENT-CLASS ASSIGNMENTS
   // ============================================================
   console.log("Assigning students to classes (~20 per class)...");
 
@@ -347,21 +719,6 @@ async function main() {
   // ============================================================
   console.log("Generating tuitions for all student-class assignments...");
 
-  const monthlyPeriods: { period: string; month: string; monthNum: number; calYear: number }[] = [
-    { period: "JULY",      month: "JULY",      monthNum: 7,  calYear: 0 }, // year = academic start
-    { period: "AUGUST",    month: "AUGUST",    monthNum: 8,  calYear: 0 },
-    { period: "SEPTEMBER", month: "SEPTEMBER", monthNum: 9,  calYear: 0 },
-    { period: "OCTOBER",   month: "OCTOBER",   monthNum: 10, calYear: 0 },
-    { period: "NOVEMBER",  month: "NOVEMBER",  monthNum: 11, calYear: 0 },
-    { period: "DECEMBER",  month: "DECEMBER",  monthNum: 12, calYear: 0 },
-    { period: "JANUARY",   month: "JANUARY",   monthNum: 1,  calYear: 1 }, // year = academic start + 1
-    { period: "FEBRUARY",  month: "FEBRUARY",  monthNum: 2,  calYear: 1 },
-    { period: "MARCH",     month: "MARCH",     monthNum: 3,  calYear: 1 },
-    { period: "APRIL",     month: "APRIL",     monthNum: 4,  calYear: 1 },
-    { period: "MAY",       month: "MAY",       monthNum: 5,  calYear: 1 },
-    { period: "JUNE",      month: "JUNE",      monthNum: 6,  calYear: 1 },
-  ];
-
   const quarterlyPeriods: { period: string; dueDate: Date; calYear: number }[] = [
     { period: "Q1", dueDate: new Date("2024-09-30"), calYear: 0 },
     { period: "Q2", dueDate: new Date("2024-12-31"), calYear: 0 },
@@ -376,15 +733,7 @@ async function main() {
     { period: "Q4", dueDate: new Date("2026-06-30"), calYear: 1 },
   ];
 
-  const tuitionInputs: {
-    classAcademicId: string;
-    studentNis: string;
-    period: string;
-    month: string | null;
-    year: number;
-    feeAmount: number;
-    dueDate: Date;
-  }[] = [];
+  const tuitionInputs: TuitionInput[] = [];
 
   // Year offsets for academic years
   const ayStartYears: Record<string, number> = {
@@ -457,7 +806,6 @@ async function main() {
   console.log(`  Generated ${tuitionInputs.length} tuition records. Inserting in batches...`);
 
   // Insert tuitions in batches of 500
-  const BATCH_SIZE = 500;
   for (let i = 0; i < tuitionInputs.length; i += BATCH_SIZE) {
     const batch = tuitionInputs.slice(i, i + BATCH_SIZE);
     await prisma.tuition.createMany({
@@ -502,13 +850,7 @@ async function main() {
 
   console.log(`  Found ${allTuitions.length} tuitions. Generating payments...`);
 
-  const paymentInserts: {
-    tuitionId: string;
-    employeeId: string;
-    amount: number;
-    paymentDate: Date;
-    notes: string | null;
-  }[] = [];
+  const paymentInserts: PaymentInput[] = [];
 
   const tuitionUpdates: {
     id: string;
@@ -563,7 +905,6 @@ async function main() {
   console.log(`  Updating ${tuitionUpdates.length} tuition statuses...`);
 
   // Update tuitions in batches using individual updates (Prisma doesn't support bulk conditional updates)
-  const UPDATE_BATCH = 100;
   for (let i = 0; i < tuitionUpdates.length; i += UPDATE_BATCH) {
     const batch = tuitionUpdates.slice(i, i + UPDATE_BATCH);
     await Promise.all(
@@ -659,25 +1000,42 @@ async function main() {
   // ============================================================
   // SUMMARY
   // ============================================================
-  const totalStudents = studentNisList.length;
-  const totalTuitions = allTuitions.length;
+  const totalCurrentStudents = studentNisList.length;
+  const totalOldStudents = oldStudentNisList.length;
+  const totalStudents = totalCurrentStudents + totalOldStudents;
+
+  const totalCurrentTuitions = allTuitions.length;
+  const totalOldTuitions = oldTuitions.length;
+  const totalTuitions = totalCurrentTuitions + totalOldTuitions;
+
   const paidCount = tuitionUpdates.filter((t) => t.status === "PAID").length;
   const partialCount = tuitionUpdates.filter((t) => t.status === "PARTIAL").length;
-  const unpaidCount = totalTuitions - paidCount - partialCount;
+  const unpaidCount = totalCurrentTuitions - paidCount - partialCount;
+
+  const oldPaidCount = oldTuitionUpdates.filter((t) => t.status === "PAID").length;
+  const oldPartialCount = oldTuitionUpdates.filter((t) => t.status === "PARTIAL").length;
+  const oldUnpaidCount = totalOldTuitions - oldPaidCount - oldPartialCount;
 
   console.log("\n=== Stress Test Seed Complete ===");
-  console.log(`  Employees:      8 (3 admins, 5 cashiers)`);
-  console.log(`  Academic years: 2 (2024/2025, 2025/2026)`);
-  console.log(`  Class academics: 24 (grades 1-6, sections A-B, 2 years)`);
-  console.log(`  Students:       ${totalStudents}`);
-  console.log(`  Student-class:  ${totalStudents * 2} assignments`);
-  console.log(`  Tuitions:       ${totalTuitions}`);
-  console.log(`    PAID:         ${paidCount} (~${Math.round((paidCount / totalTuitions) * 100)}%)`);
-  console.log(`    PARTIAL:      ${partialCount} (~${Math.round((partialCount / totalTuitions) * 100)}%)`);
-  console.log(`    UNPAID:       ${unpaidCount} (~${Math.round((unpaidCount / totalTuitions) * 100)}%)`);
-  console.log(`  Payments:       ${paymentInserts.length}`);
-  console.log(`  Scholarships:   ${scholarshipData.length}`);
-  console.log(`  Discounts:      2`);
+  console.log(`  Employees:        8 (3 admins, 5 cashiers)`);
+  console.log(`  Academic years:   4 (2021/2022, 2022/2023, 2024/2025, 2025/2026)`);
+  console.log(`  Class academics:  48 (grades 1-6, sections A-B, 4 years)`);
+  console.log(`  Students:         ${totalStudents} total (all with portal accounts, password = parentPhone)`);
+  console.log(`    Current:        ${totalCurrentStudents} (NIS 2024xxx)`);
+  console.log(`    Historical:     ${totalOldStudents} (NIS 2021xxx)`);
+  console.log(`  Student-class:    ${totalCurrentStudents * 2 + totalOldStudents * 2} assignments`);
+  console.log(`  Tuitions:         ${totalTuitions} total`);
+  console.log(`  Current tuitions: ${totalCurrentTuitions}`);
+  console.log(`    PAID:           ${paidCount} (~${Math.round((paidCount / totalCurrentTuitions) * 100)}%)`);
+  console.log(`    PARTIAL:        ${partialCount} (~${Math.round((partialCount / totalCurrentTuitions) * 100)}%)`);
+  console.log(`    UNPAID:         ${unpaidCount} (~${Math.round((unpaidCount / totalCurrentTuitions) * 100)}%)`);
+  console.log(`  Historical tuitions: ${totalOldTuitions}`);
+  console.log(`    PAID:           ${oldPaidCount} (~${Math.round((oldPaidCount / totalOldTuitions) * 100)}%)`);
+  console.log(`    PARTIAL:        ${oldPartialCount} (~${Math.round((oldPartialCount / totalOldTuitions) * 100)}%)`);
+  console.log(`    UNPAID:         ${oldUnpaidCount} (~${Math.round((oldUnpaidCount / totalOldTuitions) * 100)}%)`);
+  console.log(`  Payments:         ${paymentInserts.length + oldPaymentInserts.length} (${paymentInserts.length} current + ${oldPaymentInserts.length} historical)`);
+  console.log(`  Scholarships:     ${scholarshipData.length}`);
+  console.log(`  Discounts:        2`);
 }
 
 main()

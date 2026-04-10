@@ -5,7 +5,6 @@ import {
   Badge,
   Group,
   NumberFormatter,
-  Pagination,
   Paper,
   Select,
   Skeleton,
@@ -21,6 +20,8 @@ import { IconFilter, IconSearch, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
 import type { PaymentStatus } from "@/generated/prisma/client";
+import ColumnSettingsDrawer, { useColumnSettings } from "@/components/ui/ColumnSettingsDrawer";
+import TablePagination from "@/components/ui/TablePagination";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import { useClassAcademics } from "@/hooks/api/useClassAcademics";
 import { useDeleteTuition, useTuitions } from "@/hooks/api/useTuitions";
@@ -63,6 +64,20 @@ export default function TuitionTable() {
   });
 
   const deleteTuition = useDeleteTuition();
+
+  const columnDefs = [
+    { key: "student", label: t("tuition.student") },
+    { key: "class", label: t("tuition.class") },
+    { key: "period", label: t("tuition.period") },
+    { key: "feeAmount", label: t("tuition.feeAmount") },
+    { key: "discountAmount", label: t("tuition.discountAmount") },
+    { key: "paidAmount", label: t("tuition.paidAmount") },
+    { key: "dueDate", label: t("tuition.dueDate") },
+    { key: "status", label: t("common.status") },
+    { key: "actions", label: t("common.actions") },
+  ];
+
+  const { orderedKeys } = useColumnSettings("tuitions", columnDefs);
 
   const handleDelete = (id: string, studentName: string, monthName: string) => {
     modals.openConfirmModal({
@@ -173,33 +188,36 @@ export default function TuitionTable() {
         </Group>
       </Paper>
 
+      <Group justify="flex-end">
+        <ColumnSettingsDrawer tableId="tuitions" columnDefs={columnDefs} />
+      </Group>
+
       <Paper withBorder>
         <Table.ScrollContainer minWidth={900}>
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>{t("tuition.student")}</Table.Th>
-                <Table.Th>{t("tuition.class")}</Table.Th>
-                <Table.Th>{t("tuition.period")}</Table.Th>
-                <Table.Th ta="right" align="right">
-                  {t("tuition.feeAmount")}
-                </Table.Th>
-                <Table.Th ta="right" align="right">
-                  {t("tuition.discountAmount")}
-                </Table.Th>
-                <Table.Th ta="right" align="right">
-                  {t("tuition.paidAmount")}
-                </Table.Th>
-                <Table.Th>{t("tuition.dueDate")}</Table.Th>
-                <Table.Th>{t("common.status")}</Table.Th>
-                <Table.Th w={80}>{t("common.actions")}</Table.Th>
+                {orderedKeys.map((key) => {
+                  switch (key) {
+                    case "student": return <Table.Th key={key}>{t("tuition.student")}</Table.Th>;
+                    case "class": return <Table.Th key={key}>{t("tuition.class")}</Table.Th>;
+                    case "period": return <Table.Th key={key}>{t("tuition.period")}</Table.Th>;
+                    case "feeAmount": return <Table.Th key={key} ta="right">{t("tuition.feeAmount")}</Table.Th>;
+                    case "discountAmount": return <Table.Th key={key} ta="right">{t("tuition.discountAmount")}</Table.Th>;
+                    case "paidAmount": return <Table.Th key={key} ta="right">{t("tuition.paidAmount")}</Table.Th>;
+                    case "dueDate": return <Table.Th key={key}>{t("tuition.dueDate")}</Table.Th>;
+                    case "status": return <Table.Th key={key}>{t("common.status")}</Table.Th>;
+                    case "actions": return <Table.Th key={key} w={80}>{t("common.actions")}</Table.Th>;
+                    default: return null;
+                  }
+                })}
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
               {isLoading &&
                 Array.from({ length: 5 }).map((_, i) => (
                   <Table.Tr key={`skeleton-${i}`}>
-                    {Array.from({ length: 9 }).map((_, j) => (
+                    {Array.from({ length: orderedKeys.length }).map((_, j) => (
                       <Table.Td key={`skeleton-cell-${j}`}>
                         <Skeleton height={20} />
                       </Table.Td>
@@ -208,7 +226,7 @@ export default function TuitionTable() {
                 ))}
               {!isLoading && data?.tuitions.length === 0 && (
                 <Table.Tr>
-                  <Table.Td colSpan={9}>
+                  <Table.Td colSpan={orderedKeys.length}>
                     <Text ta="center" c="dimmed" py="md">
                       {t("tuition.notFound")}
                     </Text>
@@ -217,92 +235,115 @@ export default function TuitionTable() {
               )}
               {data?.tuitions.map((tuition) => (
                 <Table.Tr key={tuition.id}>
-                  <Table.Td>
-                    <Stack gap={0}>
-                      <Text size="sm" fw={500}>
-                        {tuition.student?.name}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        {tuition.studentNis}
-                      </Text>
-                    </Stack>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm">{tuition.classAcademic?.className}</Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm">
-                      {getPeriodDisplayName(tuition.period)} {tuition.year}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td ta="right" align="right">
-                    <NumberFormatter
-                      value={tuition.feeAmount}
-                      prefix="Rp "
-                      thousandSeparator="."
-                      decimalSeparator=","
-                    />
-                  </Table.Td>
-                  <Table.Td ta="right" align="right">
-                    {tuition.discount ? (
-                      <Tooltip label={tuition.discount.name}>
-                        <Badge color="green" variant="light" size="sm">
-                          -
+                  {orderedKeys.map((key) => {
+                    switch (key) {
+                      case "student": return (
+                        <Table.Td key={key}>
+                          <Stack gap={0}>
+                            <Text size="sm" fw={500}>
+                              {tuition.student?.name}
+                            </Text>
+                            <Text size="xs" c="dimmed">
+                              {tuition.studentNis}
+                            </Text>
+                          </Stack>
+                        </Table.Td>
+                      );
+                      case "class": return (
+                        <Table.Td key={key}>
+                          <Text size="sm">{tuition.classAcademic?.className}</Text>
+                        </Table.Td>
+                      );
+                      case "period": return (
+                        <Table.Td key={key}>
+                          <Text size="sm">
+                            {getPeriodDisplayName(tuition.period)} {tuition.year}
+                          </Text>
+                        </Table.Td>
+                      );
+                      case "feeAmount": return (
+                        <Table.Td key={key} ta="right">
                           <NumberFormatter
-                            value={tuition.discountAmount}
+                            value={tuition.feeAmount}
                             prefix="Rp "
                             thousandSeparator="."
                             decimalSeparator=","
                           />
-                        </Badge>
-                      </Tooltip>
-                    ) : (
-                      <Text size="sm" c="dimmed">
-                        -
-                      </Text>
-                    )}
-                  </Table.Td>
-                  <Table.Td ta="right" align="right">
-                    <NumberFormatter
-                      value={tuition.paidAmount}
-                      prefix="Rp "
-                      thousandSeparator="."
-                      decimalSeparator=","
-                    />
-                  </Table.Td>
-                  <Table.Td>
-                    <Text size="sm">
-                      {dayjs(tuition.dueDate).format("DD/MM/YYYY")}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td>
-                    <Badge
-                      color={STATUS_COLORS[tuition.status]}
-                      variant="light"
-                    >
-                      {t(`tuition.status.${tuition.status.toLowerCase()}`)}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap="xs">
-                      <Tooltip label={t("common.delete")}>
-                        <ActionIcon
-                          variant="subtle"
-                          color="red"
-                          onClick={() =>
-                            handleDelete(
-                              tuition.id,
-                              tuition.student?.name || "",
-                              getPeriodDisplayName(tuition.period),
-                            )
-                          }
-                          disabled={(tuition._count?.payments ?? 0) > 0}
-                        >
-                          <IconTrash size={18} />
-                        </ActionIcon>
-                      </Tooltip>
-                    </Group>
-                  </Table.Td>
+                        </Table.Td>
+                      );
+                      case "discountAmount": return (
+                        <Table.Td key={key} ta="right">
+                          {tuition.discount ? (
+                            <Tooltip label={tuition.discount.name}>
+                              <Badge color="green" variant="light" size="sm">
+                                -
+                                <NumberFormatter
+                                  value={tuition.discountAmount}
+                                  prefix="Rp "
+                                  thousandSeparator="."
+                                  decimalSeparator=","
+                                />
+                              </Badge>
+                            </Tooltip>
+                          ) : (
+                            <Text size="sm" c="dimmed">
+                              -
+                            </Text>
+                          )}
+                        </Table.Td>
+                      );
+                      case "paidAmount": return (
+                        <Table.Td key={key} ta="right">
+                          <NumberFormatter
+                            value={tuition.paidAmount}
+                            prefix="Rp "
+                            thousandSeparator="."
+                            decimalSeparator=","
+                          />
+                        </Table.Td>
+                      );
+                      case "dueDate": return (
+                        <Table.Td key={key}>
+                          <Text size="sm">
+                            {dayjs(tuition.dueDate).format("DD/MM/YYYY")}
+                          </Text>
+                        </Table.Td>
+                      );
+                      case "status": return (
+                        <Table.Td key={key}>
+                          <Badge
+                            color={STATUS_COLORS[tuition.status]}
+                            variant="light"
+                          >
+                            {t(`tuition.status.${tuition.status.toLowerCase()}`)}
+                          </Badge>
+                        </Table.Td>
+                      );
+                      case "actions": return (
+                        <Table.Td key={key}>
+                          <Group gap="xs">
+                            <Tooltip label={t("common.delete")}>
+                              <ActionIcon
+                                variant="subtle"
+                                color="red"
+                                onClick={() =>
+                                  handleDelete(
+                                    tuition.id,
+                                    tuition.student?.name || "",
+                                    getPeriodDisplayName(tuition.period),
+                                  )
+                                }
+                                disabled={(tuition._count?.payments ?? 0) > 0}
+                              >
+                                <IconTrash size={18} />
+                              </ActionIcon>
+                            </Tooltip>
+                          </Group>
+                        </Table.Td>
+                      );
+                      default: return null;
+                    }
+                  })}
                 </Table.Tr>
               ))}
             </Table.Tbody>
@@ -310,14 +351,12 @@ export default function TuitionTable() {
         </Table.ScrollContainer>
       </Paper>
 
-      {data && data.pagination.totalPages > 1 && (
-        <Group justify="center">
-          <Pagination
-            total={data.pagination.totalPages}
-            value={page}
-            onChange={(p) => setParams({ page: p })}
-          />
-        </Group>
+      {data && (
+        <TablePagination
+          total={data.pagination.totalPages}
+          value={page}
+          onChange={(p) => setParams({ page: p })}
+        />
       )}
     </Stack>
   );

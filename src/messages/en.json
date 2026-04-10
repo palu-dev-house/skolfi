@@ -39,6 +39,10 @@
     "selectAll": "Select All",
     "required": "Required",
     "optional": "Optional",
+    "previous": "Previous",
+    "next": "Next",
+    "columnSettings": "Column Settings",
+    "resetToDefault": "Reset to Default",
     "success": "Success",
     "failed": "Failed",
     "export": "Export",
@@ -435,7 +439,8 @@
     "testTransfer": "Test Transfer",
     "reports": "Reports",
     "overdueReport": "Overdue Report",
-    "classSummary": "Class Summary"
+    "classSummary": "Class Summary",
+    "searchMenu": "Search menu..."
   },
   "employee": {
     "title": "Employees",

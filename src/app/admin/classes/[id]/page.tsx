@@ -61,7 +61,7 @@ export default function EditClassPage({
           name: classAcademic.className,
         })}
       />
-      <Paper withBorder p="lg" maw={500}>
+      <Paper withBorder p="lg">
         <ClassAcademicForm
           initialData={classAcademic}
           onSubmit={handleSubmit}

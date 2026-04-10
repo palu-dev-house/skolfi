@@ -171,7 +171,7 @@ export default function PaymentForm() {
       : 0;
 
   return (
-    <Paper withBorder p="lg" maw={700}>
+    <Paper withBorder p="lg">
       <Stack gap="md">
         <Select
           label={t("payment.selectStudentLabel")}

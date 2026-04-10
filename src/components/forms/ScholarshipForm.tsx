@@ -153,7 +153,7 @@ export default function ScholarshipForm() {
     })) || [];
 
   return (
-    <Paper withBorder p="lg" maw={600}>
+    <Paper withBorder p="lg">
       <Stack gap="md">
         <Select
           label={t("class.academicYear")}

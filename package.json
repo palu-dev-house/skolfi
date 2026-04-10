@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "postinstall": "npx i18next-cli statusprisma generate",
+    "postinstall": "prisma generate",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -14,8 +14,8 @@
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "prisma:seed": "bun prisma/seed.ts",
-    "prisma:seed-stress": "bun prisma/seed-stress.ts",
+    "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:seed-stress": "tsx prisma/seed-stress.ts",
     "prisma:reset": "prisma migrate reset",
     "type-check": "tsc --noEmit",
     "release": "bash scripts/release.sh",
@@ -50,6 +50,7 @@
     "pg": "^8.17.2",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "react-virtuoso": "^4.18.4",
     "xlsx": "^0.18.5",
     "zod": "^4.3.6",
     "zustand": "^5.0.10"
@@ -70,6 +71,7 @@
     "prisma": "^7.3.0",
     "swagger-ui-react": "^5.31.0",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },
   "ignoreScripts": [

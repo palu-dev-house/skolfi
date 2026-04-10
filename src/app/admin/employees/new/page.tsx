@@ -43,7 +43,7 @@ export default function NewEmployeePage() {
         title={t("employee.add")}
         description={t("employee.addDescription")}
       />
-      <Paper withBorder p="lg" maw={500}>
+      <Paper withBorder p="lg">
         <EmployeeForm
           onSubmit={handleSubmit}
           isLoading={createEmployee.isPending}

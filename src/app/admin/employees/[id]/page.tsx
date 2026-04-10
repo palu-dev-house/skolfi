@@ -61,7 +61,7 @@ export default function EditEmployeePage({
         title={t("employee.edit")}
         description={t("employee.editDescription", { name: employee.name })}
       />
-      <Paper withBorder p="lg" maw={500}>
+      <Paper withBorder p="lg">
         <EmployeeForm
           initialData={employee}
           onSubmit={handleSubmit}

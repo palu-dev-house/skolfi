@@ -204,7 +204,7 @@ export default function EditStudentPage({
 
       <Stack gap="lg">
         {/* Student Form */}
-        <Paper withBorder p="lg" maw={600}>
+        <Paper withBorder p="lg">
           <StudentForm
             initialData={student}
             onSubmit={handleSubmit}
@@ -214,7 +214,7 @@ export default function EditStudentPage({
         </Paper>
 
         {/* Account Management */}
-        <Card withBorder maw={600}>
+        <Card withBorder>
           <Stack gap="md">
             <Title order={5}>{t("studentAccount.portalAccount")}</Title>
 

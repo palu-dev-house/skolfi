@@ -72,7 +72,7 @@ export default function ImportScholarshipsPage() {
         title={t("scholarship.importTitle")}
         description={t("scholarship.importPageDescription")}
       />
-      <Paper withBorder p="lg" maw={700}>
+      <Paper withBorder p="lg">
         <Stack gap="md">
           <Alert
             icon={<IconAlertCircle size={18} />}

@@ -3,7 +3,6 @@
 import {
   ActionIcon,
   Group,
-  Pagination,
   Paper,
   Skeleton,
   Stack,
@@ -17,6 +16,8 @@ import { IconEdit, IconSearch, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import ColumnSettingsDrawer, { useColumnSettings } from "@/components/ui/ColumnSettingsDrawer";
+import TablePagination from "@/components/ui/TablePagination";
 import { useDeleteStudent, useStudents } from "@/hooks/api/useStudents";
 import { useQueryParams } from "@/hooks/useQueryParams";
 
@@ -26,6 +27,17 @@ export default function StudentTable() {
   const { setParams, getParam, getNumParam } = useQueryParams();
   const page = getNumParam("page", 1)!;
   const search = getParam("search", "") ?? "";
+
+  const columnDefs = [
+    { key: "nis", label: t("student.nis") },
+    { key: "name", label: t("student.name") },
+    { key: "parent", label: t("student.parent") },
+    { key: "phone", label: t("student.phone") },
+    { key: "joinDate", label: t("student.joinDate") },
+    { key: "actions", label: t("common.actions") },
+  ];
+
+  const { visibleKeys, orderedKeys } = useColumnSettings("students", columnDefs);
 
   const { data, isLoading } = useStudents({
     page,
@@ -72,33 +84,42 @@ export default function StudentTable() {
 
   return (
     <Stack gap="md">
-      <TextInput
-        placeholder={t("student.searchPlaceholder")}
-        leftSection={<IconSearch size={16} />}
-        value={search}
-        onChange={(e) => {
-          setParams({ search: e.currentTarget.value, page: 1 });
-        }}
-      />
+      <Group gap="md">
+        <TextInput
+          placeholder={t("student.searchPlaceholder")}
+          leftSection={<IconSearch size={16} />}
+          value={search}
+          onChange={(e) => {
+            setParams({ search: e.currentTarget.value, page: 1 });
+          }}
+          style={{ flex: 1 }}
+        />
+        <ColumnSettingsDrawer tableId="students" columnDefs={columnDefs} />
+      </Group>
 
       <Paper withBorder>
         <Table.ScrollContainer minWidth={700}>
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>{t("student.nis")}</Table.Th>
-                <Table.Th>{t("student.name")}</Table.Th>
-                <Table.Th>{t("student.parent")}</Table.Th>
-                <Table.Th>{t("student.phone")}</Table.Th>
-                <Table.Th>{t("student.joinDate")}</Table.Th>
-                <Table.Th w={100}>{t("common.actions")}</Table.Th>
+                {orderedKeys.map((key) => {
+                  switch (key) {
+                    case "nis": return <Table.Th key={key}>{t("student.nis")}</Table.Th>;
+                    case "name": return <Table.Th key={key}>{t("student.name")}</Table.Th>;
+                    case "parent": return <Table.Th key={key}>{t("student.parent")}</Table.Th>;
+                    case "phone": return <Table.Th key={key}>{t("student.phone")}</Table.Th>;
+                    case "joinDate": return <Table.Th key={key}>{t("student.joinDate")}</Table.Th>;
+                    case "actions": return <Table.Th key={key} w={100}>{t("common.actions")}</Table.Th>;
+                    default: return null;
+                  }
+                })}
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
               {isLoading &&
                 Array.from({ length: 5 }).map((_, i) => (
                   <Table.Tr key={`skeleton-${i}`}>
-                    {Array.from({ length: 6 }).map((_, j) => (
+                    {Array.from({ length: orderedKeys.length }).map((_, j) => (
                       <Table.Td key={`skeleton-cell-${j}`}>
                         <Skeleton height={20} />
                       </Table.Td>
@@ -107,7 +128,7 @@ export default function StudentTable() {
                 ))}
               {!isLoading && data?.students.length === 0 && (
                 <Table.Tr>
-                  <Table.Td colSpan={6}>
+                  <Table.Td colSpan={orderedKeys.length}>
                     <Text ta="center" c="dimmed" py="md">
                       {t("student.notFound")}
                     </Text>
@@ -116,33 +137,38 @@ export default function StudentTable() {
               )}
               {data?.students.map((student) => (
                 <Table.Tr key={student.nis}>
-                  <Table.Td>{student.nis}</Table.Td>
-                  <Table.Td>{student.name}</Table.Td>
-                  <Table.Td>{student.parentName}</Table.Td>
-                  <Table.Td>{student.parentPhone}</Table.Td>
-                  <Table.Td>
-                    {dayjs(student.startJoinDate).format("DD/MM/YYYY")}
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap="xs">
-                      <ActionIcon
-                        variant="subtle"
-                        color="blue"
-                        onClick={() =>
-                          router.push(`/admin/students/${student.nis}`)
-                        }
-                      >
-                        <IconEdit size={18} />
-                      </ActionIcon>
-                      <ActionIcon
-                        variant="subtle"
-                        color="red"
-                        onClick={() => handleDelete(student.nis, student.name)}
-                      >
-                        <IconTrash size={18} />
-                      </ActionIcon>
-                    </Group>
-                  </Table.Td>
+                  {orderedKeys.map((key) => {
+                    switch (key) {
+                      case "nis": return <Table.Td key={key}>{student.nis}</Table.Td>;
+                      case "name": return <Table.Td key={key}>{student.name}</Table.Td>;
+                      case "parent": return <Table.Td key={key}>{student.parentName}</Table.Td>;
+                      case "phone": return <Table.Td key={key}>{student.parentPhone}</Table.Td>;
+                      case "joinDate": return <Table.Td key={key}>{dayjs(student.startJoinDate).format("DD/MM/YYYY")}</Table.Td>;
+                      case "actions": return (
+                        <Table.Td key={key}>
+                          <Group gap="xs">
+                            <ActionIcon
+                              variant="subtle"
+                              color="blue"
+                              onClick={() =>
+                                router.push(`/admin/students/${student.nis}`)
+                              }
+                            >
+                              <IconEdit size={18} />
+                            </ActionIcon>
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              onClick={() => handleDelete(student.nis, student.name)}
+                            >
+                              <IconTrash size={18} />
+                            </ActionIcon>
+                          </Group>
+                        </Table.Td>
+                      );
+                      default: return null;
+                    }
+                  })}
                 </Table.Tr>
               ))}
             </Table.Tbody>
@@ -150,14 +176,12 @@ export default function StudentTable() {
         </Table.ScrollContainer>
       </Paper>
 
-      {data && data.pagination.totalPages > 1 && (
-        <Group justify="center">
-          <Pagination
-            total={data.pagination.totalPages}
-            value={page}
-            onChange={(p) => setParams({ page: p })}
-          />
-        </Group>
+      {data && (
+        <TablePagination
+          total={data.pagination.totalPages}
+          value={page}
+          onChange={(p) => setParams({ page: p })}
+        />
       )}
     </Stack>
   );

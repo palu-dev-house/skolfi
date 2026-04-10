@@ -4,7 +4,6 @@ import {
   ActionIcon,
   Badge,
   Group,
-  Pagination,
   Paper,
   Select,
   Skeleton,
@@ -18,6 +17,8 @@ import { notifications } from "@mantine/notifications";
 import { IconEdit, IconKey, IconSearch, IconTrash } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import ColumnSettingsDrawer, { useColumnSettings } from "@/components/ui/ColumnSettingsDrawer";
+import TablePagination from "@/components/ui/TablePagination";
 import {
   useDeleteEmployee,
   useEmployees,
@@ -32,6 +33,14 @@ export default function EmployeeTable() {
   const page = getNumParam("page", 1)!;
   const search = getParam("search", "") ?? "";
   const roleFilter = getParam("role") ?? null;
+
+  const columnDefs = [
+    { key: "name", label: t("employee.name") },
+    { key: "email", label: t("employee.email") },
+    { key: "role", label: t("employee.role") },
+    { key: "actions", label: t("common.actions") },
+  ];
+  const { visibleKeys, orderedKeys } = useColumnSettings("employees", columnDefs);
 
   const { data, isLoading } = useEmployees({
     page,
@@ -136,6 +145,7 @@ export default function EmployeeTable() {
           clearable
           w={160}
         />
+        <ColumnSettingsDrawer tableId="employees" columnDefs={columnDefs} />
       </Group>
 
       <Paper withBorder>
@@ -143,33 +153,31 @@ export default function EmployeeTable() {
           <Table striped highlightOnHover>
             <Table.Thead>
               <Table.Tr>
-                <Table.Th>{t("employee.name")}</Table.Th>
-                <Table.Th>{t("employee.email")}</Table.Th>
-                <Table.Th>{t("employee.role")}</Table.Th>
-                <Table.Th w={140}>{t("common.actions")}</Table.Th>
+                {orderedKeys.map((key) => {
+                  switch (key) {
+                    case "name": return <Table.Th key={key}>{t("employee.name")}</Table.Th>;
+                    case "email": return <Table.Th key={key}>{t("employee.email")}</Table.Th>;
+                    case "role": return <Table.Th key={key}>{t("employee.role")}</Table.Th>;
+                    case "actions": return <Table.Th key={key} w={140}>{t("common.actions")}</Table.Th>;
+                    default: return null;
+                  }
+                })}
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
               {isLoading &&
                 Array.from({ length: 5 }).map((_, i) => (
                   <Table.Tr key={`skeleton-${i}`}>
-                    <Table.Td>
-                      <Skeleton height={20} />
-                    </Table.Td>
-                    <Table.Td>
-                      <Skeleton height={20} />
-                    </Table.Td>
-                    <Table.Td>
-                      <Skeleton height={20} width={80} />
-                    </Table.Td>
-                    <Table.Td>
-                      <Skeleton height={20} width={100} />
-                    </Table.Td>
+                    {Array.from({ length: orderedKeys.length }).map((_, j) => (
+                      <Table.Td key={`skeleton-cell-${j}`}>
+                        <Skeleton height={20} />
+                      </Table.Td>
+                    ))}
                   </Table.Tr>
                 ))}
               {!isLoading && data?.employees.length === 0 && (
                 <Table.Tr>
-                  <Table.Td colSpan={4}>
+                  <Table.Td colSpan={orderedKeys.length}>
                     <Text ta="center" c="dimmed" py="md">
                       {t("employee.notFound")}
                     </Text>
@@ -178,50 +186,59 @@ export default function EmployeeTable() {
               )}
               {data?.employees.map((employee) => (
                 <Table.Tr key={employee.employeeId}>
-                  <Table.Td>{employee.name}</Table.Td>
-                  <Table.Td>{employee.email}</Table.Td>
-                  <Table.Td>
-                    <Badge
-                      color={employee.role === "ADMIN" ? "blue" : "green"}
-                      variant="light"
-                    >
-                      {t(`employee.roles.${employee.role}`)}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap="xs">
-                      <ActionIcon
-                        variant="subtle"
-                        color="blue"
-                        onClick={() =>
-                          router.push(`/employees/${employee.employeeId}`)
-                        }
-                      >
-                        <IconEdit size={18} />
-                      </ActionIcon>
-                      <ActionIcon
-                        variant="subtle"
-                        color="orange"
-                        onClick={() =>
-                          handleResetPassword(
-                            employee.employeeId,
-                            employee.name,
-                          )
-                        }
-                      >
-                        <IconKey size={18} />
-                      </ActionIcon>
-                      <ActionIcon
-                        variant="subtle"
-                        color="red"
-                        onClick={() =>
-                          handleDelete(employee.employeeId, employee.name)
-                        }
-                      >
-                        <IconTrash size={18} />
-                      </ActionIcon>
-                    </Group>
-                  </Table.Td>
+                  {orderedKeys.map((key) => {
+                    switch (key) {
+                      case "name": return <Table.Td key={key}>{employee.name}</Table.Td>;
+                      case "email": return <Table.Td key={key}>{employee.email}</Table.Td>;
+                      case "role": return (
+                        <Table.Td key={key}>
+                          <Badge
+                            color={employee.role === "ADMIN" ? "blue" : "green"}
+                            variant="light"
+                          >
+                            {t(`employee.roles.${employee.role}`)}
+                          </Badge>
+                        </Table.Td>
+                      );
+                      case "actions": return (
+                        <Table.Td key={key}>
+                          <Group gap="xs">
+                            <ActionIcon
+                              variant="subtle"
+                              color="blue"
+                              onClick={() =>
+                                router.push(`/employees/${employee.employeeId}`)
+                              }
+                            >
+                              <IconEdit size={18} />
+                            </ActionIcon>
+                            <ActionIcon
+                              variant="subtle"
+                              color="orange"
+                              onClick={() =>
+                                handleResetPassword(
+                                  employee.employeeId,
+                                  employee.name,
+                                )
+                              }
+                            >
+                              <IconKey size={18} />
+                            </ActionIcon>
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              onClick={() =>
+                                handleDelete(employee.employeeId, employee.name)
+                              }
+                            >
+                              <IconTrash size={18} />
+                            </ActionIcon>
+                          </Group>
+                        </Table.Td>
+                      );
+                      default: return null;
+                    }
+                  })}
                 </Table.Tr>
               ))}
             </Table.Tbody>
@@ -229,14 +246,12 @@ export default function EmployeeTable() {
         </Table.ScrollContainer>
       </Paper>
 
-      {data && data.pagination.totalPages > 1 && (
-        <Group justify="center">
-          <Pagination
-            total={data.pagination.totalPages}
-            value={page}
-            onChange={(p) => setParams({ page: p })}
-          />
-        </Group>
+      {data && (
+        <TablePagination
+          total={data.pagination.totalPages}
+          value={page}
+          onChange={(p) => setParams({ page: p })}
+        />
       )}
     </Stack>
   );

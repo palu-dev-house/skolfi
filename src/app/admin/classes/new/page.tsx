@@ -43,7 +43,7 @@ export default function NewClassPage() {
         title={t("class.add")}
         description={t("class.addDescription")}
       />
-      <Paper withBorder p="lg" maw={500}>
+      <Paper withBorder p="lg">
         <ClassAcademicForm
           onSubmit={handleSubmit}
           isLoading={createClass.isPending}

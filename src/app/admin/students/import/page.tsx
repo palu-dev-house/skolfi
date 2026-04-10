@@ -67,7 +67,7 @@ export default function ImportStudentsPage() {
         title={t("student.import")}
         description={t("class.importStudentsDescription")}
       />
-      <Paper withBorder p="lg" maw={600}>
+      <Paper withBorder p="lg">
         <Stack gap="md">
           <Button
             leftSection={<IconDownload size={18} />}

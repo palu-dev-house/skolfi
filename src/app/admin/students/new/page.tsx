@@ -47,7 +47,7 @@ export default function NewStudentPage() {
         title={t("student.add")}
         description={t("student.addDescription")}
       />
-      <Paper withBorder p="lg" maw={600}>
+      <Paper withBorder p="lg">
         <StudentForm
           onSubmit={handleSubmit}
           isLoading={createStudent.isPending}
