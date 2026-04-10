@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.0] - 2026-04-10
+
+### Features
+- integrate Midtrans Snap payment gateway with admin controls
+
+
+
 ## [2.3.0] - 2026-04-10
 
 ### Features
