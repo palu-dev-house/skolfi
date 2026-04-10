@@ -23,7 +23,9 @@ import {
 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import ColumnSettingsDrawer, { useColumnSettings } from "@/components/ui/ColumnSettingsDrawer";
+import ColumnSettingsDrawer, {
+  useColumnSettings,
+} from "@/components/ui/ColumnSettingsDrawer";
 import TablePagination from "@/components/ui/TablePagination";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import {
@@ -65,7 +67,10 @@ export default function DiscountTable() {
     { key: "status", label: t("common.status") },
     { key: "actions", label: t("common.actions") },
   ];
-  const { visibleKeys, orderedKeys } = useColumnSettings("discounts", columnDefs);
+  const { visibleKeys, orderedKeys } = useColumnSettings(
+    "discounts",
+    columnDefs,
+  );
 
   const deleteDiscount = useDeleteDiscount();
   const applyPreview = useApplyDiscountPreview();
@@ -229,14 +234,40 @@ export default function DiscountTable() {
               <Table.Tr>
                 {orderedKeys.map((key) => {
                   switch (key) {
-                    case "name": return <Table.Th key={key}>{t("common.name")}</Table.Th>;
-                    case "amount": return <Table.Th key={key} ta="right" align="right">{t("common.amount")}</Table.Th>;
-                    case "scope": return <Table.Th key={key}>{t("discount.scope")}</Table.Th>;
-                    case "targetPeriods": return <Table.Th key={key}>{t("discount.targetPeriods")}</Table.Th>;
-                    case "appliedTo": return <Table.Th key={key}>{t("discount.appliedTo")}</Table.Th>;
-                    case "status": return <Table.Th key={key}>{t("common.status")}</Table.Th>;
-                    case "actions": return <Table.Th key={key} w={120}>{t("common.actions")}</Table.Th>;
-                    default: return null;
+                    case "name":
+                      return <Table.Th key={key}>{t("common.name")}</Table.Th>;
+                    case "amount":
+                      return (
+                        <Table.Th key={key} ta="right" align="right">
+                          {t("common.amount")}
+                        </Table.Th>
+                      );
+                    case "scope":
+                      return (
+                        <Table.Th key={key}>{t("discount.scope")}</Table.Th>
+                      );
+                    case "targetPeriods":
+                      return (
+                        <Table.Th key={key}>
+                          {t("discount.targetPeriods")}
+                        </Table.Th>
+                      );
+                    case "appliedTo":
+                      return (
+                        <Table.Th key={key}>{t("discount.appliedTo")}</Table.Th>
+                      );
+                    case "status":
+                      return (
+                        <Table.Th key={key}>{t("common.status")}</Table.Th>
+                      );
+                    case "actions":
+                      return (
+                        <Table.Th key={key} w={120}>
+                          {t("common.actions")}
+                        </Table.Th>
+                      );
+                    default:
+                      return null;
                   }
                 })}
               </Table.Tr>
@@ -265,120 +296,138 @@ export default function DiscountTable() {
                 <Table.Tr key={discount.id}>
                   {orderedKeys.map((key) => {
                     switch (key) {
-                      case "name": return (
-                        <Table.Td key={key}>
-                          <Stack gap={0}>
-                            <Text size="sm" fw={500}>
-                              {discount.name}
-                            </Text>
-                            {discount.reason && (
-                              <Text size="xs" c="dimmed">
-                                {discount.reason}
+                      case "name":
+                        return (
+                          <Table.Td key={key}>
+                            <Stack gap={0}>
+                              <Text size="sm" fw={500}>
+                                {discount.name}
                               </Text>
-                            )}
-                          </Stack>
-                        </Table.Td>
-                      );
-                      case "amount": return (
-                        <Table.Td key={key} ta="right" align="right">
-                          <NumberFormatter
-                            value={discount.discountAmount}
-                            prefix="Rp "
-                            thousandSeparator="."
-                            decimalSeparator=","
-                          />
-                        </Table.Td>
-                      );
-                      case "scope": return (
-                        <Table.Td key={key}>
-                          <Badge
-                            color={discount.classAcademicId ? "blue" : "green"}
-                            variant="light"
-                          >
-                            {discount.classAcademic
-                              ? discount.classAcademic.className
-                              : t("discount.schoolWide")}
-                          </Badge>
-                        </Table.Td>
-                      );
-                      case "targetPeriods": return (
-                        <Table.Td key={key}>
-                          <Group gap={4}>
-                            {discount.targetPeriods.slice(0, 3).map((period) => (
-                              <Badge key={period} size="sm" variant="outline">
-                                {getPeriodDisplayName(period)}
-                              </Badge>
-                            ))}
-                            {discount.targetPeriods.length > 3 && (
-                              <Badge size="sm" variant="outline" color="gray">
-                                +{discount.targetPeriods.length - 3}
-                              </Badge>
-                            )}
-                          </Group>
-                        </Table.Td>
-                      );
-                      case "appliedTo": return (
-                        <Table.Td key={key}>
-                          <Text size="sm">
-                            {t("discount.tuitionsCount", {
-                              count: discount._count?.tuitions || 0,
-                            })}
-                          </Text>
-                        </Table.Td>
-                      );
-                      case "status": return (
-                        <Table.Td key={key}>
-                          <Badge
-                            color={discount.isActive ? "green" : "gray"}
-                            variant="light"
-                          >
-                            {discount.isActive
-                              ? t("common.active")
-                              : t("common.inactive")}
-                          </Badge>
-                        </Table.Td>
-                      );
-                      case "actions": return (
-                        <Table.Td key={key}>
-                          <Group gap="xs">
-                            <Tooltip label={t("discount.applyToExisting")}>
-                              <ActionIcon
-                                variant="subtle"
-                                color="blue"
-                                onClick={() =>
-                                  handleApply(discount.id, discount.name)
-                                }
-                                disabled={!discount.isActive}
-                                loading={applyPreview.isPending}
-                              >
-                                <IconPlayerPlay size={18} />
-                              </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label={t("common.edit")}>
-                              <ActionIcon
-                                variant="subtle"
-                                onClick={() =>
-                                  router.push(`/admin/discounts/${discount.id}`)
-                                }
-                              >
-                                <IconEdit size={18} />
-                              </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label={t("common.delete")}>
-                              <ActionIcon
-                                variant="subtle"
-                                color="red"
-                                onClick={() =>
-                                  handleDelete(discount.id, discount.name)
-                                }
-                              >
-                                <IconTrash size={18} />
-                              </ActionIcon>
-                            </Tooltip>
-                          </Group>
-                        </Table.Td>
-                      );
-                      default: return null;
+                              {discount.reason && (
+                                <Text size="xs" c="dimmed">
+                                  {discount.reason}
+                                </Text>
+                              )}
+                            </Stack>
+                          </Table.Td>
+                        );
+                      case "amount":
+                        return (
+                          <Table.Td key={key} ta="right" align="right">
+                            <NumberFormatter
+                              value={discount.discountAmount}
+                              prefix="Rp "
+                              thousandSeparator="."
+                              decimalSeparator=","
+                            />
+                          </Table.Td>
+                        );
+                      case "scope":
+                        return (
+                          <Table.Td key={key}>
+                            <Badge
+                              color={
+                                discount.classAcademicId ? "blue" : "green"
+                              }
+                              variant="light"
+                            >
+                              {discount.classAcademic
+                                ? discount.classAcademic.className
+                                : t("discount.schoolWide")}
+                            </Badge>
+                          </Table.Td>
+                        );
+                      case "targetPeriods":
+                        return (
+                          <Table.Td key={key}>
+                            <Group gap={4}>
+                              {discount.targetPeriods
+                                .slice(0, 3)
+                                .map((period) => (
+                                  <Badge
+                                    key={period}
+                                    size="sm"
+                                    variant="outline"
+                                  >
+                                    {getPeriodDisplayName(period)}
+                                  </Badge>
+                                ))}
+                              {discount.targetPeriods.length > 3 && (
+                                <Badge size="sm" variant="outline" color="gray">
+                                  +{discount.targetPeriods.length - 3}
+                                </Badge>
+                              )}
+                            </Group>
+                          </Table.Td>
+                        );
+                      case "appliedTo":
+                        return (
+                          <Table.Td key={key}>
+                            <Text size="sm">
+                              {t("discount.tuitionsCount", {
+                                count: discount._count?.tuitions || 0,
+                              })}
+                            </Text>
+                          </Table.Td>
+                        );
+                      case "status":
+                        return (
+                          <Table.Td key={key}>
+                            <Badge
+                              color={discount.isActive ? "green" : "gray"}
+                              variant="light"
+                            >
+                              {discount.isActive
+                                ? t("common.active")
+                                : t("common.inactive")}
+                            </Badge>
+                          </Table.Td>
+                        );
+                      case "actions":
+                        return (
+                          <Table.Td key={key}>
+                            <Group gap="xs">
+                              <Tooltip label={t("discount.applyToExisting")}>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="blue"
+                                  onClick={() =>
+                                    handleApply(discount.id, discount.name)
+                                  }
+                                  disabled={!discount.isActive}
+                                  loading={applyPreview.isPending}
+                                >
+                                  <IconPlayerPlay size={18} />
+                                </ActionIcon>
+                              </Tooltip>
+                              <Tooltip label={t("common.edit")}>
+                                <ActionIcon
+                                  variant="subtle"
+                                  onClick={() =>
+                                    router.push(
+                                      `/admin/discounts/${discount.id}`,
+                                    )
+                                  }
+                                >
+                                  <IconEdit size={18} />
+                                </ActionIcon>
+                              </Tooltip>
+                              <Tooltip label={t("common.delete")}>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="red"
+                                  onClick={() =>
+                                    handleDelete(discount.id, discount.name)
+                                  }
+                                >
+                                  <IconTrash size={18} />
+                                </ActionIcon>
+                              </Tooltip>
+                            </Group>
+                          </Table.Td>
+                        );
+                      default:
+                        return null;
                     }
                   })}
                 </Table.Tr>

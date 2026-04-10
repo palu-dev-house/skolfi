@@ -2,6 +2,7 @@
 
 import { Box, Group, Text, UnstyledButton } from "@mantine/core";
 import {
+  IconCreditCard,
   IconHistory,
   IconHome,
   IconSettings,
@@ -12,6 +13,12 @@ import { useTranslations } from "next-intl";
 
 const navItems = [
   { href: "/portal", labelKey: "nav.home", icon: IconHome, color: "blue" },
+  {
+    href: "/portal/payment",
+    labelKey: "nav.payment",
+    icon: IconCreditCard,
+    color: "green",
+  },
   {
     href: "/portal/history",
     labelKey: "nav.history",

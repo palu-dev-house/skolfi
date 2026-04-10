@@ -18,7 +18,9 @@ import { notifications } from "@mantine/notifications";
 import { IconFilter, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
-import ColumnSettingsDrawer, { useColumnSettings } from "@/components/ui/ColumnSettingsDrawer";
+import ColumnSettingsDrawer, {
+  useColumnSettings,
+} from "@/components/ui/ColumnSettingsDrawer";
 import TablePagination from "@/components/ui/TablePagination";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import { useClassAcademics } from "@/hooks/api/useClassAcademics";
@@ -59,7 +61,10 @@ export default function ScholarshipTable() {
     { key: "created", label: t("scholarship.created") },
     { key: "actions", label: t("common.actions") },
   ];
-  const { visibleKeys, orderedKeys } = useColumnSettings("scholarships", columnDefs);
+  const { visibleKeys, orderedKeys } = useColumnSettings(
+    "scholarships",
+    columnDefs,
+  );
 
   const deleteScholarship = useDeleteScholarship();
 
@@ -135,7 +140,10 @@ export default function ScholarshipTable() {
             clearable
             w={200}
           />
-          <ColumnSettingsDrawer tableId="scholarships" columnDefs={columnDefs} />
+          <ColumnSettingsDrawer
+            tableId="scholarships"
+            columnDefs={columnDefs}
+          />
         </Group>
       </Paper>
 
@@ -146,13 +154,40 @@ export default function ScholarshipTable() {
               <Table.Tr>
                 {orderedKeys.map((key) => {
                   switch (key) {
-                    case "student": return <Table.Th key={key}>{t("scholarship.student")}</Table.Th>;
-                    case "class": return <Table.Th key={key}>{t("scholarship.class")}</Table.Th>;
-                    case "amount": return <Table.Th key={key} ta="right" align="right">{t("scholarship.amount")}</Table.Th>;
-                    case "type": return <Table.Th key={key}>{t("scholarship.type")}</Table.Th>;
-                    case "created": return <Table.Th key={key}>{t("scholarship.created")}</Table.Th>;
-                    case "actions": return <Table.Th key={key} w={80}>{t("common.actions")}</Table.Th>;
-                    default: return null;
+                    case "student":
+                      return (
+                        <Table.Th key={key}>
+                          {t("scholarship.student")}
+                        </Table.Th>
+                      );
+                    case "class":
+                      return (
+                        <Table.Th key={key}>{t("scholarship.class")}</Table.Th>
+                      );
+                    case "amount":
+                      return (
+                        <Table.Th key={key} ta="right" align="right">
+                          {t("scholarship.amount")}
+                        </Table.Th>
+                      );
+                    case "type":
+                      return (
+                        <Table.Th key={key}>{t("scholarship.type")}</Table.Th>
+                      );
+                    case "created":
+                      return (
+                        <Table.Th key={key}>
+                          {t("scholarship.created")}
+                        </Table.Th>
+                      );
+                    case "actions":
+                      return (
+                        <Table.Th key={key} w={80}>
+                          {t("common.actions")}
+                        </Table.Th>
+                      );
+                    default:
+                      return null;
                   }
                 })}
               </Table.Tr>
@@ -181,75 +216,86 @@ export default function ScholarshipTable() {
                 <Table.Tr key={scholarship.id}>
                   {orderedKeys.map((key) => {
                     switch (key) {
-                      case "student": return (
-                        <Table.Td key={key}>
-                          <Stack gap={0}>
-                            <Text size="sm" fw={500}>
-                              {scholarship.student?.name}
+                      case "student":
+                        return (
+                          <Table.Td key={key}>
+                            <Stack gap={0}>
+                              <Text size="sm" fw={500}>
+                                {scholarship.student?.name}
+                              </Text>
+                              <Text size="xs" c="dimmed">
+                                {scholarship.studentNis}
+                              </Text>
+                            </Stack>
+                          </Table.Td>
+                        );
+                      case "class":
+                        return (
+                          <Table.Td key={key}>
+                            <Text size="sm">
+                              {scholarship.classAcademic?.className}
                             </Text>
-                            <Text size="xs" c="dimmed">
-                              {scholarship.studentNis}
+                          </Table.Td>
+                        );
+                      case "amount":
+                        return (
+                          <Table.Td key={key} ta="right" align="right">
+                            <NumberFormatter
+                              value={scholarship.nominal}
+                              prefix="Rp "
+                              thousandSeparator="."
+                              decimalSeparator=","
+                            />
+                          </Table.Td>
+                        );
+                      case "type":
+                        return (
+                          <Table.Td key={key}>
+                            <Badge
+                              color={
+                                scholarship.isFullScholarship ? "green" : "blue"
+                              }
+                              variant="light"
+                            >
+                              {scholarship.isFullScholarship
+                                ? t("scholarship.full")
+                                : t("scholarship.partial")}
+                            </Badge>
+                          </Table.Td>
+                        );
+                      case "created":
+                        return (
+                          <Table.Td key={key}>
+                            <Text size="sm">
+                              {dayjs(scholarship.createdAt).format(
+                                "DD/MM/YYYY",
+                              )}
                             </Text>
-                          </Stack>
-                        </Table.Td>
-                      );
-                      case "class": return (
-                        <Table.Td key={key}>
-                          <Text size="sm">
-                            {scholarship.classAcademic?.className}
-                          </Text>
-                        </Table.Td>
-                      );
-                      case "amount": return (
-                        <Table.Td key={key} ta="right" align="right">
-                          <NumberFormatter
-                            value={scholarship.nominal}
-                            prefix="Rp "
-                            thousandSeparator="."
-                            decimalSeparator=","
-                          />
-                        </Table.Td>
-                      );
-                      case "type": return (
-                        <Table.Td key={key}>
-                          <Badge
-                            color={scholarship.isFullScholarship ? "green" : "blue"}
-                            variant="light"
-                          >
-                            {scholarship.isFullScholarship
-                              ? t("scholarship.full")
-                              : t("scholarship.partial")}
-                          </Badge>
-                        </Table.Td>
-                      );
-                      case "created": return (
-                        <Table.Td key={key}>
-                          <Text size="sm">
-                            {dayjs(scholarship.createdAt).format("DD/MM/YYYY")}
-                          </Text>
-                        </Table.Td>
-                      );
-                      case "actions": return (
-                        <Table.Td key={key}>
-                          <Group gap="xs">
-                            <Tooltip label={t("common.delete")}>
-                              <ActionIcon
-                                variant="subtle"
-                                color="red"
-                                onClick={() =>
-                                  handleDelete(
-                                    scholarship.id,
-                                    scholarship.student?.name || "",
-                                  )
-                                }
-                              >
-                                <IconTrash size={18} />
-                              </ActionIcon>
-                            </Tooltip>
-                          </Group>
-                        </Table.Td>
-                      );
-                      default: return null;
+                          </Table.Td>
+                        );
+                      case "actions":
+                        return (
+                          <Table.Td key={key}>
+                            <Group gap="xs">
+                              <Tooltip label={t("common.delete")}>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="red"
+                                  onClick={() =>
+                                    handleDelete(
+                                      scholarship.id,
+                                      scholarship.student?.name || "",
+                                    )
+                                  }
+                                >
+                                  <IconTrash size={18} />
+                                </ActionIcon>
+                              </Tooltip>
+                            </Group>
+                          </Table.Td>
+                        );
+                      default:
+                        return null;
                     }
                   })}
                 </Table.Tr>

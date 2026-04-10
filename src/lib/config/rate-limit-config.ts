@@ -4,24 +4,6 @@ export interface RateLimitConfig {
 }
 
 export const RATE_LIMITS: Record<string, RateLimitConfig> = {
-  // Payment request: 3 per minute per user
-  paymentRequest: {
-    limit: 3,
-    windowMs: 60 * 1000, // 1 minute
-  },
-
-  // Cancel payment: 3 per minute per user
-  cancelPayment: {
-    limit: 3,
-    windowMs: 60 * 1000,
-  },
-
-  // Change tuition: 3 per minute per user (max 2 changes per request tracked separately)
-  changeTuition: {
-    limit: 3,
-    windowMs: 60 * 1000,
-  },
-
   // Login: 3 attempts per 1 minute per NIS (as requested by user)
   login: {
     limit: 3,

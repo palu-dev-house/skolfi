@@ -37,6 +37,8 @@
     "type": "Tipe",
     "select": "Pilih",
     "selectAll": "Pilih Semua",
+    "deselectAll": "Batalkan Semua",
+    "saved": "Pengaturan berhasil disimpan",
     "required": "Wajib diisi",
     "optional": "Opsional",
     "previous": "Sebelumnya",
@@ -433,14 +435,13 @@
     "scholarships": "Beasiswa",
     "discounts": "Diskon",
     "payments": "Pembayaran",
-    "onlineTransactions": "Transaksi Online",
     "studentAccounts": "Akun Siswa",
-    "bankAccounts": "Rekening Bank",
-    "testTransfer": "Test Transfer",
     "reports": "Laporan",
     "overdueReport": "Laporan Tunggakan",
     "classSummary": "Ringkasan Kelas",
-    "searchMenu": "Cari menu..."
+    "searchMenu": "Cari menu...",
+    "onlinePayments": "Pembayaran Online",
+    "paymentSettings": "Pengaturan Pembayaran"
   },
   "employee": {
     "title": "Karyawan",
@@ -870,33 +871,6 @@
     "andMoreErrors": "... dan {count} error lainnya",
     "tuitionsAffected": "Tagihan terdampak: {count}"
   },
-  "bankAccount": {
-    "title": "Rekening Bank",
-    "list": "Daftar Rekening Bank",
-    "add": "Tambah Rekening",
-    "edit": "Edit Rekening",
-    "bankName": "Nama Bank",
-    "accountNumber": "No. Rekening",
-    "accountName": "Nama Pemilik",
-    "branch": "Cabang",
-    "isActive": "Status Aktif",
-    "deleteConfirm": "Apakah Anda yakin ingin menghapus rekening ini?",
-    "deleteSuccess": "Rekening berhasil dihapus",
-    "createSuccess": "Rekening berhasil dibuat",
-    "updateSuccess": "Rekening berhasil diperbarui",
-    "noData": "Belum ada bank account. Tambahkan bank untuk menerima pembayaran transfer.",
-    "pending": "Pending",
-    "status": {
-      "active": "Aktif",
-      "inactive": "Nonaktif"
-    },
-    "bankCode": "Kode Bank",
-    "logoUrl": "Logo URL (opsional)",
-    "displayOrder": "Urutan Tampilan",
-    "cannotDelete": "Tidak dapat dihapus",
-    "cannotDeleteMessage": "Bank account masih memiliki pembayaran pending",
-    "deleteMessage": "Bank account <strong>{bankName}</strong> ({accountNumber}) akan dihapus permanen. Aksi ini tidak dapat dibatalkan."
-  },
   "studentAccount": {
     "title": "Akun Siswa",
     "list": "Daftar Akun Siswa",
@@ -989,53 +963,6 @@
     "daysOverdue": "Hari Tunggakan",
     "days": "hari"
   },
-  "onlineTransaction": {
-    "title": "Transaksi Online",
-    "subtitle": "Pembayaran melalui transfer bank dari portal orang tua",
-    "searchPlaceholder": "Cari NIS atau nama siswa...",
-    "allStatus": "Semua Status",
-    "student": "Siswa"
-  },
-  "testTransfer": {
-    "title": "Test Transfer",
-    "subtitle": "Simulasi transfer bank untuk testing tanpa integrasi email",
-    "pendingPayments": "Pembayaran Menunggu",
-    "simulateTransfer": "Simulasi Transfer",
-    "noPending": "Tidak ada pembayaran yang menunggu verifikasi",
-    "confirmTitle": "Simulasi Transfer",
-    "confirmDesc": "Simulasikan transfer untuk pembayaran:",
-    "confirmNote": "Ini akan menandai pembayaran sebagai VERIFIED dan memperbarui status tagihan.",
-    "confirm": "Simulasi Transfer",
-    "successTitle": "Transfer Berhasil",
-    "successMessage": "Pembayaran telah diverifikasi",
-    "errorTitle": "Gagal",
-    "errorMessage": "Gagal memproses transfer",
-    "status": {
-      "pending": "Menunggu",
-      "verified": "Terverifikasi",
-      "expired": "Kadaluarsa",
-      "cancelled": "Dibatalkan"
-    },
-    "table": {
-      "student": "Siswa",
-      "period": "Periode",
-      "amount": "Nominal",
-      "created": "Dibuat",
-      "expires": "Kadaluarsa",
-      "status": "Status",
-      "action": "Aksi"
-    },
-    "loading": "Memuat data...",
-    "noPayments": "Tidak ada payment request dengan status {status}",
-    "testingNote": "Halaman ini hanya untuk <strong>testing</strong>. Klik tombol \"Simulasi Transfer\" untuk menandai pembayaran sebagai berhasil tanpa transfer bank yang sebenarnya.",
-    "bankAccounts": "Bank Accounts (untuk simulasi)",
-    "bankTable": {
-      "bank": "Bank",
-      "accountNumber": "No. Rekening",
-      "accountName": "Atas Nama"
-    },
-    "refresh": "Refresh"
-  },
   "header": {
     "title": "School Tuition"
   },
@@ -1125,5 +1052,34 @@
     "academicYearRequired": "Tahun ajaran harus dipilih",
     "classNotInYear": "Kelas tidak termasuk dalam tahun ajaran yang dipilih",
     "restoreSuccess": "Akun berhasil dipulihkan"
+  },
+  "onlinePayment": {
+    "title": "Pembayaran Online",
+    "adminDescription": "Monitor semua transaksi pembayaran online",
+    "selectTuitions": "Pilih Tagihan untuk Dibayar",
+    "totalSelected": "{count} tagihan dipilih",
+    "payNow": "Bayar Sekarang",
+    "pendingPayment": "Pembayaran Tertunda",
+    "waitingPayment": "Menunggu Pembayaran",
+    "continuePayment": "Lanjutkan Pembayaran",
+    "cancelPayment": "Batalkan Pembayaran",
+    "cancelConfirm": "Apakah Anda yakin ingin membatalkan pembayaran ini? Anda perlu membuat pembayaran baru.",
+    "orderId": "ID Pesanan",
+    "amount": "Jumlah",
+    "bank": "Bank",
+    "expiresAt": "Kedaluwarsa",
+    "items": "Item",
+    "history": "Riwayat Pembayaran",
+    "allPaid": "Semua tagihan sudah lunas!",
+    "maintenance": "Pembayaran online sedang dalam pemeliharaan. Silakan coba lagi nanti."
+  },
+  "paymentSettings": {
+    "title": "Pengaturan Pembayaran",
+    "description": "Kelola konfigurasi pembayaran online",
+    "enableOnlinePayment": "Aktifkan Pembayaran Online",
+    "enableDescription": "Jika dinonaktifkan, siswa tidak dapat melakukan pembayaran online melalui portal",
+    "maintenanceMessage": "Pesan Pemeliharaan",
+    "maintenanceDescription": "Pesan yang ditampilkan kepada siswa ketika pembayaran online dinonaktifkan",
+    "maintenancePlaceholder": "contoh: Pembayaran online sedang dalam pemeliharaan hingga..."
   }
 }

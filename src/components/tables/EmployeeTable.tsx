@@ -17,7 +17,9 @@ import { notifications } from "@mantine/notifications";
 import { IconEdit, IconKey, IconSearch, IconTrash } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import ColumnSettingsDrawer, { useColumnSettings } from "@/components/ui/ColumnSettingsDrawer";
+import ColumnSettingsDrawer, {
+  useColumnSettings,
+} from "@/components/ui/ColumnSettingsDrawer";
 import TablePagination from "@/components/ui/TablePagination";
 import {
   useDeleteEmployee,
@@ -40,7 +42,10 @@ export default function EmployeeTable() {
     { key: "role", label: t("employee.role") },
     { key: "actions", label: t("common.actions") },
   ];
-  const { visibleKeys, orderedKeys } = useColumnSettings("employees", columnDefs);
+  const { visibleKeys, orderedKeys } = useColumnSettings(
+    "employees",
+    columnDefs,
+  );
 
   const { data, isLoading } = useEmployees({
     page,
@@ -155,11 +160,26 @@ export default function EmployeeTable() {
               <Table.Tr>
                 {orderedKeys.map((key) => {
                   switch (key) {
-                    case "name": return <Table.Th key={key}>{t("employee.name")}</Table.Th>;
-                    case "email": return <Table.Th key={key}>{t("employee.email")}</Table.Th>;
-                    case "role": return <Table.Th key={key}>{t("employee.role")}</Table.Th>;
-                    case "actions": return <Table.Th key={key} w={140}>{t("common.actions")}</Table.Th>;
-                    default: return null;
+                    case "name":
+                      return (
+                        <Table.Th key={key}>{t("employee.name")}</Table.Th>
+                      );
+                    case "email":
+                      return (
+                        <Table.Th key={key}>{t("employee.email")}</Table.Th>
+                      );
+                    case "role":
+                      return (
+                        <Table.Th key={key}>{t("employee.role")}</Table.Th>
+                      );
+                    case "actions":
+                      return (
+                        <Table.Th key={key} w={140}>
+                          {t("common.actions")}
+                        </Table.Th>
+                      );
+                    default:
+                      return null;
                   }
                 })}
               </Table.Tr>
@@ -188,55 +208,67 @@ export default function EmployeeTable() {
                 <Table.Tr key={employee.employeeId}>
                   {orderedKeys.map((key) => {
                     switch (key) {
-                      case "name": return <Table.Td key={key}>{employee.name}</Table.Td>;
-                      case "email": return <Table.Td key={key}>{employee.email}</Table.Td>;
-                      case "role": return (
-                        <Table.Td key={key}>
-                          <Badge
-                            color={employee.role === "ADMIN" ? "blue" : "green"}
-                            variant="light"
-                          >
-                            {t(`employee.roles.${employee.role}`)}
-                          </Badge>
-                        </Table.Td>
-                      );
-                      case "actions": return (
-                        <Table.Td key={key}>
-                          <Group gap="xs">
-                            <ActionIcon
-                              variant="subtle"
-                              color="blue"
-                              onClick={() =>
-                                router.push(`/employees/${employee.employeeId}`)
+                      case "name":
+                        return <Table.Td key={key}>{employee.name}</Table.Td>;
+                      case "email":
+                        return <Table.Td key={key}>{employee.email}</Table.Td>;
+                      case "role":
+                        return (
+                          <Table.Td key={key}>
+                            <Badge
+                              color={
+                                employee.role === "ADMIN" ? "blue" : "green"
                               }
+                              variant="light"
                             >
-                              <IconEdit size={18} />
-                            </ActionIcon>
-                            <ActionIcon
-                              variant="subtle"
-                              color="orange"
-                              onClick={() =>
-                                handleResetPassword(
-                                  employee.employeeId,
-                                  employee.name,
-                                )
-                              }
-                            >
-                              <IconKey size={18} />
-                            </ActionIcon>
-                            <ActionIcon
-                              variant="subtle"
-                              color="red"
-                              onClick={() =>
-                                handleDelete(employee.employeeId, employee.name)
-                              }
-                            >
-                              <IconTrash size={18} />
-                            </ActionIcon>
-                          </Group>
-                        </Table.Td>
-                      );
-                      default: return null;
+                              {t(`employee.roles.${employee.role}`)}
+                            </Badge>
+                          </Table.Td>
+                        );
+                      case "actions":
+                        return (
+                          <Table.Td key={key}>
+                            <Group gap="xs">
+                              <ActionIcon
+                                variant="subtle"
+                                color="blue"
+                                onClick={() =>
+                                  router.push(
+                                    `/employees/${employee.employeeId}`,
+                                  )
+                                }
+                              >
+                                <IconEdit size={18} />
+                              </ActionIcon>
+                              <ActionIcon
+                                variant="subtle"
+                                color="orange"
+                                onClick={() =>
+                                  handleResetPassword(
+                                    employee.employeeId,
+                                    employee.name,
+                                  )
+                                }
+                              >
+                                <IconKey size={18} />
+                              </ActionIcon>
+                              <ActionIcon
+                                variant="subtle"
+                                color="red"
+                                onClick={() =>
+                                  handleDelete(
+                                    employee.employeeId,
+                                    employee.name,
+                                  )
+                                }
+                              >
+                                <IconTrash size={18} />
+                              </ActionIcon>
+                            </Group>
+                          </Table.Td>
+                        );
+                      default:
+                        return null;
                     }
                   })}
                 </Table.Tr>

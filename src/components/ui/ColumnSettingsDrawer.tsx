@@ -39,10 +39,7 @@ function toDefaults(defs: ColumnDef[]): ColumnConfig[] {
   }));
 }
 
-export function useColumnSettings(
-  tableId: string,
-  columnDefs: ColumnDef[],
-) {
+export function useColumnSettings(tableId: string, columnDefs: ColumnDef[]) {
   const { getColumns } = useTableSettingsStore();
   const defaults = toDefaults(columnDefs);
   const columns = getColumns(tableId, defaults);
@@ -51,9 +48,7 @@ export function useColumnSettings(
     columns.filter((c) => c.visible).map((c) => c.key),
   );
 
-  const orderedKeys = columns
-    .filter((c) => c.visible)
-    .map((c) => c.key);
+  const orderedKeys = columns.filter((c) => c.visible).map((c) => c.key);
 
   return { visibleKeys, orderedKeys };
 }

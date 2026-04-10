@@ -18,11 +18,7 @@ interface TableSettingsState {
   getColumns: (tableId: string, defaults: ColumnConfig[]) => ColumnConfig[];
   setColumns: (tableId: string, columns: ColumnConfig[]) => void;
   toggleColumn: (tableId: string, key: string) => void;
-  reorderColumns: (
-    tableId: string,
-    fromIndex: number,
-    toIndex: number,
-  ) => void;
+  reorderColumns: (tableId: string, fromIndex: number, toIndex: number) => void;
   resetColumns: (tableId: string) => void;
   setHasHydrated: (state: boolean) => void;
 }
@@ -115,10 +111,9 @@ export function useTableSettingsHydrated() {
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    const unsubscribe =
-      useTableSettingsStore.persist.onFinishHydration(() => {
-        setHydrated(true);
-      });
+    const unsubscribe = useTableSettingsStore.persist.onFinishHydration(() => {
+      setHydrated(true);
+    });
 
     if (useTableSettingsStore.persist.hasHydrated()) {
       setHydrated(true);

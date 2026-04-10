@@ -22,7 +22,9 @@ import {
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import ColumnSettingsDrawer, { useColumnSettings } from "@/components/ui/ColumnSettingsDrawer";
+import ColumnSettingsDrawer, {
+  useColumnSettings,
+} from "@/components/ui/ColumnSettingsDrawer";
 import TablePagination from "@/components/ui/TablePagination";
 import {
   useAcademicYears,
@@ -45,7 +47,10 @@ export default function AcademicYearTable() {
     { key: "status", label: t("common.status") },
     { key: "actions", label: t("common.actions") },
   ];
-  const { visibleKeys, orderedKeys } = useColumnSettings("academicYears", columnDefs);
+  const { visibleKeys, orderedKeys } = useColumnSettings(
+    "academicYears",
+    columnDefs,
+  );
 
   const { data, isLoading } = useAcademicYears({ page, limit: 10 });
 
@@ -136,13 +141,36 @@ export default function AcademicYearTable() {
               <Table.Tr>
                 {orderedKeys.map((key) => {
                   switch (key) {
-                    case "year": return <Table.Th key={key}>{t("academicYear.year")}</Table.Th>;
-                    case "startDate": return <Table.Th key={key}>{t("academicYear.startDate")}</Table.Th>;
-                    case "endDate": return <Table.Th key={key}>{t("academicYear.endDate")}</Table.Th>;
-                    case "classes": return <Table.Th key={key}>{t("class.title")}</Table.Th>;
-                    case "status": return <Table.Th key={key}>{t("common.status")}</Table.Th>;
-                    case "actions": return <Table.Th key={key} w={140}>{t("common.actions")}</Table.Th>;
-                    default: return null;
+                    case "year":
+                      return (
+                        <Table.Th key={key}>{t("academicYear.year")}</Table.Th>
+                      );
+                    case "startDate":
+                      return (
+                        <Table.Th key={key}>
+                          {t("academicYear.startDate")}
+                        </Table.Th>
+                      );
+                    case "endDate":
+                      return (
+                        <Table.Th key={key}>
+                          {t("academicYear.endDate")}
+                        </Table.Th>
+                      );
+                    case "classes":
+                      return <Table.Th key={key}>{t("class.title")}</Table.Th>;
+                    case "status":
+                      return (
+                        <Table.Th key={key}>{t("common.status")}</Table.Th>
+                      );
+                    case "actions":
+                      return (
+                        <Table.Th key={key} w={140}>
+                          {t("common.actions")}
+                        </Table.Th>
+                      );
+                    default:
+                      return null;
                   }
                 })}
               </Table.Tr>
@@ -171,78 +199,92 @@ export default function AcademicYearTable() {
                 <Table.Tr key={ay.id}>
                   {orderedKeys.map((key) => {
                     switch (key) {
-                      case "year": return <Table.Td key={key} fw={600}>{ay.year}</Table.Td>;
-                      case "startDate": return (
-                        <Table.Td key={key}>
-                          {dayjs(ay.startDate).format("DD/MM/YYYY")}
-                        </Table.Td>
-                      );
-                      case "endDate": return (
-                        <Table.Td key={key}>
-                          {dayjs(ay.endDate).format("DD/MM/YYYY")}
-                        </Table.Td>
-                      );
-                      case "classes": return (
-                        <Table.Td key={key}>{ay._count?.classAcademics ?? 0}</Table.Td>
-                      );
-                      case "status": return (
-                        <Table.Td key={key}>
-                          {ay.isActive ? (
-                            <Badge color="green" variant="light">
-                              {t("academicYear.statuses.active")}
-                            </Badge>
-                          ) : (
-                            <Badge color="gray" variant="light">
-                              {t("academicYear.statuses.inactive")}
-                            </Badge>
-                          )}
-                        </Table.Td>
-                      );
-                      case "actions": return (
-                        <Table.Td key={key}>
-                          <Group gap="xs">
-                            <Tooltip
-                              label={
-                                ay.isActive
-                                  ? t("academicYear.active")
-                                  : t("academicYear.setActive")
-                              }
-                            >
+                      case "year":
+                        return (
+                          <Table.Td key={key} fw={600}>
+                            {ay.year}
+                          </Table.Td>
+                        );
+                      case "startDate":
+                        return (
+                          <Table.Td key={key}>
+                            {dayjs(ay.startDate).format("DD/MM/YYYY")}
+                          </Table.Td>
+                        );
+                      case "endDate":
+                        return (
+                          <Table.Td key={key}>
+                            {dayjs(ay.endDate).format("DD/MM/YYYY")}
+                          </Table.Td>
+                        );
+                      case "classes":
+                        return (
+                          <Table.Td key={key}>
+                            {ay._count?.classAcademics ?? 0}
+                          </Table.Td>
+                        );
+                      case "status":
+                        return (
+                          <Table.Td key={key}>
+                            {ay.isActive ? (
+                              <Badge color="green" variant="light">
+                                {t("academicYear.statuses.active")}
+                              </Badge>
+                            ) : (
+                              <Badge color="gray" variant="light">
+                                {t("academicYear.statuses.inactive")}
+                              </Badge>
+                            )}
+                          </Table.Td>
+                        );
+                      case "actions":
+                        return (
+                          <Table.Td key={key}>
+                            <Group gap="xs">
+                              <Tooltip
+                                label={
+                                  ay.isActive
+                                    ? t("academicYear.active")
+                                    : t("academicYear.setActive")
+                                }
+                              >
+                                <ActionIcon
+                                  variant="subtle"
+                                  color={ay.isActive ? "yellow" : "gray"}
+                                  onClick={() =>
+                                    !ay.isActive &&
+                                    handleSetActive(ay.id, ay.year)
+                                  }
+                                  disabled={ay.isActive}
+                                >
+                                  {ay.isActive ? (
+                                    <IconStarFilled size={18} />
+                                  ) : (
+                                    <IconStar size={18} />
+                                  )}
+                                </ActionIcon>
+                              </Tooltip>
                               <ActionIcon
                                 variant="subtle"
-                                color={ay.isActive ? "yellow" : "gray"}
+                                color="blue"
                                 onClick={() =>
-                                  !ay.isActive && handleSetActive(ay.id, ay.year)
+                                  router.push(`/admin/academic-years/${ay.id}`)
                                 }
-                                disabled={ay.isActive}
                               >
-                                {ay.isActive ? (
-                                  <IconStarFilled size={18} />
-                                ) : (
-                                  <IconStar size={18} />
-                                )}
+                                <IconEdit size={18} />
                               </ActionIcon>
-                            </Tooltip>
-                            <ActionIcon
-                              variant="subtle"
-                              color="blue"
-                              onClick={() =>
-                                router.push(`/admin/academic-years/${ay.id}`)
-                              }
-                            >
-                              <IconEdit size={18} />
-                            </ActionIcon>
-                            <ActionIcon
-                              variant="subtle"
-                              color="red"
-                              onClick={() => handleDelete(ay.id, ay.year)}
-                            >
-                              <IconTrash size={18} />
-                            </ActionIcon>
-                          </Group>
-                        </Table.Td>
-                      );
-                      default: return null;
+                              <ActionIcon
+                                variant="subtle"
+                                color="red"
+                                onClick={() => handleDelete(ay.id, ay.year)}
+                              >
+                                <IconTrash size={18} />
+                              </ActionIcon>
+                            </Group>
+                          </Table.Td>
+                        );
+                      default:
+                        return null;
                     }
                   })}
                 </Table.Tr>

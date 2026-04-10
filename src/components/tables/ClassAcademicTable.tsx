@@ -23,7 +23,9 @@ import {
 } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import ColumnSettingsDrawer, { useColumnSettings } from "@/components/ui/ColumnSettingsDrawer";
+import ColumnSettingsDrawer, {
+  useColumnSettings,
+} from "@/components/ui/ColumnSettingsDrawer";
 import TablePagination from "@/components/ui/TablePagination";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import {
@@ -48,7 +50,10 @@ export default function ClassAcademicTable() {
     { key: "students", label: t("class.students") },
     { key: "actions", label: t("common.actions") },
   ];
-  const { visibleKeys, orderedKeys } = useColumnSettings("classAcademics", columnDefs);
+  const { visibleKeys, orderedKeys } = useColumnSettings(
+    "classAcademics",
+    columnDefs,
+  );
 
   const { data: academicYearsData } = useAcademicYears({ limit: 100 });
 
@@ -124,7 +129,10 @@ export default function ClassAcademicTable() {
           searchable
           w={200}
         />
-        <ColumnSettingsDrawer tableId="classAcademics" columnDefs={columnDefs} />
+        <ColumnSettingsDrawer
+          tableId="classAcademics"
+          columnDefs={columnDefs}
+        />
       </Group>
 
       <Paper withBorder>
@@ -134,13 +142,30 @@ export default function ClassAcademicTable() {
               <Table.Tr>
                 {orderedKeys.map((key) => {
                   switch (key) {
-                    case "name": return <Table.Th key={key}>{t("class.name")}</Table.Th>;
-                    case "grade": return <Table.Th key={key}>{t("class.grade")}</Table.Th>;
-                    case "section": return <Table.Th key={key}>{t("class.section")}</Table.Th>;
-                    case "academicYear": return <Table.Th key={key}>{t("class.academicYear")}</Table.Th>;
-                    case "students": return <Table.Th key={key}>{t("class.students")}</Table.Th>;
-                    case "actions": return <Table.Th key={key} w={120}>{t("common.actions")}</Table.Th>;
-                    default: return null;
+                    case "name":
+                      return <Table.Th key={key}>{t("class.name")}</Table.Th>;
+                    case "grade":
+                      return <Table.Th key={key}>{t("class.grade")}</Table.Th>;
+                    case "section":
+                      return (
+                        <Table.Th key={key}>{t("class.section")}</Table.Th>
+                      );
+                    case "academicYear":
+                      return (
+                        <Table.Th key={key}>{t("class.academicYear")}</Table.Th>
+                      );
+                    case "students":
+                      return (
+                        <Table.Th key={key}>{t("class.students")}</Table.Th>
+                      );
+                    case "actions":
+                      return (
+                        <Table.Th key={key} w={120}>
+                          {t("common.actions")}
+                        </Table.Th>
+                      );
+                    default:
+                      return null;
                   }
                 })}
               </Table.Tr>
@@ -169,64 +194,85 @@ export default function ClassAcademicTable() {
                 <Table.Tr key={cls.id}>
                   {orderedKeys.map((key) => {
                     switch (key) {
-                      case "name": return <Table.Td key={key} fw={600}>{cls.className}</Table.Td>;
-                      case "grade": return <Table.Td key={key}>{cls.grade}</Table.Td>;
-                      case "section": return <Table.Td key={key}>{cls.section}</Table.Td>;
-                      case "academicYear": return <Table.Td key={key}>{cls.academicYear?.year}</Table.Td>;
-                      case "students": return (
-                        <Table.Td key={key}>
-                          <Badge
-                            variant="light"
-                            color={cls._count?.studentClasses ? "blue" : "gray"}
-                            style={{ cursor: "pointer" }}
-                            onClick={() =>
-                              router.push(`/admin/classes/${cls.id}/students`)
-                            }
-                          >
-                            {t("class.studentsCount", {
-                              count: cls._count?.studentClasses ?? 0,
-                            })}
-                          </Badge>
-                        </Table.Td>
-                      );
-                      case "actions": return (
-                        <Table.Td key={key}>
-                          <Group gap="xs">
-                            <Tooltip label={t("class.manageStudents")}>
-                              <ActionIcon
-                                variant="subtle"
-                                color="teal"
-                                onClick={() =>
-                                  router.push(`/admin/classes/${cls.id}/students`)
-                                }
-                              >
-                                <IconUsers size={18} />
-                              </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label={t("class.edit")}>
-                              <ActionIcon
-                                variant="subtle"
-                                color="blue"
-                                onClick={() =>
-                                  router.push(`/admin/classes/${cls.id}`)
-                                }
-                              >
-                                <IconEdit size={18} />
-                              </ActionIcon>
-                            </Tooltip>
-                            <Tooltip label={t("common.delete")}>
-                              <ActionIcon
-                                variant="subtle"
-                                color="red"
-                                onClick={() => handleDelete(cls.id, cls.className)}
-                              >
-                                <IconTrash size={18} />
-                              </ActionIcon>
-                            </Tooltip>
-                          </Group>
-                        </Table.Td>
-                      );
-                      default: return null;
+                      case "name":
+                        return (
+                          <Table.Td key={key} fw={600}>
+                            {cls.className}
+                          </Table.Td>
+                        );
+                      case "grade":
+                        return <Table.Td key={key}>{cls.grade}</Table.Td>;
+                      case "section":
+                        return <Table.Td key={key}>{cls.section}</Table.Td>;
+                      case "academicYear":
+                        return (
+                          <Table.Td key={key}>
+                            {cls.academicYear?.year}
+                          </Table.Td>
+                        );
+                      case "students":
+                        return (
+                          <Table.Td key={key}>
+                            <Badge
+                              variant="light"
+                              color={
+                                cls._count?.studentClasses ? "blue" : "gray"
+                              }
+                              style={{ cursor: "pointer" }}
+                              onClick={() =>
+                                router.push(`/admin/classes/${cls.id}/students`)
+                              }
+                            >
+                              {t("class.studentsCount", {
+                                count: cls._count?.studentClasses ?? 0,
+                              })}
+                            </Badge>
+                          </Table.Td>
+                        );
+                      case "actions":
+                        return (
+                          <Table.Td key={key}>
+                            <Group gap="xs">
+                              <Tooltip label={t("class.manageStudents")}>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="teal"
+                                  onClick={() =>
+                                    router.push(
+                                      `/admin/classes/${cls.id}/students`,
+                                    )
+                                  }
+                                >
+                                  <IconUsers size={18} />
+                                </ActionIcon>
+                              </Tooltip>
+                              <Tooltip label={t("class.edit")}>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="blue"
+                                  onClick={() =>
+                                    router.push(`/admin/classes/${cls.id}`)
+                                  }
+                                >
+                                  <IconEdit size={18} />
+                                </ActionIcon>
+                              </Tooltip>
+                              <Tooltip label={t("common.delete")}>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="red"
+                                  onClick={() =>
+                                    handleDelete(cls.id, cls.className)
+                                  }
+                                >
+                                  <IconTrash size={18} />
+                                </ActionIcon>
+                              </Tooltip>
+                            </Group>
+                          </Table.Td>
+                        );
+                      default:
+                        return null;
                     }
                   })}
                 </Table.Tr>

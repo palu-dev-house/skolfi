@@ -252,7 +252,9 @@ export default function OverdueReportTable() {
                             <Text size="sm" c="dimmed">
                               {t("parentName")}
                             </Text>
-                            <Text fw={500}>{item.student.parentName || "-"}</Text>
+                            <Text fw={500}>
+                              {item.student.parentName || "-"}
+                            </Text>
                           </Stack>
                           <Stack gap={0}>
                             <Text size="sm" c="dimmed">
@@ -306,7 +308,8 @@ export default function OverdueReportTable() {
                               <Table.Tr key={month.tuitionId}>
                                 <Table.Td>
                                   <Text size="sm">
-                                    {getMonthDisplayName(month.period)} {month.year}
+                                    {getMonthDisplayName(month.period)}{" "}
+                                    {month.year}
                                   </Text>
                                 </Table.Td>
                                 <Table.Td>

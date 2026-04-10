@@ -37,6 +37,8 @@
     "type": "Type",
     "select": "Select",
     "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "saved": "Settings saved successfully",
     "required": "Required",
     "optional": "Optional",
     "previous": "Previous",
@@ -433,14 +435,13 @@
     "scholarships": "Scholarships",
     "discounts": "Discounts",
     "payments": "Payments",
-    "onlineTransactions": "Online Transactions",
     "studentAccounts": "Student Accounts",
-    "bankAccounts": "Bank Accounts",
-    "testTransfer": "Test Transfer",
     "reports": "Reports",
     "overdueReport": "Overdue Report",
     "classSummary": "Class Summary",
-    "searchMenu": "Search menu..."
+    "searchMenu": "Search menu...",
+    "onlinePayments": "Online Payments",
+    "paymentSettings": "Payment Settings"
   },
   "employee": {
     "title": "Employees",
@@ -870,33 +871,6 @@
     "andMoreErrors": "... and {count} more errors",
     "tuitionsAffected": "Tuitions affected: {count}"
   },
-  "bankAccount": {
-    "title": "Bank Accounts",
-    "list": "Bank Account List",
-    "add": "Add Account",
-    "edit": "Edit Account",
-    "bankName": "Bank Name",
-    "accountNumber": "Account Number",
-    "accountName": "Account Holder",
-    "branch": "Branch",
-    "isActive": "Active Status",
-    "deleteConfirm": "Are you sure you want to delete this account?",
-    "deleteSuccess": "Account deleted successfully",
-    "createSuccess": "Account created successfully",
-    "updateSuccess": "Account updated successfully",
-    "noData": "No bank accounts yet. Add a bank to receive transfer payments.",
-    "pending": "Pending",
-    "status": {
-      "active": "Active",
-      "inactive": "Inactive"
-    },
-    "bankCode": "Bank Code",
-    "logoUrl": "Logo URL (optional)",
-    "displayOrder": "Display Order",
-    "cannotDelete": "Cannot delete",
-    "cannotDeleteMessage": "Bank account still has pending payments",
-    "deleteMessage": "Bank account <strong>{bankName}</strong> ({accountNumber}) will be permanently deleted. This action cannot be undone."
-  },
   "studentAccount": {
     "title": "Student Accounts",
     "list": "Student Account List",
@@ -989,52 +963,6 @@
     "daysOverdue": "Days Overdue",
     "days": "days"
   },
-  "onlineTransaction": {
-    "title": "Online Transactions",
-    "subtitle": "Bank transfer payments from parent portal",
-    "searchPlaceholder": "Search student ID or name...",
-    "allStatus": "All Status"
-  },
-  "testTransfer": {
-    "title": "Test Transfer",
-    "subtitle": "Simulate bank transfer for testing without email integration",
-    "pendingPayments": "Pending Payments",
-    "simulateTransfer": "Simulate Transfer",
-    "noPending": "No pending payments for verification",
-    "confirmTitle": "Simulate Transfer",
-    "confirmDesc": "Simulate transfer for payment:",
-    "confirmNote": "This will mark the payment as VERIFIED and update the bill status.",
-    "confirm": "Simulate Transfer",
-    "successTitle": "Transfer Successful",
-    "successMessage": "Payment has been verified",
-    "errorTitle": "Failed",
-    "errorMessage": "Failed to process transfer",
-    "status": {
-      "pending": "Pending",
-      "verified": "Verified",
-      "expired": "Expired",
-      "cancelled": "Cancelled"
-    },
-    "table": {
-      "student": "Student",
-      "period": "Period",
-      "amount": "Amount",
-      "created": "Created",
-      "expires": "Expires",
-      "status": "Status",
-      "action": "Action"
-    },
-    "loading": "Loading data...",
-    "noPayments": "No payment requests with status {status}",
-    "testingNote": "This page is for <strong>testing</strong> only. Click \"Simulate Transfer\" button to mark payment as successful without actual bank transfer.",
-    "bankAccounts": "Bank Accounts (for simulation)",
-    "bankTable": {
-      "bank": "Bank",
-      "accountNumber": "Account No.",
-      "accountName": "Account Name"
-    },
-    "refresh": "Refresh"
-  },
   "header": {
     "title": "School Tuition"
   },
@@ -1124,5 +1052,34 @@
     "academicYearRequired": "Academic year is required",
     "classNotInYear": "Class does not belong to the selected academic year",
     "restoreSuccess": "Account restored successfully"
+  },
+  "onlinePayment": {
+    "title": "Online Payment",
+    "adminDescription": "Monitor all online payment transactions",
+    "selectTuitions": "Select Tuitions to Pay",
+    "totalSelected": "{count} tuition(s) selected",
+    "payNow": "Pay Now",
+    "pendingPayment": "Pending Payment",
+    "waitingPayment": "Waiting for Payment",
+    "continuePayment": "Continue Payment",
+    "cancelPayment": "Cancel Payment",
+    "cancelConfirm": "Are you sure you want to cancel this payment? You will need to create a new payment.",
+    "orderId": "Order ID",
+    "amount": "Amount",
+    "bank": "Bank",
+    "expiresAt": "Expires At",
+    "items": "Items",
+    "history": "Payment History",
+    "allPaid": "All tuitions are paid!",
+    "maintenance": "Online payment is currently under maintenance. Please try again later."
+  },
+  "paymentSettings": {
+    "title": "Payment Settings",
+    "description": "Manage online payment configuration",
+    "enableOnlinePayment": "Enable Online Payment",
+    "enableDescription": "When disabled, students cannot make online payments through the portal",
+    "maintenanceMessage": "Maintenance Message",
+    "maintenanceDescription": "Message shown to students when online payment is disabled",
+    "maintenancePlaceholder": "e.g., Online payment is under maintenance until..."
   }
 }

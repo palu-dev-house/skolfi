@@ -16,7 +16,9 @@ import { IconEdit, IconSearch, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import ColumnSettingsDrawer, { useColumnSettings } from "@/components/ui/ColumnSettingsDrawer";
+import ColumnSettingsDrawer, {
+  useColumnSettings,
+} from "@/components/ui/ColumnSettingsDrawer";
 import TablePagination from "@/components/ui/TablePagination";
 import { useDeleteStudent, useStudents } from "@/hooks/api/useStudents";
 import { useQueryParams } from "@/hooks/useQueryParams";
@@ -37,7 +39,10 @@ export default function StudentTable() {
     { key: "actions", label: t("common.actions") },
   ];
 
-  const { visibleKeys, orderedKeys } = useColumnSettings("students", columnDefs);
+  const { visibleKeys, orderedKeys } = useColumnSettings(
+    "students",
+    columnDefs,
+  );
 
   const { data, isLoading } = useStudents({
     page,
@@ -104,13 +109,30 @@ export default function StudentTable() {
               <Table.Tr>
                 {orderedKeys.map((key) => {
                   switch (key) {
-                    case "nis": return <Table.Th key={key}>{t("student.nis")}</Table.Th>;
-                    case "name": return <Table.Th key={key}>{t("student.name")}</Table.Th>;
-                    case "parent": return <Table.Th key={key}>{t("student.parent")}</Table.Th>;
-                    case "phone": return <Table.Th key={key}>{t("student.phone")}</Table.Th>;
-                    case "joinDate": return <Table.Th key={key}>{t("student.joinDate")}</Table.Th>;
-                    case "actions": return <Table.Th key={key} w={100}>{t("common.actions")}</Table.Th>;
-                    default: return null;
+                    case "nis":
+                      return <Table.Th key={key}>{t("student.nis")}</Table.Th>;
+                    case "name":
+                      return <Table.Th key={key}>{t("student.name")}</Table.Th>;
+                    case "parent":
+                      return (
+                        <Table.Th key={key}>{t("student.parent")}</Table.Th>
+                      );
+                    case "phone":
+                      return (
+                        <Table.Th key={key}>{t("student.phone")}</Table.Th>
+                      );
+                    case "joinDate":
+                      return (
+                        <Table.Th key={key}>{t("student.joinDate")}</Table.Th>
+                      );
+                    case "actions":
+                      return (
+                        <Table.Th key={key} w={100}>
+                          {t("common.actions")}
+                        </Table.Th>
+                      );
+                    default:
+                      return null;
                   }
                 })}
               </Table.Tr>
@@ -139,34 +161,51 @@ export default function StudentTable() {
                 <Table.Tr key={student.nis}>
                   {orderedKeys.map((key) => {
                     switch (key) {
-                      case "nis": return <Table.Td key={key}>{student.nis}</Table.Td>;
-                      case "name": return <Table.Td key={key}>{student.name}</Table.Td>;
-                      case "parent": return <Table.Td key={key}>{student.parentName}</Table.Td>;
-                      case "phone": return <Table.Td key={key}>{student.parentPhone}</Table.Td>;
-                      case "joinDate": return <Table.Td key={key}>{dayjs(student.startJoinDate).format("DD/MM/YYYY")}</Table.Td>;
-                      case "actions": return (
-                        <Table.Td key={key}>
-                          <Group gap="xs">
-                            <ActionIcon
-                              variant="subtle"
-                              color="blue"
-                              onClick={() =>
-                                router.push(`/admin/students/${student.nis}`)
-                              }
-                            >
-                              <IconEdit size={18} />
-                            </ActionIcon>
-                            <ActionIcon
-                              variant="subtle"
-                              color="red"
-                              onClick={() => handleDelete(student.nis, student.name)}
-                            >
-                              <IconTrash size={18} />
-                            </ActionIcon>
-                          </Group>
-                        </Table.Td>
-                      );
-                      default: return null;
+                      case "nis":
+                        return <Table.Td key={key}>{student.nis}</Table.Td>;
+                      case "name":
+                        return <Table.Td key={key}>{student.name}</Table.Td>;
+                      case "parent":
+                        return (
+                          <Table.Td key={key}>{student.parentName}</Table.Td>
+                        );
+                      case "phone":
+                        return (
+                          <Table.Td key={key}>{student.parentPhone}</Table.Td>
+                        );
+                      case "joinDate":
+                        return (
+                          <Table.Td key={key}>
+                            {dayjs(student.startJoinDate).format("DD/MM/YYYY")}
+                          </Table.Td>
+                        );
+                      case "actions":
+                        return (
+                          <Table.Td key={key}>
+                            <Group gap="xs">
+                              <ActionIcon
+                                variant="subtle"
+                                color="blue"
+                                onClick={() =>
+                                  router.push(`/admin/students/${student.nis}`)
+                                }
+                              >
+                                <IconEdit size={18} />
+                              </ActionIcon>
+                              <ActionIcon
+                                variant="subtle"
+                                color="red"
+                                onClick={() =>
+                                  handleDelete(student.nis, student.name)
+                                }
+                              >
+                                <IconTrash size={18} />
+                              </ActionIcon>
+                            </Group>
+                          </Table.Td>
+                        );
+                      default:
+                        return null;
                     }
                   })}
                 </Table.Tr>

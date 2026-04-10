@@ -19,9 +19,11 @@ import { notifications } from "@mantine/notifications";
 import { IconFilter, IconSearch, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
-import type { PaymentStatus } from "@/generated/prisma/client";
-import ColumnSettingsDrawer, { useColumnSettings } from "@/components/ui/ColumnSettingsDrawer";
+import ColumnSettingsDrawer, {
+  useColumnSettings,
+} from "@/components/ui/ColumnSettingsDrawer";
 import TablePagination from "@/components/ui/TablePagination";
+import type { PaymentStatus } from "@/generated/prisma/client";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import { useClassAcademics } from "@/hooks/api/useClassAcademics";
 import { useDeleteTuition, useTuitions } from "@/hooks/api/useTuitions";
@@ -199,16 +201,52 @@ export default function TuitionTable() {
               <Table.Tr>
                 {orderedKeys.map((key) => {
                   switch (key) {
-                    case "student": return <Table.Th key={key}>{t("tuition.student")}</Table.Th>;
-                    case "class": return <Table.Th key={key}>{t("tuition.class")}</Table.Th>;
-                    case "period": return <Table.Th key={key}>{t("tuition.period")}</Table.Th>;
-                    case "feeAmount": return <Table.Th key={key} ta="right">{t("tuition.feeAmount")}</Table.Th>;
-                    case "discountAmount": return <Table.Th key={key} ta="right">{t("tuition.discountAmount")}</Table.Th>;
-                    case "paidAmount": return <Table.Th key={key} ta="right">{t("tuition.paidAmount")}</Table.Th>;
-                    case "dueDate": return <Table.Th key={key}>{t("tuition.dueDate")}</Table.Th>;
-                    case "status": return <Table.Th key={key}>{t("common.status")}</Table.Th>;
-                    case "actions": return <Table.Th key={key} w={80}>{t("common.actions")}</Table.Th>;
-                    default: return null;
+                    case "student":
+                      return (
+                        <Table.Th key={key}>{t("tuition.student")}</Table.Th>
+                      );
+                    case "class":
+                      return (
+                        <Table.Th key={key}>{t("tuition.class")}</Table.Th>
+                      );
+                    case "period":
+                      return (
+                        <Table.Th key={key}>{t("tuition.period")}</Table.Th>
+                      );
+                    case "feeAmount":
+                      return (
+                        <Table.Th key={key} ta="right">
+                          {t("tuition.feeAmount")}
+                        </Table.Th>
+                      );
+                    case "discountAmount":
+                      return (
+                        <Table.Th key={key} ta="right">
+                          {t("tuition.discountAmount")}
+                        </Table.Th>
+                      );
+                    case "paidAmount":
+                      return (
+                        <Table.Th key={key} ta="right">
+                          {t("tuition.paidAmount")}
+                        </Table.Th>
+                      );
+                    case "dueDate":
+                      return (
+                        <Table.Th key={key}>{t("tuition.dueDate")}</Table.Th>
+                      );
+                    case "status":
+                      return (
+                        <Table.Th key={key}>{t("common.status")}</Table.Th>
+                      );
+                    case "actions":
+                      return (
+                        <Table.Th key={key} w={80}>
+                          {t("common.actions")}
+                        </Table.Th>
+                      );
+                    default:
+                      return null;
                   }
                 })}
               </Table.Tr>
@@ -237,111 +275,126 @@ export default function TuitionTable() {
                 <Table.Tr key={tuition.id}>
                   {orderedKeys.map((key) => {
                     switch (key) {
-                      case "student": return (
-                        <Table.Td key={key}>
-                          <Stack gap={0}>
-                            <Text size="sm" fw={500}>
-                              {tuition.student?.name}
+                      case "student":
+                        return (
+                          <Table.Td key={key}>
+                            <Stack gap={0}>
+                              <Text size="sm" fw={500}>
+                                {tuition.student?.name}
+                              </Text>
+                              <Text size="xs" c="dimmed">
+                                {tuition.studentNis}
+                              </Text>
+                            </Stack>
+                          </Table.Td>
+                        );
+                      case "class":
+                        return (
+                          <Table.Td key={key}>
+                            <Text size="sm">
+                              {tuition.classAcademic?.className}
                             </Text>
-                            <Text size="xs" c="dimmed">
-                              {tuition.studentNis}
+                          </Table.Td>
+                        );
+                      case "period":
+                        return (
+                          <Table.Td key={key}>
+                            <Text size="sm">
+                              {getPeriodDisplayName(tuition.period)}{" "}
+                              {tuition.year}
                             </Text>
-                          </Stack>
-                        </Table.Td>
-                      );
-                      case "class": return (
-                        <Table.Td key={key}>
-                          <Text size="sm">{tuition.classAcademic?.className}</Text>
-                        </Table.Td>
-                      );
-                      case "period": return (
-                        <Table.Td key={key}>
-                          <Text size="sm">
-                            {getPeriodDisplayName(tuition.period)} {tuition.year}
-                          </Text>
-                        </Table.Td>
-                      );
-                      case "feeAmount": return (
-                        <Table.Td key={key} ta="right">
-                          <NumberFormatter
-                            value={tuition.feeAmount}
-                            prefix="Rp "
-                            thousandSeparator="."
-                            decimalSeparator=","
-                          />
-                        </Table.Td>
-                      );
-                      case "discountAmount": return (
-                        <Table.Td key={key} ta="right">
-                          {tuition.discount ? (
-                            <Tooltip label={tuition.discount.name}>
-                              <Badge color="green" variant="light" size="sm">
+                          </Table.Td>
+                        );
+                      case "feeAmount":
+                        return (
+                          <Table.Td key={key} ta="right">
+                            <NumberFormatter
+                              value={tuition.feeAmount}
+                              prefix="Rp "
+                              thousandSeparator="."
+                              decimalSeparator=","
+                            />
+                          </Table.Td>
+                        );
+                      case "discountAmount":
+                        return (
+                          <Table.Td key={key} ta="right">
+                            {tuition.discount ? (
+                              <Tooltip label={tuition.discount.name}>
+                                <Badge color="green" variant="light" size="sm">
+                                  -
+                                  <NumberFormatter
+                                    value={tuition.discountAmount}
+                                    prefix="Rp "
+                                    thousandSeparator="."
+                                    decimalSeparator=","
+                                  />
+                                </Badge>
+                              </Tooltip>
+                            ) : (
+                              <Text size="sm" c="dimmed">
                                 -
-                                <NumberFormatter
-                                  value={tuition.discountAmount}
-                                  prefix="Rp "
-                                  thousandSeparator="."
-                                  decimalSeparator=","
-                                />
-                              </Badge>
-                            </Tooltip>
-                          ) : (
-                            <Text size="sm" c="dimmed">
-                              -
+                              </Text>
+                            )}
+                          </Table.Td>
+                        );
+                      case "paidAmount":
+                        return (
+                          <Table.Td key={key} ta="right">
+                            <NumberFormatter
+                              value={tuition.paidAmount}
+                              prefix="Rp "
+                              thousandSeparator="."
+                              decimalSeparator=","
+                            />
+                          </Table.Td>
+                        );
+                      case "dueDate":
+                        return (
+                          <Table.Td key={key}>
+                            <Text size="sm">
+                              {dayjs(tuition.dueDate).format("DD/MM/YYYY")}
                             </Text>
-                          )}
-                        </Table.Td>
-                      );
-                      case "paidAmount": return (
-                        <Table.Td key={key} ta="right">
-                          <NumberFormatter
-                            value={tuition.paidAmount}
-                            prefix="Rp "
-                            thousandSeparator="."
-                            decimalSeparator=","
-                          />
-                        </Table.Td>
-                      );
-                      case "dueDate": return (
-                        <Table.Td key={key}>
-                          <Text size="sm">
-                            {dayjs(tuition.dueDate).format("DD/MM/YYYY")}
-                          </Text>
-                        </Table.Td>
-                      );
-                      case "status": return (
-                        <Table.Td key={key}>
-                          <Badge
-                            color={STATUS_COLORS[tuition.status]}
-                            variant="light"
-                          >
-                            {t(`tuition.status.${tuition.status.toLowerCase()}`)}
-                          </Badge>
-                        </Table.Td>
-                      );
-                      case "actions": return (
-                        <Table.Td key={key}>
-                          <Group gap="xs">
-                            <Tooltip label={t("common.delete")}>
-                              <ActionIcon
-                                variant="subtle"
-                                color="red"
-                                onClick={() =>
-                                  handleDelete(
-                                    tuition.id,
-                                    tuition.student?.name || "",
-                                    getPeriodDisplayName(tuition.period),
-                                  )
-                                }
-                                disabled={(tuition._count?.payments ?? 0) > 0}
-                              >
-                                <IconTrash size={18} />
-                              </ActionIcon>
-                            </Tooltip>
-                          </Group>
-                        </Table.Td>
-                      );
-                      default: return null;
+                          </Table.Td>
+                        );
+                      case "status":
+                        return (
+                          <Table.Td key={key}>
+                            <Badge
+                              color={STATUS_COLORS[tuition.status]}
+                              variant="light"
+                            >
+                              {t(
+                                `tuition.status.${tuition.status.toLowerCase()}`,
+                              )}
+                            </Badge>
+                          </Table.Td>
+                        );
+                      case "actions":
+                        return (
+                          <Table.Td key={key}>
+                            <Group gap="xs">
+                              <Tooltip label={t("common.delete")}>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="red"
+                                  onClick={() =>
+                                    handleDelete(
+                                      tuition.id,
+                                      tuition.student?.name || "",
+                                      getPeriodDisplayName(tuition.period),
+                                    )
+                                  }
+                                  disabled={(tuition._count?.payments ?? 0) > 0}
+                                >
+                                  <IconTrash size={18} />
+                                </ActionIcon>
+                              </Tooltip>
+                            </Group>
+                          </Table.Td>
+                        );
+                      default:
+                        return null;
                     }
                   })}
                 </Table.Tr>

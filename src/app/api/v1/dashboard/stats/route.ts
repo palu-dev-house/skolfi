@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
         studentName: p.tuition.student.name,
         studentNis: p.tuition.student.nis,
         className: p.tuition.classAcademic.className,
-        processedBy: p.employee.name,
+        processedBy: p.employee?.name ?? "Online Payment",
         scholarshipAmount: p.tuition.scholarshipAmount,
         discountAmount: p.tuition.discountAmount,
         discount: p.tuition.discount,

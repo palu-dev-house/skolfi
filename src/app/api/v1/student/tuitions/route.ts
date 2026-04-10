@@ -40,21 +40,6 @@ export async function GET(request: NextRequest) {
             },
           },
         },
-        paymentRequests: {
-          where: {
-            paymentRequest: {
-              status: "PENDING",
-              expiresAt: { gt: new Date() },
-            },
-          },
-          orderBy: {
-            tuition: { dueDate: "asc" },
-          },
-          select: {
-            paymentRequestId: true,
-          },
-          take: 1,
-        },
       },
     });
 
@@ -76,7 +61,6 @@ export async function GET(request: NextRequest) {
         Number(t.paidAmount) -
         Number(t.scholarshipAmount) -
         Number(t.discountAmount),
-      pendingPaymentId: t.paymentRequests[0]?.paymentRequestId || null,
     }));
 
     return successResponse({ tuitions: tuitionsWithRemaining });

@@ -25,7 +25,9 @@ import {
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
-import ColumnSettingsDrawer, { useColumnSettings } from "@/components/ui/ColumnSettingsDrawer";
+import ColumnSettingsDrawer, {
+  useColumnSettings,
+} from "@/components/ui/ColumnSettingsDrawer";
 import TablePagination from "@/components/ui/TablePagination";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import { useClassAcademics } from "@/hooks/api/useClassAcademics";
@@ -127,7 +129,10 @@ export default function PaymentTable() {
     ? [...baseDefs, { key: "actions", label: t("common.actions") }]
     : baseDefs;
 
-  const { visibleKeys, orderedKeys } = useColumnSettings("payments", columnDefs);
+  const { visibleKeys, orderedKeys } = useColumnSettings(
+    "payments",
+    columnDefs,
+  );
 
   return (
     <Stack gap="md">
@@ -180,15 +185,42 @@ export default function PaymentTable() {
               <Table.Tr>
                 {orderedKeys.map((key) => {
                   switch (key) {
-                    case "date": return <Table.Th key={key}>{t("common.date")}</Table.Th>;
-                    case "student": return <Table.Th key={key}>{t("tuition.student")}</Table.Th>;
-                    case "class": return <Table.Th key={key}>{t("tuition.class")}</Table.Th>;
-                    case "month": return <Table.Th key={key}>{t("payment.month")}</Table.Th>;
-                    case "amount": return <Table.Th key={key} ta="right" align="right">{t("common.amount")}</Table.Th>;
-                    case "cashier": return <Table.Th key={key}>{t("payment.cashier")}</Table.Th>;
-                    case "status": return <Table.Th key={key}>{t("common.status")}</Table.Th>;
-                    case "actions": return isAdmin ? <Table.Th key={key} w={80}>{t("common.actions")}</Table.Th> : null;
-                    default: return null;
+                    case "date":
+                      return <Table.Th key={key}>{t("common.date")}</Table.Th>;
+                    case "student":
+                      return (
+                        <Table.Th key={key}>{t("tuition.student")}</Table.Th>
+                      );
+                    case "class":
+                      return (
+                        <Table.Th key={key}>{t("tuition.class")}</Table.Th>
+                      );
+                    case "month":
+                      return (
+                        <Table.Th key={key}>{t("payment.month")}</Table.Th>
+                      );
+                    case "amount":
+                      return (
+                        <Table.Th key={key} ta="right" align="right">
+                          {t("common.amount")}
+                        </Table.Th>
+                      );
+                    case "cashier":
+                      return (
+                        <Table.Th key={key}>{t("payment.cashier")}</Table.Th>
+                      );
+                    case "status":
+                      return (
+                        <Table.Th key={key}>{t("common.status")}</Table.Th>
+                      );
+                    case "actions":
+                      return isAdmin ? (
+                        <Table.Th key={key} w={80}>
+                          {t("common.actions")}
+                        </Table.Th>
+                      ) : null;
+                    default:
+                      return null;
                   }
                 })}
               </Table.Tr>
@@ -217,135 +249,148 @@ export default function PaymentTable() {
                 <Table.Tr key={payment.id}>
                   {orderedKeys.map((key) => {
                     switch (key) {
-                      case "date": return (
-                        <Table.Td key={key}>
-                          <Text size="sm">
-                            {dayjs(payment.paymentDate).format("DD/MM/YYYY HH:mm")}
-                          </Text>
-                        </Table.Td>
-                      );
-                      case "student": return (
-                        <Table.Td key={key}>
-                          <Stack gap={0}>
-                            <Text size="sm" fw={500}>
-                              {payment.tuition?.student?.name}
+                      case "date":
+                        return (
+                          <Table.Td key={key}>
+                            <Text size="sm">
+                              {dayjs(payment.paymentDate).format(
+                                "DD/MM/YYYY HH:mm",
+                              )}
                             </Text>
-                            <Text size="xs" c="dimmed">
-                              {payment.tuition?.student?.nis}
+                          </Table.Td>
+                        );
+                      case "student":
+                        return (
+                          <Table.Td key={key}>
+                            <Stack gap={0}>
+                              <Text size="sm" fw={500}>
+                                {payment.tuition?.student?.name}
+                              </Text>
+                              <Text size="xs" c="dimmed">
+                                {payment.tuition?.student?.nis}
+                              </Text>
+                            </Stack>
+                          </Table.Td>
+                        );
+                      case "class":
+                        return (
+                          <Table.Td key={key}>
+                            <Text size="sm">
+                              {payment.tuition?.classAcademic?.className}
                             </Text>
-                          </Stack>
-                        </Table.Td>
-                      );
-                      case "class": return (
-                        <Table.Td key={key}>
-                          <Text size="sm">
-                            {payment.tuition?.classAcademic?.className}
-                          </Text>
-                        </Table.Td>
-                      );
-                      case "month": return (
-                        <Table.Td key={key}>
-                          <Text size="sm">
-                            {payment.tuition?.month
-                              ? `${getMonthDisplayName(payment.tuition.month)} ${payment.tuition.year}`
-                              : "-"}
-                          </Text>
-                        </Table.Td>
-                      );
-                      case "amount": return (
-                        <Table.Td key={key} align="right">
-                          <Stack gap={2} align="flex-end">
-                            <Text size="sm" fw={600}>
-                              <NumberFormatter
-                                value={payment.amount}
-                                prefix="Rp "
-                                thousandSeparator="."
-                                decimalSeparator=","
-                              />
+                          </Table.Td>
+                        );
+                      case "month":
+                        return (
+                          <Table.Td key={key}>
+                            <Text size="sm">
+                              {payment.tuition?.month
+                                ? `${getMonthDisplayName(payment.tuition.month)} ${payment.tuition.year}`
+                                : "-"}
                             </Text>
-                            {!!Number(payment.scholarshipAmount) && (
-                              <Badge
-                                size="xs"
-                                color={"blue"}
-                                variant="light"
-                                leftSection={<IconGift size={10} />}
-                              >
-                                {t("payment.scholarship")}:{" "}
+                          </Table.Td>
+                        );
+                      case "amount":
+                        return (
+                          <Table.Td key={key} align="right">
+                            <Stack gap={2} align="flex-end">
+                              <Text size="sm" fw={600}>
                                 <NumberFormatter
-                                  value={Number(payment.scholarshipAmount)}
+                                  value={payment.amount}
                                   prefix="Rp "
                                   thousandSeparator="."
                                   decimalSeparator=","
                                 />
-                              </Badge>
-                            )}
-                            {!!payment.tuition?.discount && (
-                              <Badge
-                                size="xs"
-                                color={"blue"}
-                                variant="light"
-                                leftSection={<IconDiscount size={10} />}
-                              >
-                                {payment.tuition?.discount?.name}:{" "}
-                                <NumberFormatter
-                                  value={Number(payment.tuition?.discountAmount)}
-                                  prefix="Rp "
-                                  thousandSeparator="."
-                                  decimalSeparator=","
-                                />
-                              </Badge>
-                            )}
-                          </Stack>
-                        </Table.Td>
-                      );
-                      case "cashier": return (
-                        <Table.Td key={key}>
-                          <Text size="sm">{payment.employee?.name}</Text>
-                        </Table.Td>
-                      );
-                      case "status": return (
-                        <Table.Td key={key}>
-                          <Badge
-                            color={
-                              payment.tuition?.status === "PAID"
-                                ? "green"
-                                : payment.tuition?.status === "PARTIAL"
-                                  ? "yellow"
-                                  : "red"
-                            }
-                            variant="light"
-                            size="sm"
-                          >
-                            {payment.tuition?.status
-                              ? t(
-                                  `tuition.status.${payment.tuition.status.toLowerCase()}`,
-                                )
-                              : "-"}
-                          </Badge>
-                        </Table.Td>
-                      );
-                      case "actions": return isAdmin ? (
-                        <Table.Td key={key}>
-                          <Group gap="xs">
-                            <Tooltip label={t("payment.reverseButton")}>
-                              <ActionIcon
-                                variant="subtle"
-                                color="red"
-                                onClick={() =>
-                                  handleDelete(
-                                    payment.id,
-                                    payment.tuition?.student?.name || "",
-                                    payment.amount,
+                              </Text>
+                              {!!Number(payment.scholarshipAmount) && (
+                                <Badge
+                                  size="xs"
+                                  color={"blue"}
+                                  variant="light"
+                                  leftSection={<IconGift size={10} />}
+                                >
+                                  {t("payment.scholarship")}:{" "}
+                                  <NumberFormatter
+                                    value={Number(payment.scholarshipAmount)}
+                                    prefix="Rp "
+                                    thousandSeparator="."
+                                    decimalSeparator=","
+                                  />
+                                </Badge>
+                              )}
+                              {!!payment.tuition?.discount && (
+                                <Badge
+                                  size="xs"
+                                  color={"blue"}
+                                  variant="light"
+                                  leftSection={<IconDiscount size={10} />}
+                                >
+                                  {payment.tuition?.discount?.name}:{" "}
+                                  <NumberFormatter
+                                    value={Number(
+                                      payment.tuition?.discountAmount,
+                                    )}
+                                    prefix="Rp "
+                                    thousandSeparator="."
+                                    decimalSeparator=","
+                                  />
+                                </Badge>
+                              )}
+                            </Stack>
+                          </Table.Td>
+                        );
+                      case "cashier":
+                        return (
+                          <Table.Td key={key}>
+                            <Text size="sm">{payment.employee?.name}</Text>
+                          </Table.Td>
+                        );
+                      case "status":
+                        return (
+                          <Table.Td key={key}>
+                            <Badge
+                              color={
+                                payment.tuition?.status === "PAID"
+                                  ? "green"
+                                  : payment.tuition?.status === "PARTIAL"
+                                    ? "yellow"
+                                    : "red"
+                              }
+                              variant="light"
+                              size="sm"
+                            >
+                              {payment.tuition?.status
+                                ? t(
+                                    `tuition.status.${payment.tuition.status.toLowerCase()}`,
                                   )
-                                }
-                              >
-                                <IconTrash size={18} />
-                              </ActionIcon>
-                            </Tooltip>
-                          </Group>
-                        </Table.Td>
-                      ) : null;
-                      default: return null;
+                                : "-"}
+                            </Badge>
+                          </Table.Td>
+                        );
+                      case "actions":
+                        return isAdmin ? (
+                          <Table.Td key={key}>
+                            <Group gap="xs">
+                              <Tooltip label={t("payment.reverseButton")}>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="red"
+                                  onClick={() =>
+                                    handleDelete(
+                                      payment.id,
+                                      payment.tuition?.student?.name || "",
+                                      payment.amount,
+                                    )
+                                  }
+                                >
+                                  <IconTrash size={18} />
+                                </ActionIcon>
+                              </Tooltip>
+                            </Group>
+                          </Table.Td>
+                        ) : null;
+                      default:
+                        return null;
                     }
                   })}
                 </Table.Tr>

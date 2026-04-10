@@ -2,6 +2,7 @@
 
 import "@mantine/core/styles.css";
 import "@mantine/notifications/styles.css";
+import "./portal.css";
 import {
   ActionIcon,
   AppShell,
@@ -12,11 +13,11 @@ import {
   ScrollArea,
   Stack,
   Text,
-  ThemeIcon,
   UnstyledButton,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import {
+  IconCreditCard,
   IconHistory,
   IconHome,
   IconKey,
@@ -34,18 +35,24 @@ import { LoadingAnimation } from "@/components/ui/LottieAnimation";
 import { useStudentLogout, useStudentMe } from "@/hooks/api/useStudentAuth";
 
 const navLinks = [
-  { href: "/portal", labelKey: "nav.home", icon: IconHome, color: "blue" },
+  { href: "/portal", labelKey: "nav.home", icon: IconHome, color: "teal" },
+  {
+    href: "/portal/payment",
+    labelKey: "nav.payment",
+    icon: IconCreditCard,
+    color: "teal",
+  },
   {
     href: "/portal/history",
     labelKey: "nav.history",
     icon: IconHistory,
-    color: "violet",
+    color: "teal",
   },
   {
     href: "/portal/change-password",
     labelKey: "nav.changePassword",
     icon: IconKey,
-    color: "orange",
+    color: "teal",
   },
 ];
 
@@ -53,7 +60,7 @@ function getInitials(name: string): string {
   return name
     .split(" ")
     .map((n) => n[0])
-    .slice(0, 3)
+    .slice(0, 2)
     .join("")
     .toUpperCase();
 }
@@ -76,7 +83,6 @@ export default function StudentPortalLayout({
   const t = useTranslations();
   const isLoginPage = pathname === "/portal/login";
 
-  // Only fetch user data if not on login page
   const {
     data: userData,
     isLoading: loading,
@@ -86,7 +92,6 @@ export default function StudentPortalLayout({
   });
   const logout = useStudentLogout();
 
-  // Redirect to login if not authenticated (except on login page)
   useEffect(() => {
     if (!isLoginPage && !loading && (isError || !userData)) {
       router.push("/portal/login");
@@ -106,16 +111,11 @@ export default function StudentPortalLayout({
         cancel: t("common.cancel"),
       },
       confirmProps: { color: "red" },
-      onConfirm: () => {
-        logout.mutate();
-      },
+      onConfirm: () => logout.mutate(),
     });
   };
 
-  // Show login page without layout
-  if (isLoginPage) {
-    return children;
-  }
+  if (isLoginPage) return children;
 
   if (loading) {
     return (
@@ -125,7 +125,7 @@ export default function StudentPortalLayout({
           alignItems: "center",
           justifyContent: "center",
           minHeight: "100vh",
-          backgroundColor: "#f8f9fa",
+          background: "var(--portal-bg)",
         }}
       >
         <LoadingAnimation />
@@ -135,40 +135,44 @@ export default function StudentPortalLayout({
 
   return (
     <AppShell
-      header={{ height: 70 }}
+      className="portal-shell"
+      header={{ height: 64 }}
       navbar={{
-        width: 280,
+        width: 260,
         breakpoint: "sm",
         collapsed: { mobile: true },
       }}
       padding="md"
-      styles={{
-        header: {
-          backgroundColor: "var(--mantine-color-blue-6)",
-          borderBottom: "none",
-          paddingTop: "env(safe-area-inset-top)",
-        },
-      }}
     >
-      <AppShell.Header>
+      {/* Header */}
+      <AppShell.Header className="portal-header">
         <Group h="100%" px="md" justify="space-between">
           <Group gap="sm">
-            <ThemeIcon size={42} radius="xl" variant="white" color="blue">
-              <IconSchool size={24} />
-            </ThemeIcon>
+            <Box
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                background: "rgba(255,255,255,0.2)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <IconSchool size={20} color="white" />
+            </Box>
             <Box visibleFrom="xs">
-              <Text size="lg" fw={700} c="white">
+              <Text size="sm" fw={700} c="white" lh={1.2}>
                 {t("portal.title")}
               </Text>
-              <Text size="xs" c="white" opacity={0.85}>
+              <Text size="xs" c="white" opacity={0.75} lh={1.2}>
                 {t("portal.subtitle")}
               </Text>
             </Box>
           </Group>
           <Group gap="sm">
-            {/* Desktop: Show greeting and name */}
             <Box visibleFrom="sm" ta="right">
-              <Text size="xs" c="white" opacity={0.85}>
+              <Text size="xs" c="white" opacity={0.75}>
                 {t(`portal.greeting.${getGreetingKey()}`)}
               </Text>
               <Text size="sm" fw={600} c="white">
@@ -177,15 +181,21 @@ export default function StudentPortalLayout({
             </Box>
             <Avatar
               radius="xl"
-              size="md"
-              c="white"
-              variant="filled"
-              styles={{ root: { backgroundColor: "rgba(255,255,255,0.2)" } }}
+              size={36}
+              styles={{
+                root: {
+                  backgroundColor: "rgba(255,255,255,0.2)",
+                  border: "2px solid rgba(255,255,255,0.3)",
+                  color: "white",
+                  fontWeight: 700,
+                  fontSize: 13,
+                },
+              }}
             >
               {user?.studentName ? (
                 getInitials(user.studentName)
               ) : (
-                <IconUser size={18} />
+                <IconUser size={16} />
               )}
             </Avatar>
             <LanguageSwitcher />
@@ -197,29 +207,34 @@ export default function StudentPortalLayout({
               title={t("auth.logout")}
               visibleFrom="sm"
             >
-              <IconLogout size={20} />
+              <IconLogout size={18} />
             </ActionIcon>
           </Group>
         </Group>
       </AppShell.Header>
 
-      <AppShell.Navbar
-        p="md"
-        style={{ backgroundColor: "#f8f9fa" }}
-        component={ScrollArea}
-      >
+      {/* Sidebar */}
+      <AppShell.Navbar className="portal-nav" p="md" component={ScrollArea}>
         <Stack gap="md" style={{ flex: 1 }}>
-          {/* User card on mobile */}
+          {/* Mobile user card */}
           <Box hiddenFrom="sm">
             <Box
+              className="portal-card-accent"
               p="md"
-              style={{
-                backgroundColor: "var(--mantine-color-blue-6)",
-                borderRadius: "var(--mantine-radius-md)",
-              }}
+              style={{ borderRadius: "var(--portal-radius-sm)" }}
             >
-              <Group gap="sm">
-                <Avatar radius="xl" size="lg" c="blue" variant="filled">
+              <Group gap="sm" style={{ position: "relative", zIndex: 1 }}>
+                <Avatar
+                  radius="xl"
+                  size="lg"
+                  styles={{
+                    root: {
+                      backgroundColor: "rgba(255,255,255,0.2)",
+                      color: "white",
+                      fontWeight: 700,
+                    },
+                  }}
+                >
                   {user?.studentName ? (
                     getInitials(user.studentName)
                   ) : (
@@ -227,25 +242,32 @@ export default function StudentPortalLayout({
                   )}
                 </Avatar>
                 <Box>
-                  <Text size="xs" c="white" opacity={0.85}>
+                  <Text size="xs" c="white" opacity={0.8}>
                     {t(`portal.greeting.${getGreetingKey()}`)}
                   </Text>
-                  <Text size="sm" fw={600} c="white">
+                  <Text size="sm" fw={700} c="white">
                     {user?.studentName}
                   </Text>
-                  <Text size="xs" c="white" opacity={0.7}>
-                    {t("portal.nis")}: {user?.studentNis}
+                  <Text size="xs" c="white" opacity={0.6}>
+                    NIS: {user?.studentNis}
                   </Text>
                 </Box>
               </Group>
             </Box>
           </Box>
 
-          <Text size="xs" fw={600} c="dimmed" tt="uppercase" px="xs">
+          <Text
+            size="xs"
+            fw={700}
+            c="dimmed"
+            tt="uppercase"
+            px="xs"
+            style={{ letterSpacing: "0.06em" }}
+          >
             {t("nav.mainMenu")}
           </Text>
 
-          <Stack gap="xs">
+          <Stack gap={4}>
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
@@ -253,30 +275,39 @@ export default function StudentPortalLayout({
                   key={link.href}
                   component={Link}
                   href={link.href}
-                  p="sm"
+                  className="portal-nav-item"
+                  data-active={isActive}
                   style={{
-                    borderRadius: "var(--mantine-radius-md)",
-                    backgroundColor: isActive
-                      ? `var(--mantine-color-${link.color}-light)`
+                    background: isActive
+                      ? "var(--portal-gradient-subtle)"
                       : "transparent",
-                    border: isActive
-                      ? `1px solid var(--mantine-color-${link.color}-light)`
-                      : "1px solid transparent",
+                    borderLeft: isActive
+                      ? "3px solid var(--portal-accent)"
+                      : "3px solid transparent",
                   }}
                 >
                   <Group gap="sm">
-                    <ThemeIcon
-                      size="lg"
-                      radius="md"
-                      variant={isActive ? "filled" : "light"}
-                      color={link.color}
+                    <Box
+                      style={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 10,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        background: isActive
+                          ? "var(--portal-gradient)"
+                          : "var(--portal-gradient-subtle)",
+                        color: isActive ? "white" : "var(--portal-accent)",
+                        transition: "all 0.2s ease",
+                      }}
                     >
                       <link.icon size={18} />
-                    </ThemeIcon>
+                    </Box>
                     <Text
                       size="sm"
-                      fw={isActive ? 600 : 500}
-                      c={isActive ? link.color : "dark"}
+                      fw={isActive ? 700 : 500}
+                      c={isActive ? "var(--portal-accent-dark)" : "dark"}
                     >
                       {t(link.labelKey)}
                     </Text>
@@ -288,20 +319,20 @@ export default function StudentPortalLayout({
 
           <Box style={{ flex: 1 }} />
 
-          {/* Logout button on mobile */}
           <Button
             variant="light"
             color="red"
             leftSection={<IconLogout size={18} />}
             onClick={handleLogout}
             hiddenFrom="sm"
+            radius="md"
           >
             {t("auth.logout")}
           </Button>
         </Stack>
       </AppShell.Navbar>
 
-      <AppShell.Main style={{ backgroundColor: "#f8f9fa" }}>
+      <AppShell.Main className="portal-main">
         <Box pb={{ base: 80, sm: 0 }}>{children}</Box>
       </AppShell.Main>
       <BottomNav />

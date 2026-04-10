@@ -43,13 +43,13 @@ enum PaymentFrequency {
   SEMESTER
 }
 
-enum PaymentRequestStatus {
+enum OnlinePaymentStatus {
   PENDING
-  EXPIRED
-  VERIFYING
-  VERIFIED
-  FAILED
-  CANCELLED
+  SETTLEMENT
+  EXPIRE
+  CANCEL
+  DENY
+  FAILURE
 }
 
 enum RecordStatus {
@@ -117,7 +117,7 @@ model Student {
   scholarships    Scholarship[]
   tuitions        Tuition[]
   studentClasses  StudentClass[]
-  paymentRequests PaymentRequest[]
+  onlinePayments  OnlinePayment[]
 
   // Indexes
   @@index([hasAccount])
@@ -219,8 +219,8 @@ model Tuition {
   classAcademic   ClassAcademic    @relation(fields: [classAcademicId], references: [id], onDelete: Cascade)
   student         Student          @relation(fields: [studentNis], references: [nis], onDelete: Cascade)
   discount        Discount?        @relation(fields: [discountId], references: [id], onDelete: SetNull)
-  payments        Payment[]
-  paymentRequests PaymentRequestTuition[]
+  payments           Payment[]
+  onlinePaymentItems OnlinePaymentItem[]
 
   @@unique([classAcademicId, studentNis, period, year])
   @@index([studentNis])
@@ -263,7 +263,8 @@ model Scholarship {
 model Payment {
   id                String   @id @default(uuid())
   tuitionId         String   @map("tuition_id")
-  employeeId        String   @map("employee_id")
+  employeeId        String?  @map("employee_id")
+  onlinePaymentId   String?  @map("online_payment_id")
   amount            Decimal  @db.Decimal(10, 2)
   scholarshipAmount Decimal  @default(0) @map("scholarship_amount") @db.Decimal(10, 2)
   paymentDate       DateTime @default(now()) @map("payment_date")
@@ -271,11 +272,13 @@ model Payment {
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
-  tuition  Tuition  @relation(fields: [tuitionId], references: [id], onDelete: Cascade)
-  employee Employee @relation(fields: [employeeId], references: [employeeId], onDelete: Restrict)
+  tuition       Tuition        @relation(fields: [tuitionId], references: [id], onDelete: Cascade)
+  employee      Employee?      @relation(fields: [employeeId], references: [employeeId], onDelete: Restrict)
+  onlinePayment OnlinePayment? @relation(fields: [onlinePaymentId], references: [id], onDelete: SetNull)
 
   @@index([tuitionId])
   @@index([employeeId])
+  @@index([onlinePaymentId])
   @@index([paymentDate])
   @@map("payments")
 }
@@ -308,104 +311,88 @@ model Discount {
 }
 
 // ============================================
-// SCHOOL BANK ACCOUNTS (Phase 2)
+// ONLINE PAYMENT - MIDTRANS (Phase 2)
 // ============================================
 
-model SchoolBankAccount {
-  id            String   @id @default(uuid())
-  bankName      String   @map("bank_name")
-  bankCode      String   @map("bank_code")
-  accountNumber String   @map("account_number")
-  accountName   String   @map("account_name")
-  logoUrl       String?  @map("logo_url")
-  displayOrder  Int      @default(0) @map("display_order")
-  isActive      Boolean  @default(true) @map("is_active")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+model OnlinePayment {
+  id               String              @id @default(uuid())
+  orderId          String              @unique @map("order_id")
+  studentNis       String              @map("student_nis")
+  grossAmount      Decimal             @map("gross_amount") @db.Decimal(12, 2)
+  snapToken        String?             @map("snap_token")
+  snapRedirectUrl  String?             @map("snap_redirect_url")
+  bank             String?             // Set from webhook (e.g., "bca", "bni")
+  vaNumber         String?             @map("va_number")
+  billKey          String?             @map("bill_key")
+  billerCode       String?             @map("biller_code")
+  paymentType      String?             @map("payment_type")
+  status           OnlinePaymentStatus @default(PENDING)
+  midtransResponse String?             @map("midtrans_response") @db.Text
+  transactionTime  DateTime?           @map("transaction_time")
+  settlementTime   DateTime?           @map("settlement_time")
+  expiryTime       DateTime?           @map("expiry_time")
+  createdAt        DateTime            @default(now()) @map("created_at")
+  updatedAt        DateTime            @updatedAt @map("updated_at")
 
-  paymentRequests PaymentRequest[]
-  bankEmailLogs   BankEmailLog[]
+  student     Student             @relation(fields: [studentNis], references: [nis], onDelete: Cascade)
+  items       OnlinePaymentItem[]
+  payments    Payment[]
+  webhookLogs MidtransWebhookLog[]
 
-  @@unique([bankCode, accountNumber])
-  @@index([isActive])
-  @@map("school_bank_accounts")
-}
-
-// ============================================
-// PAYMENT REQUEST (Phase 2)
-// ============================================
-
-model PaymentRequest {
-  id             String               @id @default(uuid())
-  studentNis     String               @map("student_nis")
-  bankAccountId  String?              @map("bank_account_id") // Optional - set when IMAP matches
-  baseAmount     Decimal              @map("base_amount") @db.Decimal(10, 2)
-  uniqueCode     Int                  @map("unique_code")
-  totalAmount    Decimal              @map("total_amount") @db.Decimal(10, 2)
-  idempotencyKey String               @unique @map("idempotency_key")
-  changeCount    Int                  @default(0) @map("change_count")
-  changeHistory  Json?                @map("change_history")
-  status         PaymentRequestStatus @default(PENDING)
-  expiresAt      DateTime             @map("expires_at")
-  verifiedAt     DateTime?            @map("verified_at")
-  emailMatchId   String?              @map("email_match_id")
-  createdAt      DateTime             @default(now()) @map("created_at")
-  updatedAt      DateTime             @updatedAt @map("updated_at")
-
-  student     Student            @relation(fields: [studentNis], references: [nis], onDelete: Cascade)
-  bankAccount SchoolBankAccount? @relation(fields: [bankAccountId], references: [id], onDelete: Restrict)
-  tuitions    PaymentRequestTuition[]
-
-  @@index([status])
-  @@index([totalAmount])
-  @@index([expiresAt])
-  @@index([bankAccountId, totalAmount])
   @@index([studentNis])
-  @@map("payment_requests")
+  @@index([status])
+  @@index([expiryTime])
+  @@index([createdAt])
+  @@map("online_payments")
 }
 
-// Junction table for PaymentRequest <-> Tuition (many-to-many)
-model PaymentRequestTuition {
-  id               String   @id @default(uuid())
-  paymentRequestId String   @map("payment_request_id")
-  tuitionId        String   @map("tuition_id")
-  amount           Decimal  @db.Decimal(10, 2) // Amount allocated to this tuition
-  createdAt        DateTime @default(now()) @map("created_at")
+model OnlinePaymentItem {
+  id              String   @id @default(uuid())
+  onlinePaymentId String   @map("online_payment_id")
+  tuitionId       String   @map("tuition_id")
+  amount          Decimal  @db.Decimal(10, 2)
+  createdAt       DateTime @default(now()) @map("created_at")
 
-  paymentRequest PaymentRequest @relation(fields: [paymentRequestId], references: [id], onDelete: Cascade)
-  tuition        Tuition        @relation(fields: [tuitionId], references: [id], onDelete: Cascade)
+  onlinePayment OnlinePayment @relation(fields: [onlinePaymentId], references: [id], onDelete: Cascade)
+  tuition       Tuition       @relation(fields: [tuitionId], references: [id], onDelete: Cascade)
 
-  @@unique([paymentRequestId, tuitionId])
-  @@index([paymentRequestId])
+  @@unique([onlinePaymentId, tuitionId])
   @@index([tuitionId])
-  @@map("payment_request_tuitions")
+  @@map("online_payment_items")
+}
+
+model MidtransWebhookLog {
+  id                String    @id @default(uuid())
+  orderId           String    @map("order_id")
+  transactionStatus String    @map("transaction_status")
+  statusCode        String    @map("status_code")
+  signatureKey      String    @map("signature_key")
+  rawPayload        String    @map("raw_payload") @db.Text
+  isValid           Boolean   @default(false) @map("is_valid")
+  processedAt       DateTime? @map("processed_at")
+  errorMessage      String?   @map("error_message")
+  onlinePaymentId   String?   @map("online_payment_id")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  onlinePayment OnlinePayment? @relation(fields: [onlinePaymentId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([createdAt])
+  @@map("midtrans_webhook_logs")
 }
 
 // ============================================
-// BANK EMAIL LOG (Phase 2)
+// PAYMENT SETTINGS (Admin-controlled)
 // ============================================
 
-model BankEmailLog {
-  id               String    @id @default(uuid())
-  emailUid         String    @unique @map("email_uid")
-  bankAccountId    String?   @map("bank_account_id")
-  receivedAt       DateTime  @map("received_at")
-  fromAddress      String    @map("from_address")
-  subject          String
-  amount           Decimal?  @db.Decimal(10, 2)
-  senderName       String?   @map("sender_name")
-  senderAccount    String?   @map("sender_account")
-  rawContent       String?   @map("raw_content") @db.Text
-  isMatched        Boolean   @default(false) @map("is_matched")
-  matchedRequestId String?   @map("matched_request_id")
-  processedAt      DateTime  @default(now()) @map("processed_at")
+model PaymentSetting {
+  id                    String   @id @default("default")
+  onlinePaymentEnabled  Boolean  @default(true) @map("online_payment_enabled")
+  maintenanceMessage    String?  @map("maintenance_message")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+  updatedBy             String?  @map("updated_by")
 
-  bankAccount SchoolBankAccount? @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
-
-  @@index([amount])
-  @@index([isMatched])
-  @@index([bankAccountId, amount])
-  @@map("bank_email_logs")
+  @@map("payment_settings")
 }
 
 // ============================================

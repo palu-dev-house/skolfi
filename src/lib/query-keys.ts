@@ -90,6 +90,13 @@ export interface NotificationFilters {
   messageType?: string;
 }
 
+export interface OnlinePaymentFilters {
+  page?: number;
+  limit?: number;
+  status?: string;
+  search?: string;
+}
+
 export interface RateLimitFilters {
   action?: string;
   identifier?: string;
@@ -203,6 +210,28 @@ export const queryKeys = {
     list: () => [...queryKeys.studentTuitions.all, "list"] as const,
   },
 
+  studentOnlinePayments: {
+    all: ["student-online-payments"] as const,
+    lists: () => [...queryKeys.studentOnlinePayments.all, "list"] as const,
+    list: (filters?: { status?: string }) =>
+      [...queryKeys.studentOnlinePayments.lists(), filters] as const,
+    details: () => [...queryKeys.studentOnlinePayments.all, "detail"] as const,
+    detail: (id: string) =>
+      [...queryKeys.studentOnlinePayments.details(), id] as const,
+    config: () => [...queryKeys.studentOnlinePayments.all, "config"] as const,
+  },
+
+  adminOnlinePayments: {
+    all: ["admin-online-payments"] as const,
+    lists: () => [...queryKeys.adminOnlinePayments.all, "list"] as const,
+    list: (filters: OnlinePaymentFilters) =>
+      [...queryKeys.adminOnlinePayments.lists(), filters] as const,
+  },
+
+  paymentSettings: {
+    all: ["payment-settings"] as const,
+  },
+
   // Admin Phase 3
   studentAccounts: {
     all: ["student-accounts"] as const,
@@ -223,5 +252,4 @@ export const queryKeys = {
     list: (filters: RateLimitFilters) =>
       [...queryKeys.rateLimits.all, "list", filters] as const,
   },
-
 } as const;

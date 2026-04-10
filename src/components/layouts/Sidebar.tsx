@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useMemo } from "react";
 import { NavLink, Stack, Text, TextInput } from "@mantine/core";
 import {
   IconAlertTriangle,
@@ -8,6 +7,7 @@ import {
   IconCalendar,
   IconCash,
   IconChartBar,
+  IconCreditCard,
   IconDiscount,
   IconGift,
   IconHome,
@@ -15,12 +15,14 @@ import {
   IconReportAnalytics,
   IconSchool,
   IconSearch,
+  IconSettings,
   IconUserCircle,
   IconUsers,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
 interface NavItem {
@@ -50,9 +52,19 @@ export default function Sidebar() {
     { icon: IconDiscount, label: t("discounts"), href: "/admin/discounts" },
     { icon: IconReceipt, label: t("payments"), href: "/admin/payments" },
     {
+      icon: IconCreditCard,
+      label: t("onlinePayments"),
+      href: "/admin/online-payments",
+    },
+    {
       icon: IconUserCircle,
       label: t("studentAccounts"),
       href: "/admin/student-accounts",
+    },
+    {
+      icon: IconSettings,
+      label: t("paymentSettings"),
+      href: "/admin/payment-settings",
     },
     {
       icon: IconReportAnalytics,
