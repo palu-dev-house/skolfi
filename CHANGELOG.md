@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.6.0] - 2026-04-13
+
+### Features
+- add print invoices, profile modal, student accounts refactor, mobile card view
+
+
+
 ## [2.5.1] - 2026-04-10
 
 ### Other
