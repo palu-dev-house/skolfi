@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.7.0] - 2026-04-13
+
+### Features
+- migrate App Router to Pages Router with React 18, add Husky + Biome pre-commit
+
+
+
 ## [2.6.0] - 2026-04-13
 
 ### Features
