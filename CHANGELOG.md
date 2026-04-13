@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.8.1] - 2026-04-13
+
+### Fixes
+- simplify backup script to local storage only
+
+
+
 ## [2.8.0] - 2026-04-13
 
 ### Features
