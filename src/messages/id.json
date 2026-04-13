@@ -949,6 +949,7 @@
   },
   "studentAccount": {
     "title": "Akun Siswa",
+    "description": "Kelola akun portal siswa",
     "list": "Daftar Akun Siswa",
     "student": "Siswa",
     "hasAccount": "Memiliki Akun",
@@ -1185,5 +1186,35 @@
     "maintenanceMessage": "Pesan Pemeliharaan",
     "maintenanceDescription": "Pesan yang ditampilkan kepada siswa ketika pembayaran online dinonaktifkan",
     "maintenancePlaceholder": "contoh: Pembayaran online sedang dalam pemeliharaan hingga..."
+  },
+  "invoice": {
+    "printTitle": "Cetak Kwitansi",
+    "printDescription": "Cetak bukti pembayaran di kertas A4 (3 per halaman)",
+    "academicYear": "Tahun Ajaran",
+    "selectYear": "Pilih Tahun Ajaran",
+    "printMode": "Mode Cetak",
+    "today": "Hari Ini",
+    "allPaid": "Semua Lunas",
+    "print": "Cetak",
+    "noPaymentsToday": "Tidak ada pembayaran hari ini",
+    "noPayments": "Tidak ada pembayaran untuk tahun ajaran ini",
+    "totalInvoices": "{count} kwitansi",
+    "totalPages": "{count} halaman",
+    "schoolName": "Sistem SPP Sekolah",
+    "schoolAddress": "Jl. Pendidikan No. 1",
+    "receipt": "Kwitansi",
+    "studentName": "Siswa",
+    "class": "Kelas",
+    "nis": "NIS",
+    "description": "Keterangan",
+    "amount": "Jumlah",
+    "deduction": "Potongan",
+    "total": "Total",
+    "tuitionFee": "Biaya SPP",
+    "paymentReceived": "Jumlah Diterima",
+    "notes": "Catatan",
+    "thankYou": "Terima kasih atas pembayarannya.",
+    "admin": "Admin",
+    "paid": "LUNAS"
   }
 }

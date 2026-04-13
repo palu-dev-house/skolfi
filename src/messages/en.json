@@ -949,6 +949,7 @@
   },
   "studentAccount": {
     "title": "Student Accounts",
+    "description": "Manage student portal accounts",
     "list": "Student Account List",
     "student": "Student",
     "hasAccount": "Has Account",
@@ -1185,5 +1186,35 @@
     "maintenanceMessage": "Maintenance Message",
     "maintenanceDescription": "Message shown to students when online payment is disabled",
     "maintenancePlaceholder": "e.g., Online payment is under maintenance until..."
+  },
+  "invoice": {
+    "printTitle": "Print Invoices",
+    "printDescription": "Print payment receipts on A4 paper (3 per page)",
+    "academicYear": "Academic Year",
+    "selectYear": "Select Academic Year",
+    "printMode": "Print Mode",
+    "today": "Today Only",
+    "allPaid": "All Paid",
+    "print": "Print",
+    "noPaymentsToday": "No payments recorded today",
+    "noPayments": "No payments found for this academic year",
+    "totalInvoices": "{count} invoices",
+    "totalPages": "{count} pages",
+    "schoolName": "School Tuition System",
+    "schoolAddress": "Jl. Pendidikan No. 1",
+    "receipt": "Receipt",
+    "studentName": "Student",
+    "class": "Class",
+    "nis": "NIS",
+    "description": "Description",
+    "amount": "Amount",
+    "deduction": "Deduction",
+    "total": "Total",
+    "tuitionFee": "Tuition Fee",
+    "paymentReceived": "Payment Received",
+    "notes": "Notes",
+    "thankYou": "Thank you for your payment.",
+    "admin": "Admin",
+    "paid": "PAID"
   }
 }

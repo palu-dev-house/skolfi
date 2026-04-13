@@ -42,6 +42,10 @@ export default function Header({
     passwordModalOpened,
     { open: openPasswordModal, close: closePasswordModal },
   ] = useDisclosure(false);
+  const [
+    profileModalOpened,
+    { open: openProfileModal, close: closeProfileModal },
+  ] = useDisclosure(false);
   const changePassword = useChangePassword();
   const t = useTranslations();
 
@@ -148,7 +152,10 @@ export default function Header({
           </Menu.Target>
 
           <Menu.Dropdown>
-            <Menu.Item leftSection={<IconUser size={14} />}>
+            <Menu.Item
+              leftSection={<IconUser size={14} />}
+              onClick={openProfileModal}
+            >
               {t("auth.profile")}
             </Menu.Item>
             <Menu.Item
@@ -168,6 +175,47 @@ export default function Header({
           </Menu.Dropdown>
         </Menu>
       </Group>
+
+      {/* Profile Modal */}
+      <Modal
+        opened={profileModalOpened}
+        onClose={closeProfileModal}
+        title={t("auth.profile")}
+      >
+        <Stack gap="md">
+          <Group justify="center">
+            <Avatar size="xl" radius="xl" color="blue">
+              {user?.name?.charAt(0).toUpperCase() || "?"}
+            </Avatar>
+          </Group>
+          <Stack gap="xs">
+            <Group justify="space-between">
+              <Text size="sm" c="dimmed">
+                {t("common.name")}
+              </Text>
+              <Text size="sm" fw={500}>
+                {user?.name || "-"}
+              </Text>
+            </Group>
+            <Group justify="space-between">
+              <Text size="sm" c="dimmed">
+                {t("auth.email")}
+              </Text>
+              <Text size="sm" fw={500}>
+                {user?.email || "-"}
+              </Text>
+            </Group>
+            <Group justify="space-between">
+              <Text size="sm" c="dimmed">
+                {t("employee.role")}
+              </Text>
+              <Text size="sm" fw={500}>
+                {user?.role || "-"}
+              </Text>
+            </Group>
+          </Stack>
+        </Stack>
+      </Modal>
 
       {/* Change Password Modal */}
       <Modal

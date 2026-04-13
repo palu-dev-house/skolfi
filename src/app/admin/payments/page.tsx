@@ -1,7 +1,7 @@
 "use client";
 
-import { Button } from "@mantine/core";
-import { IconPlus } from "@tabler/icons-react";
+import { Button, Group } from "@mantine/core";
+import { IconPlus, IconPrinter } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import PaymentTable from "@/components/tables/PaymentTable";
@@ -17,12 +17,21 @@ export default function PaymentsPage() {
         title={t("payment.title")}
         description={t("payment.description")}
         actions={
-          <Button
-            leftSection={<IconPlus size={18} />}
-            onClick={() => router.push("/admin/payments/new")}
-          >
-            {t("payment.newPayment")}
-          </Button>
+          <Group>
+            <Button
+              variant="light"
+              leftSection={<IconPrinter size={18} />}
+              onClick={() => router.push("/admin/payments/print")}
+            >
+              {t("invoice.print")}
+            </Button>
+            <Button
+              leftSection={<IconPlus size={18} />}
+              onClick={() => router.push("/admin/payments/new")}
+            >
+              {t("payment.newPayment")}
+            </Button>
+          </Group>
         }
       />
       <PaymentTable />

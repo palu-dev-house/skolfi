@@ -253,6 +253,10 @@ export default function StudentPortalLayout({
           >
             {t("auth.logout")}
           </Button>
+
+          <Text size="xs" c="dimmed" ta="center">
+            v{process.env.APP_VERSION}
+          </Text>
         </Stack>
       </AppShell.Navbar>
 
