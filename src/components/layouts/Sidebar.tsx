@@ -20,7 +20,7 @@ import {
   IconUsers,
 } from "@tabler/icons-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,7 +33,7 @@ interface NavItem {
 }
 
 export default function Sidebar() {
-  const pathname = usePathname();
+  const { pathname } = useRouter();
   const { user } = useAuth();
   const t = useTranslations("admin");
 

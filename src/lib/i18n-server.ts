@@ -1,5 +1,3 @@
-import type { NextRequest } from "next/server";
-
 type Messages = Record<
   string,
   string | Record<string, string | Record<string, string>>
@@ -38,8 +36,15 @@ export type ServerT = (
   params?: Record<string, string | number>,
 ) => string;
 
-export async function getServerT(request: NextRequest): Promise<ServerT> {
-  const locale = request.cookies.get("NEXT_LOCALE")?.value;
+function getCookieValue(request: Request, name: string): string | undefined {
+  const cookieHeader = request.headers.get("cookie");
+  if (!cookieHeader) return undefined;
+  const match = cookieHeader.match(new RegExp(`(?:^|;\\s*)${name}=([^;]*)`));
+  return match ? match[1] : undefined;
+}
+
+export async function getServerT(request: Request): Promise<ServerT> {
+  const locale = getCookieValue(request, "NEXT_LOCALE");
   const validLocale = locale === "en" ? "en" : "id";
   const messages = await loadMessages(validLocale);
 

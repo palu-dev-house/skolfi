@@ -1,4 +1,3 @@
-import type { NextRequest } from "next/server";
 import type { z } from "zod";
 import { errorResponse } from "@/lib/api-response";
 import { getServerT } from "@/lib/i18n-server";
@@ -6,7 +5,7 @@ import { getServerT } from "@/lib/i18n-server";
 export async function parseWithLocale<T extends z.ZodType>(
   schema: T,
   data: unknown,
-  request: NextRequest,
+  request: Request,
 ): Promise<
   { success: true; data: z.infer<T> } | { success: false; response: Response }
 > {

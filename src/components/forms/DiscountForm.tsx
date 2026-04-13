@@ -19,7 +19,7 @@ import {
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconInfoCircle, IconPercentage } from "@tabler/icons-react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";

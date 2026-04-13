@@ -1,9 +1,6 @@
-"use client";
-
 import { ActionIcon, Tooltip } from "@mantine/core";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { useLocale } from "next-intl";
-import { useTransition } from "react";
 import type { Locale } from "@/i18n/routing";
 
 interface LanguageSwitcherProps {
@@ -17,14 +14,11 @@ export function LanguageSwitcher({
 }: LanguageSwitcherProps) {
   const locale = useLocale();
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
 
   const toggleLocale = () => {
     const newLocale: Locale = locale === "id" ? "en" : "id";
     document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000; SameSite=Lax`;
-    startTransition(() => {
-      router.refresh();
-    });
+    router.reload();
   };
 
   const label = locale === "id" ? "EN" : "ID";
@@ -38,7 +32,6 @@ export function LanguageSwitcher({
         color={color}
         size="lg"
         onClick={toggleLocale}
-        loading={isPending}
         style={{ fontWeight: 600, fontSize: 12 }}
       >
         {label}

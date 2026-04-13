@@ -21,7 +21,7 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
 import ColumnSettingsDrawer, {
   useColumnSettings,
@@ -53,7 +53,10 @@ export default function AcademicYearTable() {
     columnDefs,
   );
 
-  const { data, isLoading, refetch, isFetching } = useAcademicYears({ page, limit: 10 });
+  const { data, isLoading, refetch, isFetching } = useAcademicYears({
+    page,
+    limit: 10,
+  });
 
   const deleteAcademicYear = useDeleteAcademicYear();
   const setActive = useSetActiveAcademicYear();
@@ -132,7 +135,12 @@ export default function AcademicYearTable() {
   return (
     <Stack gap="md">
       <Group justify="flex-end" gap="xs">
-        <ActionIcon variant="default" size="lg" onClick={() => refetch()} loading={isFetching}>
+        <ActionIcon
+          variant="default"
+          size="lg"
+          onClick={() => refetch()}
+          loading={isFetching}
+        >
           <IconRefresh size={18} />
         </ActionIcon>
         <ColumnSettingsDrawer tableId="academicYears" columnDefs={columnDefs} />

@@ -25,7 +25,7 @@ import {
   IconUsers,
   IconX,
 } from "@tabler/icons-react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import ColumnSettingsDrawer, {
@@ -206,7 +206,12 @@ export default function ClassAcademicTable() {
           searchable
           w={200}
         />
-        <ActionIcon variant="default" size="lg" onClick={() => refetch()} loading={isFetching}>
+        <ActionIcon
+          variant="default"
+          size="lg"
+          onClick={() => refetch()}
+          loading={isFetching}
+        >
           <IconRefresh size={18} />
         </ActionIcon>
         <ColumnSettingsDrawer

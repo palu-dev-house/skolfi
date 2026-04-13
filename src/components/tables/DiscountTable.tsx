@@ -29,7 +29,7 @@ import {
   IconTrash,
   IconX,
 } from "@tabler/icons-react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import ColumnSettingsDrawer, {
@@ -359,7 +359,12 @@ export default function DiscountTable() {
             clearable
             w={150}
           />
-          <ActionIcon variant="default" size="lg" onClick={() => refetch()} loading={isFetching}>
+          <ActionIcon
+            variant="default"
+            size="lg"
+            onClick={() => refetch()}
+            loading={isFetching}
+          >
             <IconRefresh size={18} />
           </ActionIcon>
           <ColumnSettingsDrawer tableId="discounts" columnDefs={columnDefs} />

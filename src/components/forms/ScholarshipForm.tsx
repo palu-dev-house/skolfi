@@ -20,7 +20,7 @@ import {
   IconGift,
   IconInfoCircle,
 } from "@tabler/icons-react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";

@@ -8,7 +8,7 @@ import {
   IconSettings,
 } from "@tabler/icons-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
 
 const navItems = [
@@ -23,7 +23,7 @@ const navItems = [
 ];
 
 export function BottomNav() {
-  const pathname = usePathname();
+  const { pathname } = useRouter();
   const t = useTranslations();
 
   return (

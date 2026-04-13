@@ -21,7 +21,7 @@ import {
   IconInfoCircle,
   IconReceipt,
 } from "@tabler/icons-react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { PaymentFrequency } from "@/generated/prisma/client";
