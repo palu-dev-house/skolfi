@@ -328,28 +328,33 @@ Given `feeServiceId`, `period` (e.g. `"OCTOBER"`), `year`:
 
 ### 6.2 Fee-bill generation (transport/accommodation)
 
-Endpoint: `POST /api/v1/fee-bills/generate` with body `{ feeServiceId?: string; period: string; year: number }`.
+Two endpoints — the "generate all" one is the primary operator path (see §13c for the full spec).
 
-Algorithm:
-1. Resolve target month's first day (`targetDate`) and last day.
-2. Query `FeeSubscription` rows with:
-   - `feeServiceId = body.feeServiceId` (if provided)
-   - `startDate <= lastDay` AND `(endDate IS NULL OR endDate >= firstDay)`
-3. For each subscription, resolve price (§6.1) → amount.
-4. Upsert `FeeBill` using unique `(subscriptionId, period, year)`:
-   - If exists → skip (idempotent)
-   - Else insert with `dueDate = firstDay + 10` (same rule as Tuition, reuse existing helper if available).
-5. Wrap in one Prisma transaction; return `{ created: N, skipped: M }`.
+**Primary:** `POST /api/v1/fee-bills/generate-all` — body `{ academicYearId?: string }`. Generates missing bills for every active service × every active subscription × every month in the academic year. Idempotent. Re-run after data changes.
+
+**Targeted (edge cases):** `POST /api/v1/fee-bills/generate` — body `{ feeServiceId?: string; period: string; year: number }`. Used for one-off fixes (e.g., regenerate after a past-month price correction that didn't exist at original run time).
+
+Shared algorithm per (subscription, period) pair:
+1. Resolve target month's first day (`targetDate`) and last day (`getPeriodStart` from [student-exit.ts:36](src/lib/business-logic/student-exit.ts#L36) reused).
+2. Subscription must cover the period: `startDate <= lastDay` AND `(endDate IS NULL OR endDate >= firstDay)`.
+3. Skip if student is exited and `targetDate > student.exitedAt`.
+4. Resolve price (§6.1) → amount. Missing price → add to `priceWarnings`, do not abort run.
+5. Upsert `FeeBill` using unique `(subscriptionId, period, year)` — inserts only; existing rows untouched (preserves paid status and original amount snapshot).
+6. `dueDate = firstDay + 10 days` (same rule as Tuition — reuse existing helper from `src/lib/business-logic/tuition-generator.ts` if one exists).
+
+Wrapped in a single Prisma transaction for the whole run.
 
 ### 6.3 Service-fee-bill generation
 
-Endpoint: `POST /api/v1/service-fee-bills/generate` with body `{ classAcademicId?: string; period: string; year: number }`.
+**Primary:** `POST /api/v1/service-fee-bills/generate-all` — body `{ academicYearId?: string }`. See §13c for full spec.
 
-Algorithm:
-1. Query `ServiceFee` rows where `isActive = true`, optionally filtered by `classAcademicId`, where `billingMonths` contains the target period.
-2. For each `ServiceFee`, fetch students in the class via `StudentClass`.
-3. Upsert `ServiceFeeBill` per `(serviceFeeId, studentNis, period, year)`. Amount snapshotted from `ServiceFee.amount`. `dueDate = firstDay + 10`.
-4. Return `{ created, skipped }`.
+**Targeted:** `POST /api/v1/service-fee-bills/generate` — body `{ classAcademicId?: string; period: string; year: number }`.
+
+Shared algorithm:
+1. For each active `ServiceFee` (optionally filtered by `classAcademicId`) whose `billingMonths` contains the target period:
+2. For each student in the class via `StudentClass`:
+3. Skip if student exited and period's first day > `student.exitedAt`.
+4. Upsert `ServiceFeeBill` by `(serviceFeeId, studentNis, period, year)`. Amount snapshotted from `ServiceFee.amount` at insert time. `dueDate = firstDay + 10 days`.
 
 ### 6.4 Payment recording (unified)
 
@@ -381,13 +386,23 @@ Voiding a payment (existing flow) needs to be extended to handle the three FK ca
 
 ### 6.5 Student exit cascade
 
-Existing `src/lib/business-logic/student-exit.ts` (or wherever the exit flow lives) is extended in one place:
+File: [src/lib/business-logic/student-exit.ts](src/lib/business-logic/student-exit.ts). Two functions to extend: `recordStudentExit` and `undoStudentExit`.
 
-When a student is marked exited on `exitDate`:
-1. Existing behavior: void future unpaid `Tuition` rows.
-2. New: for each active `FeeSubscription` (endDate NULL or > exitDate), set `endDate = exitDate`.
-3. New: for `FeeBill` with `year` + period first-day > exitDate and `status = UNPAID`: set `voidedByExit = true`, `status = VOID`.
-4. New: for `ServiceFeeBill` with period first-day > exitDate and `status = UNPAID`: set `voidedByExit = true`, `status = VOID`.
+**`recordStudentExit(params)` — add after the existing tuition loop:**
+1. Update active `FeeSubscription` rows: `where: { studentNis: nis, OR: [{ endDate: null }, { endDate: { gt: exitDate } }] }` → `set endDate = exitDate`.
+2. For `FeeBill` rows where `studentNis = nis` and `status IN (UNPAID, PARTIAL)`:
+   - Reuse `isPeriodAfterExit(period, year, "MONTHLY", exitDate)` from [student-exit.ts:63](src/lib/business-logic/student-exit.ts#L63).
+   - UNPAID → void: `status = VOID, voidedByExit = true, amount = 0, paidAmount = 0`.
+   - PARTIAL → append to `partialWarnings` (mirror tuition behavior — don't auto-void partially-paid bills).
+3. Same logic for `ServiceFeeBill`.
+4. The existing `RecordExitResult.voidedCount` is incremented across all three tables; `partialWarnings` items grow a `source` discriminator field: `"tuition" | "feeBill" | "serviceFeeBill"`.
+
+**`undoStudentExit(params)` — extend the restore phase:**
+1. Existing: restore voided tuitions with re-snapshotted class fee.
+2. New: find `FeeSubscription` rows where `studentNis = nis AND endDate = student.exitedAt` → set `endDate = null`.
+3. New: find `FeeBill` rows where `studentNis = nis AND voidedByExit = true` → re-resolve price via §6.1, restore `status = UNPAID, voidedByExit = false, amount = <resolved>, paidAmount = 0`. If price resolution fails for a bill's period, skip it (same "data inconsistent, skip" pattern tuition uses at [student-exit.ts:250](src/lib/business-logic/student-exit.ts#L250)).
+4. New: find `ServiceFeeBill` rows where `studentNis = nis AND voidedByExit = true` → restore `amount` from current `ServiceFee.amount`. If `ServiceFee` has been deleted or inactivated, skip.
+5. `UndoExitResult.restoredCount` aggregates across all three tables.
 
 ### 6.6 Invariant enforcement helpers
 
@@ -551,6 +566,24 @@ Sidebar labels added to existing `admin.*` namespace.
 | 13 | Student has a scholarship | Scholarship applies to tuition only. Transport, accommodation, and service fee bills are billed in full regardless of scholarship status. |
 | 14 | Active discount covers a period | Discount applies to tuition only. No discount_amount column exists on `FeeBill` / `ServiceFeeBill`. |
 
+## 9a. User documentation
+
+After implementation, update both help-page sources so end users see the new features documented in-app:
+
+- [docs/USER-GUIDE-ID.md](docs/USER-GUIDE-ID.md) — Indonesian user guide
+- [docs/USER-GUIDE-EN.md](docs/USER-GUIDE-EN.md) — English mirror
+
+Add sections covering:
+- Managing transport / accommodation services (create, price history, subscribe/unsubscribe students)
+- Managing service fee (uang perlengkapan) per class — amount + billing months
+- Using the "Generate all bills" button, what it does, when to re-run it
+- Cashier multi-bill payment (selecting tuition + transport + service fee line items in one transaction)
+- Portal: new unified bill list for students
+- Behavior on student exit (automatic subscription end + future bill voiding)
+- Clarification that scholarships and discounts remain tuition-only
+
+The help page is rendered from these files at [src/pages/admin/help.tsx](src/pages/admin/help.tsx) — changes take effect on next build.
+
 ## 10. Seed data
 
 Update `prisma/seed.ts` to add (against the currently-active academic year):
@@ -611,11 +644,56 @@ Update `prisma/seed.ts` to add (against the currently-active academic year):
 3. Code changes: business-logic helpers, API routes, UI pages, i18n, seed script (in that order per implementation plan).
 4. Deploy via existing Railway pipeline. No downtime expected.
 
-## 13. Open questions for implementation
+## 13. Resolved implementation decisions
 
-- Does `prisma/seed.ts` currently target an active academic year, or does it create its own? Confirm before extending.
-- Which exact file holds the student exit cascade logic? Will be identified during plan step 1.
-- Should the "generate bills" UI allow bulk generation across all services + all months at once, or stay one-at-a-time? Defer to a follow-up.
+**13a — Seed target:** Seed extends the currently-active academic year (same scope as existing tuition seed). No new academic year is created for testing.
+
+**13b — Student exit cascade file:** [src/lib/business-logic/student-exit.ts](src/lib/business-logic/student-exit.ts).
+- `recordStudentExit(params)` — extend to also:
+  - Set `endDate = exitDate` on active `FeeSubscription` rows for this student (`endDate IS NULL OR endDate > exitDate`).
+  - Apply the same period-after-exit + status-check logic used for tuition to `FeeBill` and `ServiceFeeBill` (UNPAID → VOID with `voidedByExit = true, amount = 0, paidAmount = 0`; PARTIAL → added to `partialWarnings` result, not auto-voided).
+- `undoStudentExit(params)` — extend to also:
+  - Restore any `FeeSubscription` where `endDate = student.exitedAt`, setting `endDate = null`.
+  - Restore `FeeBill` rows where `voidedByExit = true` by re-snapshotting amount from the price history (use the same price resolution §6.1 for the bill's period).
+  - Restore `ServiceFeeBill` rows where `voidedByExit = true` by re-snapshotting from the current `ServiceFee.amount`.
+- Reuse existing `getPeriodStart(period, year, frequency)` helper — all fee bills use `frequency = "MONTHLY"` (transport/accommodation) or `"MONTHLY"` mapping (service fee periods are always month names).
+
+**13c — Bulk generation logic ("generate everything, idempotent, re-runnable"):**
+
+The primary admin action is **one-click generate-all**. Running it repeatedly is the supported way to pick up new students, new subscriptions, and exits.
+
+Endpoint: `POST /api/v1/fee-bills/generate-all` with body `{ academicYearId?: string }` (defaults to active AY):
+
+1. Compute the list of months in the academic year: from `academicYear.startDate` month through `academicYear.endDate` month, inclusive.
+2. For each active `FeeService` in the academic year:
+   - For each active `FeeSubscription` on that service (regardless of status — scoping is done per-month):
+     - For each month in the AY list where the month is within `[startDate, min(endDate, academicYear.endDate)]`:
+       - Skip if the student is exited and that month starts after `student.exitedAt`.
+       - Resolve price (§6.1). If missing → collect as a warning, do not abort.
+       - Upsert `FeeBill` by unique `(subscriptionId, period, year)`. Existing bills are left untouched.
+3. Return `{ created, skipped, priceWarnings: [...], exitSkipped: N }`.
+
+Analogous endpoint: `POST /api/v1/service-fee-bills/generate-all` with body `{ academicYearId?: string }`:
+
+1. For each active `ClassAcademic` in the academic year:
+   - For each active `ServiceFee` on that class:
+     - For each `period` in `ServiceFee.billingMonths`:
+       - For each currently-enrolled student in the class (`StudentClass` rows):
+         - Skip if student is exited and that period starts after `student.exitedAt`.
+         - Upsert `ServiceFeeBill` by `(serviceFeeId, studentNis, period, year)`. Existing bills left untouched.
+2. Return `{ created, skipped, exitSkipped }`.
+
+**Safety properties:**
+- **Idempotent:** unique constraints (`@@unique([subscriptionId, period, year])` / `@@unique([serviceFeeId, studentNis, period, year])`) prevent duplicates on re-run.
+- **No retro-rewrites:** paid or partially-paid bills are never touched on re-generation — the upsert only inserts new rows.
+- **Data-drift aware:** new students added, new subscriptions, and mid-year exits are all picked up naturally by the next run.
+- **Past bills safe:** amount is snapshotted on first insert. A later price change or `ServiceFee.amount` edit does not alter existing rows.
+
+**UI:**
+- `/admin/fee-bills` and `/admin/service-fee-bills` each gain a prominent **"Generate all bills for <active AY>"** button at the top.
+- A confirmation modal summarizes: "This will create any missing bills for the current academic year. Existing bills will not be modified. Continue?"
+- Result is displayed with counts + any price warnings listed so admins can fix missing prices and re-run.
+- Per-service / per-period targeted generation endpoints (§7) remain for edge cases but the generate-all button is the default path.
 
 ---
 
