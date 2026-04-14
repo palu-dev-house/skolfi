@@ -11,6 +11,7 @@ export interface StudentFilters {
   search?: string;
   startJoinDateFrom?: string;
   startJoinDateTo?: string;
+  status?: "active" | "exited" | "all";
 }
 
 export interface AcademicYearFilters {

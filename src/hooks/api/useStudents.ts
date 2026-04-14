@@ -24,6 +24,10 @@ interface Student {
   accountDeleted: boolean;
   accountDeletedAt: string | null;
   accountDeletedReason: string | null;
+  // Exit tracking
+  exitedAt: string | null;
+  exitReason: string | null;
+  exitedBy: string | null;
 }
 
 interface StudentListResponse {
