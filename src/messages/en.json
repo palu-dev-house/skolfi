@@ -594,6 +594,33 @@
       "updateSuccess": "Updated {count} students",
       "delete": "Delete Selected",
       "update": "Update Join Date"
+    },
+    "exit": {
+      "sectionTitle": "Student Status",
+      "statusActive": "Active",
+      "statusExited": "Exited",
+      "markExitButton": "Mark as Exited",
+      "exitDateLabel": "Exit Date",
+      "reasonLabel": "Exit Reason",
+      "reasonPlaceholder": "e.g., Moved to another city",
+      "previewWillVoid": "{count} tuitions will be voided",
+      "previewPartialWarning": "{count} tuitions with partial payments require manual handling",
+      "confirmExitButton": "Mark as Exited",
+      "exitedBanner": "Student exited on {date}. Reason: {reason}",
+      "exitedBannerByLine": "Recorded by {name}",
+      "undoButton": "Undo Exit Status",
+      "undoConfirm": "{count} tuitions will be restored to UNPAID. Continue?",
+      "recordSuccess": "Exit recorded. {count} tuitions voided.",
+      "undoSuccess": "Exit undone. {count} tuitions restored.",
+      "errorDateBeforeJoin": "Exit date cannot be before the join date",
+      "errorDateInFuture": "Exit date cannot be in the future",
+      "errorAlreadyExited": "Student is already exited",
+      "filterStatusLabel": "Student Status",
+      "filterActive": "Active",
+      "filterExited": "Exited",
+      "filterAll": "All",
+      "rowBadgeExited": "Exited",
+      "portalBanner": "This account is in exited status as of {date}. Only outstanding tuitions are visible."
     }
   },
   "academicYear": {

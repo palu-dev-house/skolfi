@@ -594,6 +594,33 @@
       "updateSuccess": "Berhasil mengubah {count} siswa",
       "delete": "Hapus Terpilih",
       "update": "Ubah Tanggal Masuk"
+    },
+    "exit": {
+      "sectionTitle": "Status Siswa",
+      "statusActive": "Aktif",
+      "statusExited": "Sudah Keluar",
+      "markExitButton": "Tandai Keluar",
+      "exitDateLabel": "Tanggal Keluar",
+      "reasonLabel": "Alasan Keluar",
+      "reasonPlaceholder": "Contoh: Pindah ke kota lain",
+      "previewWillVoid": "{count} tagihan akan dibatalkan",
+      "previewPartialWarning": "{count} tagihan dengan pembayaran sebagian perlu ditangani manual",
+      "confirmExitButton": "Tandai Keluar",
+      "exitedBanner": "Siswa keluar pada {date}. Alasan: {reason}",
+      "exitedBannerByLine": "Dicatat oleh {name}",
+      "undoButton": "Batalkan Status Keluar",
+      "undoConfirm": "Akan memulihkan {count} tagihan ke status UNPAID. Lanjutkan?",
+      "recordSuccess": "Status keluar berhasil dicatat. {count} tagihan dibatalkan.",
+      "undoSuccess": "Status keluar dibatalkan. {count} tagihan dipulihkan.",
+      "errorDateBeforeJoin": "Tanggal keluar tidak boleh sebelum tanggal masuk",
+      "errorDateInFuture": "Tanggal keluar tidak boleh di masa depan",
+      "errorAlreadyExited": "Siswa sudah berstatus keluar",
+      "filterStatusLabel": "Status Siswa",
+      "filterActive": "Aktif",
+      "filterExited": "Sudah Keluar",
+      "filterAll": "Semua",
+      "rowBadgeExited": "Keluar",
+      "portalBanner": "Akun ini berstatus keluar per {date}. Hanya tagihan tertunggak yang dapat dilihat."
     }
   },
   "academicYear": {
