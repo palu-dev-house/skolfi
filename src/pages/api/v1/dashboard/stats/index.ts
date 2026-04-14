@@ -118,18 +118,23 @@ async function GET(request: NextRequest) {
         partial: partialCount,
         total: paidCount + unpaidCount + partialCount,
       },
-      recentPayments: recentPayments.map((p) => ({
-        id: p.id,
-        amount: Number(p.amount),
-        paymentDate: p.paymentDate,
-        studentName: p.tuition.student.name,
-        studentNis: p.tuition.student.nis,
-        className: p.tuition.classAcademic.className,
-        processedBy: p.employee?.name ?? "Online Payment",
-        scholarshipAmount: p.tuition.scholarshipAmount,
-        discountAmount: p.tuition.discountAmount,
-        discount: p.tuition.discount,
-      })),
+      recentPayments: recentPayments
+        .filter((p) => p.tuition !== null)
+        .map((p) => {
+          const tuition = p.tuition as NonNullable<typeof p.tuition>;
+          return {
+            id: p.id,
+            amount: Number(p.amount),
+            paymentDate: p.paymentDate,
+            studentName: tuition.student.name,
+            studentNis: tuition.student.nis,
+            className: tuition.classAcademic.className,
+            processedBy: p.employee?.name ?? "Online Payment",
+            scholarshipAmount: tuition.scholarshipAmount,
+            discountAmount: tuition.discountAmount,
+            discount: tuition.discount,
+          };
+        }),
     });
   } catch (error) {
     console.error("Dashboard stats error:", error);

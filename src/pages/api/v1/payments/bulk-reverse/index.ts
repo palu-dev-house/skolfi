@@ -32,6 +32,7 @@ async function POST(request: NextRequest) {
         if (!payment) continue;
 
         const tuition = payment.tuition;
+        if (!tuition) continue;
 
         // Delete the payment first
         await tx.payment.delete({ where: { id: paymentId } });
