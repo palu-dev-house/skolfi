@@ -10,19 +10,25 @@ import {
   LoadingOverlay,
   Modal,
   Paper,
+  Select,
   Stack,
+  Table,
   Text,
   Title,
 } from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
 import { useDisclosure } from "@mantine/hooks";
+import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import {
   IconAlertCircle,
   IconCheck,
   IconKey,
+  IconPlus,
   IconTrash,
   IconUserPlus,
 } from "@tabler/icons-react";
+import dayjs from "dayjs";
 import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
 import type { ReactElement } from "react";
@@ -31,6 +37,14 @@ import StudentExitSection from "@/components/forms/StudentExitSection";
 import StudentForm from "@/components/forms/StudentForm";
 import AdminLayout from "@/components/layouts/AdminLayout";
 import PageHeader from "@/components/ui/PageHeader/PageHeader";
+import { useFeeBills } from "@/hooks/api/useFeeBills";
+import { useFeeServices } from "@/hooks/api/useFeeServices";
+import {
+  useCreateFeeSubscription,
+  useFeeSubscriptions,
+  useUpdateFeeSubscription,
+} from "@/hooks/api/useFeeSubscriptions";
+import { useServiceFeeBills } from "@/hooks/api/useServiceFeeBills";
 import {
   useCreateStudentAccount,
   useDeleteStudentAccount,
@@ -227,9 +241,9 @@ const EditStudentPage: NextPageWithLayout = function EditStudentPage() {
               <StudentExitSection
                 nis={student.nis}
                 startJoinDate={student.startJoinDate}
-                exitedAt={student.exitedAt}
-                exitReason={student.exitReason}
-                exitedBy={student.exitedBy}
+                exitedAt={student.exitedAt ?? null}
+                exitReason={student.exitReason ?? null}
+                exitedBy={student.exitedBy ?? null}
                 onChanged={() => refetch()}
               />
 
@@ -302,6 +316,13 @@ const EditStudentPage: NextPageWithLayout = function EditStudentPage() {
               </Card>
             </Stack>
           </Box>
+        </Grid.Col>
+
+        <Grid.Col span={12}>
+          <SubscriptionsSection nis={student.nis} />
+        </Grid.Col>
+        <Grid.Col span={12}>
+          <FeeBillsSection nis={student.nis} />
         </Grid.Col>
       </Grid>
 
@@ -421,6 +442,340 @@ const EditStudentPage: NextPageWithLayout = function EditStudentPage() {
     </>
   );
 };
+function formatRp(v: string | number) {
+  const n = typeof v === "string" ? parseFloat(v) : v;
+  return `Rp ${n.toLocaleString("id-ID")}`;
+}
+
+function SubscriptionsSection({ nis }: { nis: string }) {
+  const t = useTranslations();
+  const { data, isLoading } = useFeeSubscriptions({
+    studentNis: nis,
+    limit: 50,
+  });
+  const { data: services } = useFeeServices({ isActive: true, limit: 200 });
+  const create = useCreateFeeSubscription();
+  const endSub = useUpdateFeeSubscription();
+  const [opened, { open, close }] = useDisclosure(false);
+  const [feeServiceId, setFeeServiceId] = useState<string | null>(null);
+  const [startDate, setStartDate] = useState<string | null>(
+    dayjs().format("YYYY-MM-DD"),
+  );
+  const [endDate, setEndDate] = useState<string | null>(null);
+
+  const subs = data?.subscriptions ?? [];
+
+  const handleCreate = () => {
+    if (!feeServiceId || !startDate) return;
+    create.mutate(
+      {
+        feeServiceId,
+        studentNis: nis,
+        startDate,
+        endDate: endDate ?? undefined,
+      },
+      {
+        onSuccess: () => {
+          notifications.show({
+            color: "green",
+            title: t("common.success"),
+            message: t("feeService.subscribed"),
+          });
+          close();
+          setFeeServiceId(null);
+          setStartDate(dayjs().format("YYYY-MM-DD"));
+          setEndDate(null);
+        },
+        onError: (err) =>
+          notifications.show({
+            color: "red",
+            title: t("common.error"),
+            message: err.message,
+          }),
+      },
+    );
+  };
+
+  const handleEnd = (id: string) =>
+    modals.openConfirmModal({
+      title: t("feeService.endSubscriptionTitle"),
+      children: (
+        <Text size="sm">
+          {t("feeService.endSubscriptionConfirm", { name: "" })}
+        </Text>
+      ),
+      labels: { confirm: t("common.confirm"), cancel: t("common.cancel") },
+      onConfirm: () =>
+        endSub.mutate({
+          id,
+          updates: { endDate: dayjs().format("YYYY-MM-DD") },
+        }),
+    });
+
+  return (
+    <Card withBorder>
+      <Group justify="space-between" mb="sm">
+        <Title order={5}>{t("student.subscriptions")}</Title>
+        <Button size="xs" leftSection={<IconPlus size={14} />} onClick={open}>
+          {t("feeService.subscribeStudent")}
+        </Button>
+      </Group>
+      {isLoading ? (
+        <Text c="dimmed">{t("common.loading")}</Text>
+      ) : subs.length === 0 ? (
+        <Text c="dimmed">{t("feeService.noSubscribers")}</Text>
+      ) : (
+        <Table>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>{t("feeService.name")}</Table.Th>
+              <Table.Th>{t("feeService.category.label")}</Table.Th>
+              <Table.Th>{t("feeService.startDate")}</Table.Th>
+              <Table.Th>{t("feeService.endDate")}</Table.Th>
+              <Table.Th style={{ width: 120 }}>{t("common.actions")}</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {subs.map((s) => (
+              <Table.Tr key={s.id}>
+                <Table.Td>{s.feeService?.name ?? "-"}</Table.Td>
+                <Table.Td>
+                  {s.feeService?.category
+                    ? t(
+                        `feeService.category.${s.feeService.category.toLowerCase()}`,
+                      )
+                    : "-"}
+                </Table.Td>
+                <Table.Td>{dayjs(s.startDate).format("DD MMM YYYY")}</Table.Td>
+                <Table.Td>
+                  {s.endDate ? (
+                    dayjs(s.endDate).format("DD MMM YYYY")
+                  ) : (
+                    <Badge color="green" variant="light">
+                      {t("feeService.active")}
+                    </Badge>
+                  )}
+                </Table.Td>
+                <Table.Td>
+                  {!s.endDate && (
+                    <Button
+                      size="xs"
+                      variant="subtle"
+                      color="red"
+                      onClick={() => handleEnd(s.id)}
+                    >
+                      {t("feeService.endSubscription")}
+                    </Button>
+                  )}
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      )}
+
+      <Modal
+        opened={opened}
+        onClose={close}
+        title={t("feeService.subscribeStudent")}
+      >
+        <Stack gap="md">
+          <Select
+            label={t("feeService.label")}
+            required
+            searchable
+            data={(services?.feeServices ?? []).map((f) => ({
+              value: f.id,
+              label: `${f.name} — ${t(`feeService.category.${f.category.toLowerCase()}`)}`,
+            }))}
+            value={feeServiceId}
+            onChange={setFeeServiceId}
+          />
+          <DatePickerInput
+            label={t("feeService.startDate")}
+            required
+            value={startDate}
+            onChange={setStartDate}
+          />
+          <DatePickerInput
+            label={t("feeService.endDate")}
+            clearable
+            value={endDate}
+            onChange={setEndDate}
+          />
+          <Group justify="flex-end">
+            <Button variant="default" onClick={close}>
+              {t("common.cancel")}
+            </Button>
+            <Button onClick={handleCreate} loading={create.isPending}>
+              {t("common.save")}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+    </Card>
+  );
+}
+
+function FeeBillsSection({ nis }: { nis: string }) {
+  const t = useTranslations();
+  const [page, setPage] = useState(1);
+  const [period, setPeriod] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
+
+  const { data: feeBillsData } = useFeeBills({
+    studentNis: nis,
+    page,
+    limit: 10,
+    period: period || undefined,
+    status: status as "UNPAID" | "PARTIAL" | "PAID" | "VOID" | undefined,
+  });
+  const { data: serviceFeeBillsData } = useServiceFeeBills({
+    studentNis: nis,
+    page,
+    limit: 10,
+    period: period || undefined,
+    status: status as "UNPAID" | "PARTIAL" | "PAID" | "VOID" | undefined,
+  });
+
+  type Row = {
+    key: string;
+    type: "FEE" | "SERVICE_FEE";
+    description: string;
+    period: string;
+    year: number;
+    amount: string;
+    paidAmount: string;
+    status: string;
+  };
+
+  const rows: Row[] = [
+    ...(feeBillsData?.feeBills ?? []).map((b) => ({
+      key: `fee:${b.id}`,
+      type: "FEE" as const,
+      description: b.feeService?.name ?? t("feeBill.label"),
+      period: b.period,
+      year: b.year,
+      amount: b.amount,
+      paidAmount: b.paidAmount,
+      status: b.status,
+    })),
+    ...(serviceFeeBillsData?.serviceFeeBills ?? []).map((b) => ({
+      key: `svc:${b.id}`,
+      type: "SERVICE_FEE" as const,
+      description: b.serviceFee?.name ?? t("serviceFee.label"),
+      period: b.period,
+      year: b.year,
+      amount: b.amount,
+      paidAmount: b.paidAmount,
+      status: b.status,
+    })),
+  ].sort((a, b) =>
+    a.year !== b.year ? b.year - a.year : a.period.localeCompare(b.period),
+  );
+
+  const months = [
+    "JULY",
+    "AUGUST",
+    "SEPTEMBER",
+    "OCTOBER",
+    "NOVEMBER",
+    "DECEMBER",
+    "JANUARY",
+    "FEBRUARY",
+    "MARCH",
+    "APRIL",
+    "MAY",
+    "JUNE",
+  ];
+
+  return (
+    <Card withBorder>
+      <Group justify="space-between" mb="sm">
+        <Title order={5}>{t("student.feeBills")}</Title>
+        <Group>
+          <Select
+            placeholder={t("feeBill.period")}
+            data={months.map((p) => ({ value: p, label: t(`months.${p}`) }))}
+            value={period}
+            onChange={setPeriod}
+            clearable
+            w={160}
+          />
+          <Select
+            placeholder={t("common.status")}
+            data={["UNPAID", "PARTIAL", "PAID", "VOID"].map((s) => ({
+              value: s,
+              label: t(`tuition.status.${s.toLowerCase()}`),
+            }))}
+            value={status}
+            onChange={setStatus}
+            clearable
+            w={160}
+          />
+        </Group>
+      </Group>
+      {rows.length === 0 ? (
+        <Text c="dimmed">{t("feeBill.noBills")}</Text>
+      ) : (
+        <Table>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>{t("payment.type")}</Table.Th>
+              <Table.Th>{t("payment.description")}</Table.Th>
+              <Table.Th>{t("feeBill.period")}</Table.Th>
+              <Table.Th>{t("feeBill.amount")}</Table.Th>
+              <Table.Th>{t("feeBill.paid")}</Table.Th>
+              <Table.Th>{t("common.status")}</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {rows.map((r) => (
+              <Table.Tr key={r.key}>
+                <Table.Td>
+                  <Badge
+                    color={r.type === "FEE" ? "orange" : "grape"}
+                    variant="light"
+                  >
+                    {t(`payment.itemType.${r.type}`)}
+                  </Badge>
+                </Table.Td>
+                <Table.Td>{r.description}</Table.Td>
+                <Table.Td>
+                  {t(`months.${r.period}`)} {r.year}
+                </Table.Td>
+                <Table.Td>{formatRp(r.amount)}</Table.Td>
+                <Table.Td>{formatRp(r.paidAmount)}</Table.Td>
+                <Table.Td>
+                  <Badge>{t(`tuition.status.${r.status.toLowerCase()}`)}</Badge>
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      )}
+      <Group justify="center" mt="sm">
+        <Button
+          size="xs"
+          variant="subtle"
+          disabled={page <= 1}
+          onClick={() => setPage((p) => p - 1)}
+        >
+          {t("common.previous")}
+        </Button>
+        <Text size="sm">{page}</Text>
+        <Button
+          size="xs"
+          variant="subtle"
+          onClick={() => setPage((p) => p + 1)}
+        >
+          {t("common.next")}
+        </Button>
+      </Group>
+    </Card>
+  );
+}
+
 EditStudentPage.getLayout = (page: ReactElement) => (
   <AdminLayout>{page}</AdminLayout>
 );
