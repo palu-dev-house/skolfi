@@ -1,4 +1,6 @@
 import type { PaymentFrequency } from "@/generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
+import { prisma } from "@/lib/prisma";
 
 const MONTH_NUMBER: Record<string, number> = {
   JANUARY: 1,
@@ -65,4 +67,131 @@ export function isPeriodAfterExit(
   exitDate: Date,
 ): boolean {
   return getPeriodStart(period, year, frequency).getTime() > exitDate.getTime();
+}
+
+export interface RecordExitParams {
+  nis: string;
+  exitDate: Date;
+  reason: string;
+  employeeId: string;
+}
+
+export interface PartialWarning {
+  tuitionId: string;
+  period: string;
+  year: number;
+  paidAmount: string; // Decimal serialized
+}
+
+export interface RecordExitResult {
+  voidedCount: number;
+  partialWarnings: PartialWarning[];
+}
+
+export class StudentExitError extends Error {
+  constructor(
+    public code:
+      | "NOT_FOUND"
+      | "ALREADY_EXITED"
+      | "DATE_BEFORE_JOIN"
+      | "DATE_IN_FUTURE",
+    message: string,
+  ) {
+    super(message);
+    this.name = "StudentExitError";
+  }
+}
+
+export async function recordStudentExit(
+  params: RecordExitParams,
+): Promise<RecordExitResult> {
+  const { nis, exitDate, reason, employeeId } = params;
+
+  const student = await prisma.student.findUnique({ where: { nis } });
+  if (!student) {
+    throw new StudentExitError("NOT_FOUND", `Student ${nis} not found`);
+  }
+  if (student.exitedAt) {
+    throw new StudentExitError(
+      "ALREADY_EXITED",
+      `Student ${nis} is already exited`,
+    );
+  }
+  if (exitDate < student.startJoinDate) {
+    throw new StudentExitError(
+      "DATE_BEFORE_JOIN",
+      "Exit date cannot be before student's join date",
+    );
+  }
+  // Compare only the date (ignore time) so "today" is allowed.
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+  if (exitDate > today) {
+    throw new StudentExitError(
+      "DATE_IN_FUTURE",
+      "Exit date cannot be in the future",
+    );
+  }
+
+  return prisma.$transaction(async (tx) => {
+    await tx.student.update({
+      where: { nis },
+      data: { exitedAt: exitDate, exitReason: reason, exitedBy: employeeId },
+    });
+
+    const candidates = await tx.tuition.findMany({
+      where: {
+        studentNis: nis,
+        status: { in: ["UNPAID", "PARTIAL"] },
+      },
+      select: {
+        id: true,
+        period: true,
+        year: true,
+        status: true,
+        paidAmount: true,
+        classAcademic: { select: { paymentFrequency: true } },
+      },
+    });
+
+    const toVoid: string[] = [];
+    const partialWarnings: PartialWarning[] = [];
+
+    for (const t of candidates) {
+      if (
+        !isPeriodAfterExit(
+          t.period,
+          t.year,
+          t.classAcademic.paymentFrequency,
+          exitDate,
+        )
+      ) {
+        continue;
+      }
+      if (t.status === "PARTIAL") {
+        partialWarnings.push({
+          tuitionId: t.id,
+          period: t.period,
+          year: t.year,
+          paidAmount: t.paidAmount.toString(),
+        });
+        continue;
+      }
+      toVoid.push(t.id);
+    }
+
+    if (toVoid.length > 0) {
+      await tx.tuition.updateMany({
+        where: { id: { in: toVoid } },
+        data: {
+          status: "VOID",
+          voidedByExit: true,
+          feeAmount: new Prisma.Decimal(0),
+          paidAmount: new Prisma.Decimal(0),
+        },
+      });
+    }
+
+    return { voidedCount: toVoid.length, partialWarnings };
+  });
 }
