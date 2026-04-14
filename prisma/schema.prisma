@@ -66,6 +66,11 @@ enum WhatsAppLogStatus {
   FAILED
 }
 
+enum FeeServiceCategory {
+  TRANSPORT
+  ACCOMMODATION
+}
+
 // ============================================
 // EMPLOYEE MANAGEMENT
 // ============================================
@@ -124,6 +129,9 @@ model Student {
   tuitions        Tuition[]
   studentClasses  StudentClass[]
   onlinePayments  OnlinePayment[]
+  feeSubscriptions FeeSubscription[]
+  feeBills         FeeBill[]
+  serviceFeeBills  ServiceFeeBill[]
 
   // Indexes
   @@index([exitedAt])
@@ -148,6 +156,7 @@ model AcademicYear {
 
   classAcademics ClassAcademic[]
   discounts      Discount[]
+  feeServices    FeeService[]
 
   @@map("academic_years")
 }
@@ -175,6 +184,8 @@ model ClassAcademic {
   scholarships   Scholarship[]
   studentClasses StudentClass[]
   discounts      Discount[]
+  serviceFees     ServiceFee[]
+  serviceFeeBills ServiceFeeBill[]
 
   @@unique([academicYearId, grade, section])
   @@map("class_academics")
@@ -270,7 +281,10 @@ model Scholarship {
 
 model Payment {
   id                String   @id @default(uuid())
-  tuitionId         String   @map("tuition_id")
+  tuitionId         String?  @map("tuition_id")
+  feeBillId         String?  @map("fee_bill_id")
+  serviceFeeBillId  String?  @map("service_fee_bill_id")
+  transactionId     String?  @map("transaction_id")
   employeeId        String?  @map("employee_id")
   onlinePaymentId   String?  @map("online_payment_id")
   amount            Decimal  @db.Decimal(10, 2)
@@ -280,11 +294,16 @@ model Payment {
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
-  tuition       Tuition        @relation(fields: [tuitionId], references: [id], onDelete: Cascade)
-  employee      Employee?      @relation(fields: [employeeId], references: [employeeId], onDelete: Restrict)
-  onlinePayment OnlinePayment? @relation(fields: [onlinePaymentId], references: [id], onDelete: SetNull)
+  tuition        Tuition?        @relation(fields: [tuitionId], references: [id], onDelete: Cascade)
+  feeBill        FeeBill?        @relation(fields: [feeBillId], references: [id], onDelete: Cascade)
+  serviceFeeBill ServiceFeeBill? @relation(fields: [serviceFeeBillId], references: [id], onDelete: Cascade)
+  employee       Employee?       @relation(fields: [employeeId], references: [employeeId], onDelete: Restrict)
+  onlinePayment  OnlinePayment?  @relation(fields: [onlinePaymentId], references: [id], onDelete: SetNull)
 
   @@index([tuitionId])
+  @@index([feeBillId])
+  @@index([serviceFeeBillId])
+  @@index([transactionId])
   @@index([employeeId])
   @@index([onlinePaymentId])
   @@index([paymentDate])
@@ -355,17 +374,22 @@ model OnlinePayment {
 }
 
 model OnlinePaymentItem {
-  id              String   @id @default(uuid())
-  onlinePaymentId String   @map("online_payment_id")
-  tuitionId       String   @map("tuition_id")
-  amount          Decimal  @db.Decimal(10, 2)
-  createdAt       DateTime @default(now()) @map("created_at")
+  id               String   @id @default(uuid())
+  onlinePaymentId  String   @map("online_payment_id")
+  tuitionId        String?  @map("tuition_id")
+  feeBillId        String?  @map("fee_bill_id")
+  serviceFeeBillId String?  @map("service_fee_bill_id")
+  amount           Decimal  @db.Decimal(10, 2)
+  createdAt        DateTime @default(now()) @map("created_at")
 
-  onlinePayment OnlinePayment @relation(fields: [onlinePaymentId], references: [id], onDelete: Cascade)
-  tuition       Tuition       @relation(fields: [tuitionId], references: [id], onDelete: Cascade)
+  onlinePayment  OnlinePayment   @relation(fields: [onlinePaymentId], references: [id], onDelete: Cascade)
+  tuition        Tuition?        @relation(fields: [tuitionId], references: [id], onDelete: Cascade)
+  feeBill        FeeBill?        @relation(fields: [feeBillId], references: [id], onDelete: Cascade)
+  serviceFeeBill ServiceFeeBill? @relation(fields: [serviceFeeBillId], references: [id], onDelete: Cascade)
 
-  @@unique([onlinePaymentId, tuitionId])
   @@index([tuitionId])
+  @@index([feeBillId])
+  @@index([serviceFeeBillId])
   @@map("online_payment_items")
 }
 
@@ -461,4 +485,142 @@ model WhatsAppLog {
   @@index([phone])
   @@index([messageType])
   @@map("whatsapp_logs")
+}
+
+// ============================================
+// FEE SERVICES (TRANSPORT / ACCOMMODATION)
+// ============================================
+
+model FeeService {
+  id              String             @id @default(uuid())
+  academicYearId  String             @map("academic_year_id")
+  category        FeeServiceCategory
+  name            String
+  description     String?
+  isActive        Boolean            @default(true) @map("is_active")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  academicYear  AcademicYear      @relation(fields: [academicYearId], references: [id], onDelete: Cascade)
+  prices        FeeServicePrice[]
+  subscriptions FeeSubscription[]
+  bills         FeeBill[]
+
+  @@index([academicYearId])
+  @@index([category, isActive])
+  @@map("fee_services")
+}
+
+model FeeServicePrice {
+  id            String   @id @default(uuid())
+  feeServiceId  String   @map("fee_service_id")
+  effectiveFrom DateTime @map("effective_from")
+  amount        Decimal  @db.Decimal(10, 2)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  feeService FeeService @relation(fields: [feeServiceId], references: [id], onDelete: Cascade)
+
+  @@unique([feeServiceId, effectiveFrom])
+  @@index([feeServiceId, effectiveFrom])
+  @@map("fee_service_prices")
+}
+
+model FeeSubscription {
+  id           String    @id @default(uuid())
+  feeServiceId String    @map("fee_service_id")
+  studentNis   String    @map("student_nis")
+  startDate    DateTime  @map("start_date")
+  endDate      DateTime? @map("end_date")
+  notes        String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  feeService FeeService @relation(fields: [feeServiceId], references: [id], onDelete: Cascade)
+  student    Student    @relation(fields: [studentNis], references: [nis], onDelete: Cascade)
+  bills      FeeBill[]
+
+  @@index([studentNis])
+  @@index([feeServiceId])
+  @@index([studentNis, endDate])
+  @@map("fee_subscriptions")
+}
+
+model FeeBill {
+  id             String        @id @default(uuid())
+  subscriptionId String        @map("subscription_id")
+  feeServiceId   String        @map("fee_service_id")
+  studentNis     String        @map("student_nis")
+  period         String
+  year           Int
+  amount         Decimal       @db.Decimal(10, 2)
+  paidAmount     Decimal       @default(0) @map("paid_amount") @db.Decimal(10, 2)
+  status         PaymentStatus @default(UNPAID)
+  dueDate        DateTime      @map("due_date")
+  generatedAt    DateTime      @default(now()) @map("generated_at")
+  voidedByExit   Boolean       @default(false) @map("voided_by_exit")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  subscription       FeeSubscription     @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  feeService         FeeService          @relation(fields: [feeServiceId], references: [id], onDelete: Restrict)
+  student            Student             @relation(fields: [studentNis], references: [nis], onDelete: Cascade)
+  payments           Payment[]
+  onlinePaymentItems OnlinePaymentItem[]
+
+  @@unique([subscriptionId, period, year])
+  @@index([studentNis])
+  @@index([feeServiceId])
+  @@index([status])
+  @@index([dueDate])
+  @@map("fee_bills")
+}
+
+// ============================================
+// SERVICE FEE (UANG PERLENGKAPAN)
+// ============================================
+
+model ServiceFee {
+  id              String   @id @default(uuid())
+  classAcademicId String   @map("class_academic_id")
+  name            String
+  amount          Decimal  @db.Decimal(10, 2)
+  billingMonths   Month[]  @map("billing_months")
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  classAcademic ClassAcademic    @relation(fields: [classAcademicId], references: [id], onDelete: Cascade)
+  bills         ServiceFeeBill[]
+
+  @@index([classAcademicId, isActive])
+  @@map("service_fees")
+}
+
+model ServiceFeeBill {
+  id              String        @id @default(uuid())
+  serviceFeeId    String        @map("service_fee_id")
+  studentNis      String        @map("student_nis")
+  classAcademicId String        @map("class_academic_id")
+  period          String
+  year            Int
+  amount          Decimal       @db.Decimal(10, 2)
+  paidAmount      Decimal       @default(0) @map("paid_amount") @db.Decimal(10, 2)
+  status          PaymentStatus @default(UNPAID)
+  dueDate         DateTime      @map("due_date")
+  generatedAt     DateTime      @default(now()) @map("generated_at")
+  voidedByExit    Boolean       @default(false) @map("voided_by_exit")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  serviceFee         ServiceFee          @relation(fields: [serviceFeeId], references: [id], onDelete: Cascade)
+  student            Student             @relation(fields: [studentNis], references: [nis], onDelete: Cascade)
+  classAcademic      ClassAcademic       @relation(fields: [classAcademicId], references: [id], onDelete: Restrict)
+  payments           Payment[]
+  onlinePaymentItems OnlinePaymentItem[]
+
+  @@unique([serviceFeeId, studentNis, period, year])
+  @@index([studentNis])
+  @@index([classAcademicId])
+  @@index([status])
+  @@map("service_fee_bills")
 }
