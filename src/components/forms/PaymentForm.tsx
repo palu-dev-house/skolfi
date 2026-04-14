@@ -117,13 +117,12 @@ export default function PaymentForm() {
 
     createPayment.mutate(
       {
-        tuitionId,
-        amount: Number(amount),
+        studentNis: studentNis as string,
         notes: notes || undefined,
+        items: [{ tuitionId, amount: String(amount) }],
       },
       {
-        onSuccess: (data) => {
-          setResult(data);
+        onSuccess: () => {
           notifications.show({
             title: t("payment.paymentSuccessful"),
             message: t("payment.paymentSuccessMessage", {

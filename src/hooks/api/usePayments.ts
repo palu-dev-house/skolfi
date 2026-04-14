@@ -1,14 +1,17 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { Month, PaymentStatus } from "@/generated/prisma/client";
+import type { Month } from "@/generated/prisma/client";
 import { apiClient } from "@/lib/api-client";
 import { type PaymentFilters, queryKeys } from "@/lib/query-keys";
 
 interface Payment {
   id: string;
-  tuitionId: string;
-  employeeId: string;
+  tuitionId: string | null;
+  feeBillId: string | null;
+  serviceFeeBillId: string | null;
+  transactionId: string | null;
+  employeeId: string | null;
   amount: string;
   scholarshipAmount: string;
   paymentDate: string;
@@ -44,11 +47,27 @@ interface Payment {
       reason: string;
       description: string | null;
     };
-  };
+  } | null;
+  feeBill?: {
+    id: string;
+    period: string;
+    year: number;
+    feeService?: {
+      id: string;
+      name: string;
+      category: "TRANSPORT" | "ACCOMMODATION";
+    };
+  } | null;
+  serviceFeeBill?: {
+    id: string;
+    period: string;
+    year: number;
+    serviceFee?: { id: string; name: string };
+  } | null;
   employee?: {
     employeeId: string;
     name: string;
-  };
+  } | null;
 }
 
 interface PaymentListResponse {
@@ -60,24 +79,6 @@ interface PaymentListResponse {
       limit: number;
       total: number;
       totalPages: number;
-    };
-  };
-}
-
-interface PaymentResponse {
-  success: boolean;
-  data: {
-    payment: Payment;
-    result: {
-      previousStatus: PaymentStatus;
-      newStatus: PaymentStatus;
-      previousPaidAmount: number;
-      newPaidAmount: number;
-      remainingAmount: number;
-      feeAmount: number;
-      scholarshipAmount: number;
-      discountAmount: number;
-      effectiveFeeAmount: number;
     };
   };
 }
@@ -110,27 +111,46 @@ export function usePayment(id: string) {
   });
 }
 
+interface PaymentItemPayload {
+  tuitionId?: string;
+  feeBillId?: string;
+  serviceFeeBillId?: string;
+  amount: string;
+  scholarshipAmount?: string;
+}
+
+interface CreatePaymentPayload {
+  studentNis: string;
+  paymentDate?: string;
+  notes?: string;
+  items: PaymentItemPayload[];
+}
+
+interface CreatePaymentResponse {
+  success: boolean;
+  data: {
+    transactionId: string;
+    payments: Payment[];
+  };
+}
+
 export function useCreatePayment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payment: {
-      tuitionId: string;
-      amount: number;
-      notes?: string;
-    }) => {
-      const { data } = await apiClient.post<PaymentResponse>(
+    mutationFn: async (payload: CreatePaymentPayload) => {
+      const { data } = await apiClient.post<CreatePaymentResponse>(
         "/payments",
-        payment,
+        payload,
       );
       return data.data;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.payments.lists() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tuitions.lists() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.feeBills.lists() });
       queryClient.invalidateQueries({
-        queryKey: queryKeys.payments.lists(),
-      });
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.tuitions.lists(),
+        queryKey: queryKeys.serviceFeeBills.lists(),
       });
     },
   });
