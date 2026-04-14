@@ -1,5 +1,35 @@
 # Changelog
 
+## [2.9.0] - 2026-04-14
+
+### Features
+- feat(db): add student exit tracking fields
+- feat(exit): add period-start helpers for student exit logic
+- feat(exit): add zod schema for student exit input
+- feat(exit): implement recordStudentExit business logic
+- feat(exit): implement undoStudentExit business logic
+- feat(exit): skip post-exit periods during tuition generation
+- feat(exit): add POST/DELETE student exit API endpoints
+- feat(exit): support status filter on GET /students
+- feat(exit): add student exit hooks and types
+- feat(exit): add i18n strings for student exit feature
+- add usePageTitle hook for browser tab title
+- feat(exit): add StudentExitSection UI component
+- feat(exit): wire StudentExitSection into student detail page
+- feat(exit): add status filter and exited badge on student list
+- feat(exit): show banner to exited students in portal
+- sync browser tab title with PageHeader and portal pages
+
+### Fixes
+- fix(exit): move guards inside transaction to avoid TOCTOU race
+- fix(layout): move user menu from header to sidebar for mobile
+
+### Other
+- docs: add design spec for student exit tracking
+- docs: add implementation plan for student exit tracking
+
+
+
 ## [2.8.1] - 2026-04-13
 
 ### Fixes
