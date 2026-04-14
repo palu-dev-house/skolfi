@@ -30,6 +30,7 @@ import type { ReactElement } from "react";
 import AdminLayout from "@/components/layouts/AdminLayout";
 import { useDashboardStats } from "@/hooks/api/useDashboard";
 import { useAuth } from "@/hooks/useAuth";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import type { NextPageWithLayout } from "@/lib/page-types";
 
 function StatCard({
@@ -77,6 +78,8 @@ const DashboardPage: NextPageWithLayout = function DashboardPage() {
   const t = useTranslations();
   const { user } = useAuth();
   const { data: stats, isLoading } = useDashboardStats();
+
+  usePageTitle(t("admin.dashboard"));
 
   const collectionRate =
     stats && stats.tuitionStats.total > 0

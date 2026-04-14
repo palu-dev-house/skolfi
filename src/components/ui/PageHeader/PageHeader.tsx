@@ -1,6 +1,7 @@
 "use client";
 
 import { Group, Stack, Text, Title } from "@mantine/core";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 interface PageHeaderProps {
   title: string;
@@ -13,6 +14,8 @@ export default function PageHeader({
   description,
   actions,
 }: PageHeaderProps) {
+  usePageTitle(title);
+
   return (
     <Group justify="space-between" mb="lg">
       <Stack gap={4}>

@@ -30,6 +30,7 @@ import PortalLayout from "@/components/layouts/PortalLayout";
 import { EmptyAnimation } from "@/components/ui/LottieAnimation";
 import { DashboardSkeleton } from "@/components/ui/PortalSkeleton";
 import { useStudentTuitions } from "@/hooks/api/useStudentTuitions";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import type { NextPageWithLayout } from "@/lib/page-types";
 
 type TuitionsData = NonNullable<ReturnType<typeof useStudentTuitions>["data"]>;
@@ -66,6 +67,8 @@ const StudentDashboardPage: NextPageWithLayout =
   function StudentDashboardPage() {
     const t = useTranslations();
     const { data: tuitions = [], isLoading, error } = useStudentTuitions();
+
+    usePageTitle(t("nav.home"));
 
     const groupedTuitions = groupByAcademicYearAndClass(tuitions);
 

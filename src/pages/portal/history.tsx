@@ -28,11 +28,14 @@ import { EmptyAnimation } from "@/components/ui/LottieAnimation";
 import { PaymentSkeleton } from "@/components/ui/PortalSkeleton";
 import type { StudentTuition } from "@/hooks/api/useStudentTuitions";
 import { useStudentTuitions } from "@/hooks/api/useStudentTuitions";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import type { NextPageWithLayout } from "@/lib/page-types";
 
 const TransactionHistoryPage: NextPageWithLayout =
   function TransactionHistoryPage() {
     const t = useTranslations();
+
+    usePageTitle(t("nav.history"));
     const { data: tuitions, isLoading } = useStudentTuitions();
     const [statusFilter, setStatusFilter] = useState("ALL");
     const [yearFilter, setYearFilter] = useState<string | null>(null);

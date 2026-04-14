@@ -13,10 +13,13 @@ import { useTranslations } from "next-intl";
 import type { ReactElement } from "react";
 import { useState } from "react";
 import PortalLayout from "@/components/layouts/PortalLayout";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import type { NextPageWithLayout } from "@/lib/page-types";
 
 const ChangePasswordPage: NextPageWithLayout = function ChangePasswordPage() {
   const t = useTranslations();
+
+  usePageTitle(t("nav.changePassword"));
   const searchParams = new URLSearchParams(
     useRouter().asPath.split("?")[1] || "",
   );

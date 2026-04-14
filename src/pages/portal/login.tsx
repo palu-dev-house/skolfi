@@ -16,10 +16,13 @@ import { useTranslations } from "next-intl";
 import type { ReactElement } from "react";
 import { useState } from "react";
 import PortalLayout from "@/components/layouts/PortalLayout";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import type { NextPageWithLayout } from "@/lib/page-types";
 
 const StudentLoginPage: NextPageWithLayout = function StudentLoginPage() {
   const t = useTranslations();
+
+  usePageTitle(t("auth.login"));
   const [nis, setNis] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);

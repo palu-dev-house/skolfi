@@ -14,6 +14,7 @@ import { useTranslations } from "next-intl";
 import type { ReactElement } from "react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import type { NextPageWithLayout } from "@/lib/page-types";
 
 const LoginPage: NextPageWithLayout = function LoginPage() {
@@ -23,6 +24,8 @@ const LoginPage: NextPageWithLayout = function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
+
+  usePageTitle(t("auth.login"));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -40,6 +40,7 @@ import {
 } from "@/hooks/api/useOnlinePayments";
 import type { StudentTuition } from "@/hooks/api/useStudentTuitions";
 import { useStudentTuitions } from "@/hooks/api/useStudentTuitions";
+import { usePageTitle } from "@/hooks/usePageTitle";
 import type { NextPageWithLayout } from "@/lib/page-types";
 
 declare global {
@@ -75,6 +76,8 @@ function getStatusColor(status: string) {
 
 const PaymentPage: NextPageWithLayout = function PaymentPage() {
   const t = useTranslations();
+
+  usePageTitle(t("nav.payment"));
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [snapReady, setSnapReady] = useState(false);
   const snapLoadedRef = useRef(false);
