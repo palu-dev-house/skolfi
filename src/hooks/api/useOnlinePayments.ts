@@ -7,7 +7,7 @@ import { studentApiClient } from "@/lib/student-api-client";
 export interface OnlinePaymentItem {
   id: string;
   amount: string;
-  tuition: {
+  tuition?: {
     id: string;
     period: string;
     year: number;
@@ -18,7 +18,36 @@ export interface OnlinePaymentItem {
       className: string;
       academicYear: { year: string };
     };
-  };
+  } | null;
+  feeBill?: {
+    id: string;
+    period: string;
+    year: number;
+    amount: string;
+    paidAmount: string;
+    status: string;
+    feeService: { id: string; name: string; category: string };
+  } | null;
+  serviceFeeBill?: {
+    id: string;
+    period: string;
+    year: number;
+    amount: string;
+    paidAmount: string;
+    status: string;
+    serviceFee: { id: string; name: string };
+    classAcademic: { className: string };
+  } | null;
+}
+
+export interface OnlinePaymentItemInput {
+  tuitionId?: string;
+  feeBillId?: string;
+  serviceFeeBillId?: string;
+}
+
+export interface CreateOnlinePaymentInput {
+  items: OnlinePaymentItemInput[];
 }
 
 export interface OnlinePayment {
@@ -118,7 +147,7 @@ export function useCreateOnlinePayment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (input: { tuitionIds: string[] }) => {
+    mutationFn: async (input: CreateOnlinePaymentInput) => {
       const { data } = await studentApiClient.post<CreateOnlinePaymentResponse>(
         "/student/online-payments",
         input,
@@ -128,6 +157,9 @@ export function useCreateOnlinePayment() {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.studentTuitions.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.studentOutstanding.all,
       });
       queryClient.invalidateQueries({
         queryKey: queryKeys.studentOnlinePayments.all,
@@ -146,6 +178,9 @@ export function useCancelOnlinePayment() {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.studentTuitions.all,
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.studentOutstanding.all,
       });
       queryClient.invalidateQueries({
         queryKey: queryKeys.studentOnlinePayments.all,

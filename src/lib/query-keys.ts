@@ -310,6 +310,11 @@ export const queryKeys = {
     list: () => [...queryKeys.studentTuitions.all, "list"] as const,
   },
 
+  studentOutstanding: {
+    all: ["student-outstanding"] as const,
+    list: () => [...queryKeys.studentOutstanding.all, "list"] as const,
+  },
+
   studentOnlinePayments: {
     all: ["student-online-payments"] as const,
     lists: () => [...queryKeys.studentOnlinePayments.all, "list"] as const,

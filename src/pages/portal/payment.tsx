@@ -19,10 +19,13 @@ import {
 import { modals } from "@mantine/modals";
 import {
   IconAlertCircle,
+  IconBus,
   IconCreditCard,
   IconHistory,
   IconLoader,
+  IconPackage,
   IconReceipt,
+  IconSchool,
   IconX,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
@@ -38,8 +41,10 @@ import {
   usePaymentConfig,
   useStudentOnlinePayments,
 } from "@/hooks/api/useOnlinePayments";
-import type { StudentTuition } from "@/hooks/api/useStudentTuitions";
-import { useStudentTuitions } from "@/hooks/api/useStudentTuitions";
+import {
+  type OutstandingBill,
+  usePortalOutstanding,
+} from "@/hooks/api/usePortalOutstanding";
 import { usePageTitle } from "@/hooks/usePageTitle";
 import type { NextPageWithLayout } from "@/lib/page-types";
 
@@ -74,78 +79,104 @@ function getStatusColor(status: string) {
   }
 }
 
+function billKey(bill: OutstandingBill): string {
+  return `${bill.kind}:${bill.id}`;
+}
+
+function getBillBadge(
+  bill: OutstandingBill,
+  t: ReturnType<typeof useTranslations>,
+) {
+  if (bill.kind === "tuition") {
+    return { label: t("tuition.title"), color: "blue", Icon: IconSchool };
+  }
+  if (bill.kind === "feeBill") {
+    const isAccommodation = bill.category === "ACCOMMODATION";
+    return {
+      label: isAccommodation
+        ? t("feeService.category.accommodation")
+        : t("feeService.category.transport"),
+      color: isAccommodation ? "grape" : "teal",
+      Icon: IconBus,
+    };
+  }
+  return { label: t("serviceFee.title"), color: "orange", Icon: IconPackage };
+}
+
 const PaymentPage: NextPageWithLayout = function PaymentPage() {
   const t = useTranslations();
 
   usePageTitle(t("nav.payment"));
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set());
   const [snapReady, setSnapReady] = useState(false);
   const snapLoadedRef = useRef(false);
 
   const { data: config, isLoading: configLoading } = usePaymentConfig();
-  const { data: tuitions = [], isLoading: tuitionsLoading } =
-    useStudentTuitions();
+  const { data: outstanding, isLoading: outstandingLoading } =
+    usePortalOutstanding();
   const { data: onlinePayments = [], isLoading: paymentsLoading } =
     useStudentOnlinePayments();
 
   const createPayment = useCreateOnlinePayment();
   const cancelPayment = useCancelOnlinePayment();
 
-  // Find active pending payment
   const pendingPayment = useMemo(
     () => onlinePayments.find((p) => p.status === "PENDING"),
     [onlinePayments],
   );
 
-  // Unpaid tuitions available for payment
-  const payableTuitions = useMemo(
-    () =>
-      tuitions.filter(
-        (t) =>
-          t.status !== "PAID" && t.status !== "VOID" && t.remainingAmount > 0,
-      ),
-    [tuitions],
-  );
+  const allBills = useMemo<OutstandingBill[]>(() => {
+    if (!outstanding) return [];
+    return [
+      ...outstanding.tuitions,
+      ...outstanding.feeBills,
+      ...outstanding.serviceFeeBills,
+    ].filter((b) => b.remainingAmount > 0);
+  }, [outstanding]);
 
   const selectedTotal = useMemo(
     () =>
-      payableTuitions
-        .filter((t) => selectedIds.has(t.id))
-        .reduce((sum, t) => sum + t.remainingAmount, 0),
-    [payableTuitions, selectedIds],
+      allBills
+        .filter((b) => selectedKeys.has(billKey(b)))
+        .reduce((sum, b) => sum + b.remainingAmount, 0),
+    [allBills, selectedKeys],
   );
 
-  const toggleSelection = (id: string) => {
-    setSelectedIds((prev) => {
+  const toggleSelection = (key: string) => {
+    setSelectedKeys((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   };
 
   const selectAll = () => {
-    if (selectedIds.size === payableTuitions.length) {
-      setSelectedIds(new Set());
+    if (selectedKeys.size === allBills.length) {
+      setSelectedKeys(new Set());
     } else {
-      setSelectedIds(new Set(payableTuitions.map((t) => t.id)));
+      setSelectedKeys(new Set(allBills.map(billKey)));
     }
   };
 
   const handleSnapCallback = useCallback(() => {
-    // Refetch after any Snap interaction
     createPayment.reset();
   }, [createPayment]);
 
   const handleCreatePayment = async () => {
-    if (selectedIds.size === 0) return;
+    if (selectedKeys.size === 0) return;
 
-    try {
-      const result = await createPayment.mutateAsync({
-        tuitionIds: Array.from(selectedIds),
+    const items = allBills
+      .filter((b) => selectedKeys.has(billKey(b)))
+      .map((b) => {
+        if (b.kind === "tuition") return { tuitionId: b.id };
+        if (b.kind === "feeBill") return { feeBillId: b.id };
+        return { serviceFeeBillId: b.id };
       });
 
-      // Open Snap popup
+    try {
+      const result = await createPayment.mutateAsync({ items });
+
       if (window.snap && result.snapToken) {
         window.snap.pay(result.snapToken, {
           onSuccess: handleSnapCallback,
@@ -155,7 +186,7 @@ const PaymentPage: NextPageWithLayout = function PaymentPage() {
         });
       }
     } catch {
-      // Error shown via mutation state
+      // surfaced via mutation state
     }
   };
 
@@ -183,14 +214,13 @@ const PaymentPage: NextPageWithLayout = function PaymentPage() {
     }
   };
 
-  // Load snap.js
   useEffect(() => {
     if (config?.snapJsUrl && !snapLoadedRef.current) {
       snapLoadedRef.current = true;
     }
   }, [config?.snapJsUrl]);
 
-  const isLoading = configLoading || tuitionsLoading || paymentsLoading;
+  const isLoading = configLoading || outstandingLoading || paymentsLoading;
 
   if (isLoading) {
     return (
@@ -200,7 +230,6 @@ const PaymentPage: NextPageWithLayout = function PaymentPage() {
     );
   }
 
-  // Maintenance mode
   if (config && !config.enabled) {
     return (
       <Stack gap="lg">
@@ -217,8 +246,8 @@ const PaymentPage: NextPageWithLayout = function PaymentPage() {
   }
 
   const allSelected =
-    payableTuitions.length > 0 && selectedIds.size === payableTuitions.length;
-  const someSelected = selectedIds.size > 0 && !allSelected;
+    allBills.length > 0 && selectedKeys.size === allBills.length;
+  const someSelected = selectedKeys.size > 0 && !allSelected;
 
   const completedPayments = onlinePayments.filter(
     (p) => p.status !== "PENDING",
@@ -253,7 +282,6 @@ const PaymentPage: NextPageWithLayout = function PaymentPage() {
 
         <Tabs.Panel value="payment" pt="md">
           <Stack gap="md">
-            {/* Active Pending Payment */}
             {pendingPayment && (
               <Card
                 withBorder
@@ -320,22 +348,39 @@ const PaymentPage: NextPageWithLayout = function PaymentPage() {
                   <Text size="xs" c="dimmed" fw={600}>
                     {t("onlinePayment.items")}:
                   </Text>
-                  {pendingPayment.items.map((item) => (
-                    <Group key={item.id} justify="space-between" wrap="nowrap">
-                      <Text size="sm" truncate style={{ minWidth: 0, flex: 1 }}>
-                        {item.tuition.classAcademic.className} -{" "}
-                        {item.tuition.period} {item.tuition.year}
-                      </Text>
-                      <Text size="sm" fw={500} style={{ flexShrink: 0 }}>
-                        <NumberFormatter
-                          value={Number(item.amount)}
-                          prefix="Rp "
-                          thousandSeparator="."
-                          decimalSeparator=","
-                        />
-                      </Text>
-                    </Group>
-                  ))}
+                  {pendingPayment.items.map((item) => {
+                    let label: string = t("onlinePayment.item");
+                    if (item.tuition) {
+                      label = `${item.tuition.classAcademic.className} - ${item.tuition.period} ${item.tuition.year}`;
+                    } else if (item.feeBill) {
+                      label = `${item.feeBill.feeService?.name ?? t("feeBill.title")} - ${item.feeBill.period} ${item.feeBill.year}`;
+                    } else if (item.serviceFeeBill) {
+                      label = `${item.serviceFeeBill.serviceFee?.name ?? t("serviceFee.title")} - ${item.serviceFeeBill.period} ${item.serviceFeeBill.year}`;
+                    }
+                    return (
+                      <Group
+                        key={item.id}
+                        justify="space-between"
+                        wrap="nowrap"
+                      >
+                        <Text
+                          size="sm"
+                          truncate
+                          style={{ minWidth: 0, flex: 1 }}
+                        >
+                          {label}
+                        </Text>
+                        <Text size="sm" fw={500} style={{ flexShrink: 0 }}>
+                          <NumberFormatter
+                            value={Number(item.amount)}
+                            prefix="Rp "
+                            thousandSeparator="."
+                            decimalSeparator=","
+                          />
+                        </Text>
+                      </Group>
+                    );
+                  })}
 
                   <Group wrap="wrap">
                     <Button
@@ -361,10 +406,9 @@ const PaymentPage: NextPageWithLayout = function PaymentPage() {
               </Card>
             )}
 
-            {/* Tuition Selection (only if no pending payment) */}
             {!pendingPayment && (
               <>
-                {payableTuitions.length === 0 ? (
+                {allBills.length === 0 ? (
                   <Card withBorder>
                     <EmptyAnimation message={t("onlinePayment.allPaid")} />
                   </Card>
@@ -373,9 +417,7 @@ const PaymentPage: NextPageWithLayout = function PaymentPage() {
                     <Card withBorder p="md">
                       <Stack gap="md">
                         <Group justify="space-between">
-                          <Text fw={600}>
-                            {t("onlinePayment.selectTuitions")}
-                          </Text>
+                          <Text fw={600}>{t("onlinePayment.selectBills")}</Text>
                           <Checkbox
                             label={t("common.selectAll")}
                             checked={allSelected}
@@ -385,25 +427,24 @@ const PaymentPage: NextPageWithLayout = function PaymentPage() {
                           />
                         </Group>
 
-                        {payableTuitions.map((tuition) => (
-                          <TuitionCheckItem
-                            key={tuition.id}
-                            tuition={tuition}
-                            checked={selectedIds.has(tuition.id)}
-                            onChange={() => toggleSelection(tuition.id)}
+                        {allBills.map((bill) => (
+                          <BillCheckItem
+                            key={billKey(bill)}
+                            bill={bill}
+                            checked={selectedKeys.has(billKey(bill))}
+                            onChange={() => toggleSelection(billKey(bill))}
                           />
                         ))}
                       </Stack>
                     </Card>
 
-                    {/* Summary & Pay - fixed on mobile, sticky on desktop */}
-                    {selectedIds.size > 0 && (
+                    {selectedKeys.size > 0 && (
                       <Card withBorder p="md" bg="white" className="pay-footer">
                         <Group justify="space-between">
                           <Box>
                             <Text size="sm" c="dimmed">
                               {t("onlinePayment.totalSelected", {
-                                count: selectedIds.size,
+                                count: selectedKeys.size,
                               })}
                             </Text>
                             <Text size="lg" fw={700} c="blue">
@@ -501,16 +542,18 @@ const PaymentPage: NextPageWithLayout = function PaymentPage() {
   );
 };
 
-function TuitionCheckItem({
-  tuition,
+function BillCheckItem({
+  bill,
   checked,
   onChange,
 }: {
-  tuition: StudentTuition;
+  bill: OutstandingBill;
   checked: boolean;
   onChange: () => void;
 }) {
   const t = useTranslations();
+  const badge = getBillBadge(bill, t);
+  const BadgeIcon = badge.Icon;
 
   return (
     <Paper withBorder p="sm" onClick={onChange} style={{ cursor: "pointer" }}>
@@ -518,25 +561,23 @@ function TuitionCheckItem({
         <Checkbox checked={checked} onChange={onChange} readOnly />
         <Box style={{ flex: 1, minWidth: 0 }}>
           <Group justify="space-between" wrap="nowrap">
-            <Text size="sm" fw={500} truncate>
-              {tuition.className} - {tuition.period} {tuition.year}
-            </Text>
-            <Badge
-              color={tuition.status === "PARTIAL" ? "yellow" : "red"}
-              variant="light"
-              size="sm"
-            >
-              {tuition.status}
+            <Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
+              <BadgeIcon size={14} />
+              <Text size="sm" fw={500} truncate>
+                {bill.label} — {bill.period} {bill.year}
+              </Text>
+            </Group>
+            <Badge color={badge.color} variant="light" size="sm">
+              {badge.label}
             </Badge>
           </Group>
           <Group justify="space-between" mt={4}>
             <Text size="xs" c="dimmed">
-              {t("tuition.dueDate")}:{" "}
-              {dayjs(tuition.dueDate).format("DD/MM/YYYY")}
+              {t("tuition.dueDate")}: {dayjs(bill.dueDate).format("DD/MM/YYYY")}
             </Text>
             <Text size="sm" fw={600} c="red">
               <NumberFormatter
-                value={tuition.remainingAmount}
+                value={bill.remainingAmount}
                 prefix="Rp "
                 thousandSeparator="."
                 decimalSeparator=","
@@ -548,6 +589,7 @@ function TuitionCheckItem({
     </Paper>
   );
 }
+
 PaymentPage.getLayout = (page: ReactElement) => (
   <PortalLayout>{page}</PortalLayout>
 );
