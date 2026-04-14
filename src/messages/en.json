@@ -393,6 +393,11 @@
       "reverseTitle": "Bulk Reverse Payments",
       "reverseConfirm": "Are you sure you want to reverse {count} payments? This will update tuition statuses accordingly.",
       "reverseSuccess": "Reversed {reversed} payments"
+    },
+    "type": "Type",
+    "itemType": {
+      "FEE": "Fee",
+      "SERVICE_FEE": "Service Fee"
     }
   },
   "nav": {
@@ -625,7 +630,9 @@
       "filterAll": "All",
       "rowBadgeExited": "Exited",
       "portalBanner": "This account is in exited status as of {date}. Only outstanding tuitions are visible."
-    }
+    },
+    "subscriptions": "Subscriptions",
+    "feeBills": "Fee Bills"
   },
   "academicYear": {
     "title": "Academic Years",
@@ -1265,5 +1272,33 @@
     "printSelected": "Print Selected",
     "selectAll": "Select All",
     "clearSelection": "Clear"
+  },
+  "feeService": {
+    "label": "Fee Service",
+    "name": "Service Name",
+    "category": {
+      "label": "Category",
+      "transport": "Transport",
+      "accommodation": "Accommodation"
+    },
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "active": "Active",
+    "subscribeStudent": "Subscribe Student",
+    "subscribed": "Student subscribed successfully",
+    "noSubscribers": "No active subscriptions",
+    "endSubscription": "End Subscription",
+    "endSubscriptionTitle": "End Subscription",
+    "endSubscriptionConfirm": "Are you sure you want to end this subscription?"
+  },
+  "feeBill": {
+    "label": "Fee Bill",
+    "period": "Period",
+    "amount": "Amount",
+    "paid": "Paid",
+    "noBills": "No fee bills found"
+  },
+  "serviceFee": {
+    "label": "Service Fee"
   }
 }

@@ -393,6 +393,11 @@
       "reverseTitle": "Batalkan Pembayaran Massal",
       "reverseConfirm": "Apakah Anda yakin ingin membatalkan {count} pembayaran? Ini akan memperbarui status tagihan.",
       "reverseSuccess": "Berhasil membatalkan {reversed} pembayaran"
+    },
+    "type": "Jenis",
+    "itemType": {
+      "FEE": "Biaya",
+      "SERVICE_FEE": "Biaya Layanan"
     }
   },
   "nav": {
@@ -625,7 +630,9 @@
       "filterAll": "Semua",
       "rowBadgeExited": "Keluar",
       "portalBanner": "Akun ini berstatus keluar per {date}. Hanya tagihan tertunggak yang dapat dilihat."
-    }
+    },
+    "subscriptions": "Langganan",
+    "feeBills": "Tagihan Biaya"
   },
   "academicYear": {
     "title": "Tahun Ajaran",
@@ -1265,5 +1272,33 @@
     "printSelected": "Cetak Terpilih",
     "selectAll": "Pilih Semua",
     "clearSelection": "Kosongkan"
+  },
+  "feeService": {
+    "label": "Layanan Biaya",
+    "name": "Nama Layanan",
+    "category": {
+      "label": "Kategori",
+      "transport": "Transportasi",
+      "accommodation": "Akomodasi"
+    },
+    "startDate": "Tanggal Mulai",
+    "endDate": "Tanggal Berakhir",
+    "active": "Aktif",
+    "subscribeStudent": "Daftarkan Siswa",
+    "subscribed": "Siswa berhasil didaftarkan",
+    "noSubscribers": "Tidak ada langganan aktif",
+    "endSubscription": "Akhiri Langganan",
+    "endSubscriptionTitle": "Akhiri Langganan",
+    "endSubscriptionConfirm": "Apakah Anda yakin ingin mengakhiri langganan ini?"
+  },
+  "feeBill": {
+    "label": "Tagihan Biaya",
+    "period": "Periode",
+    "amount": "Jumlah",
+    "paid": "Dibayar",
+    "noBills": "Tidak ada tagihan biaya"
+  },
+  "serviceFee": {
+    "label": "Biaya Layanan"
   }
 }
