@@ -65,15 +65,10 @@ interface GenerateFeeBillsResponse {
 interface GenerateAllFeeBillsResponse {
   success: boolean;
   data: {
-    totalGenerated: number;
-    totalSkipped: number;
-    results: Array<{
-      feeServiceId: string;
-      feeServiceName: string;
-      generated: number;
-      skipped: number;
-      error?: string;
-    }>;
+    created: number;
+    skipped: number;
+    exitSkipped: number;
+    priceWarnings: string[];
   };
 }
 
@@ -140,9 +135,9 @@ export function useGenerateFeeBills() {
 export function useGenerateAllFeeBills() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { period: string; year: number }) => {
+    mutationFn: async (input: { academicYearId?: string }) => {
       const { data } = await apiClient.post<GenerateAllFeeBillsResponse>(
-        "/fee-bills/generate",
+        "/fee-bills/generate-all",
         input,
       );
       return data.data;
