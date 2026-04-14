@@ -2,10 +2,12 @@
 
 import {
   ActionIcon,
+  Badge,
   Button,
   Checkbox,
   Group,
   Paper,
+  Select,
   Skeleton,
   Stack,
   Table,
@@ -45,6 +47,9 @@ export default function StudentTable() {
   const { setParams, getParam, getNumParam } = useQueryParams();
   const page = getNumParam("page", 1)!;
   const search = getParam("search", "") ?? "";
+  const statusRaw = getParam("status", "active") ?? "active";
+  const status: "active" | "exited" | "all" =
+    statusRaw === "exited" || statusRaw === "all" ? statusRaw : "active";
 
   const [selectedNis, setSelectedNis] = useState<Set<string>>(new Set());
 
@@ -63,6 +68,7 @@ export default function StudentTable() {
     page,
     limit: 10,
     search: search || undefined,
+    status,
   });
 
   const deleteStudent = useDeleteStudent();
@@ -213,6 +219,18 @@ export default function StudentTable() {
           }}
           style={{ flex: 1 }}
         />
+        <Select
+          aria-label={t("student.exit.filterStatusLabel")}
+          value={status}
+          onChange={(v) => setParams({ status: v ?? "active", page: 1 })}
+          data={[
+            { value: "active", label: t("student.exit.filterActive") },
+            { value: "exited", label: t("student.exit.filterExited") },
+            { value: "all", label: t("student.exit.filterAll") },
+          ]}
+          allowDeselect={false}
+          w={160}
+        />
         <ActionIcon
           variant="default"
           size="lg"
@@ -330,73 +348,110 @@ export default function StudentTable() {
                   </Table.Td>
                 </Table.Tr>
               )}
-              {data?.students.map((student) => (
-                <Table.Tr
-                  key={student.nis}
-                  bg={
-                    selectedNis.has(student.nis)
-                      ? "var(--mantine-color-blue-light)"
-                      : undefined
-                  }
-                >
-                  <Table.Td>
-                    <Checkbox
-                      checked={selectedNis.has(student.nis)}
-                      onChange={() => toggleOne(student.nis)}
-                      size="xs"
-                    />
-                  </Table.Td>
-                  {orderedKeys.map((key) => {
-                    switch (key) {
-                      case "nis":
-                        return <Table.Td key={key}>{student.nis}</Table.Td>;
-                      case "name":
-                        return <Table.Td key={key}>{student.name}</Table.Td>;
-                      case "parent":
-                        return (
-                          <Table.Td key={key}>{student.parentName}</Table.Td>
-                        );
-                      case "phone":
-                        return (
-                          <Table.Td key={key}>{student.parentPhone}</Table.Td>
-                        );
-                      case "joinDate":
-                        return (
-                          <Table.Td key={key}>
-                            {dayjs(student.startJoinDate).format("DD/MM/YYYY")}
-                          </Table.Td>
-                        );
-                      case "actions":
-                        return (
-                          <Table.Td key={key}>
-                            <Group gap="xs">
-                              <ActionIcon
-                                variant="subtle"
-                                color="blue"
-                                onClick={() =>
-                                  router.push(`/admin/students/${student.nis}`)
-                                }
-                              >
-                                <IconEdit size={18} />
-                              </ActionIcon>
-                              <ActionIcon
-                                variant="subtle"
-                                color="red"
-                                onClick={() =>
-                                  handleDelete(student.nis, student.name)
-                                }
-                              >
-                                <IconTrash size={18} />
-                              </ActionIcon>
-                            </Group>
-                          </Table.Td>
-                        );
-                      default:
-                        return null;
+              {data?.students.map((student) => {
+                const isExited = !!student.exitedAt;
+                const cellColor = isExited ? "dimmed" : undefined;
+                return (
+                  <Table.Tr
+                    key={student.nis}
+                    bg={
+                      selectedNis.has(student.nis)
+                        ? "var(--mantine-color-blue-light)"
+                        : undefined
                     }
-                  })}
-                </Table.Tr>
-              ))}
+                  >
+                    <Table.Td>
+                      <Checkbox
+                        checked={selectedNis.has(student.nis)}
+                        onChange={() => toggleOne(student.nis)}
+                        size="xs"
+                      />
+                    </Table.Td>
+                    {orderedKeys.map((key) => {
+                      switch (key) {
+                        case "nis":
+                          return (
+                            <Table.Td key={key}>
+                              <Text c={cellColor} size="sm">
+                                {student.nis}
+                              </Text>
+                            </Table.Td>
+                          );
+                        case "name":
+                          return (
+                            <Table.Td key={key}>
+                              <Group gap="xs" wrap="nowrap">
+                                <Text c={cellColor} size="sm">
+                                  {student.name}
+                                </Text>
+                                {isExited && (
+                                  <Badge color="gray" variant="light" size="sm">
+                                    {t("student.exit.rowBadgeExited")}
+                                  </Badge>
+                                )}
+                              </Group>
+                            </Table.Td>
+                          );
+                        case "parent":
+                          return (
+                            <Table.Td key={key}>
+                              <Text c={cellColor} size="sm">
+                                {student.parentName}
+                              </Text>
+                            </Table.Td>
+                          );
+                        case "phone":
+                          return (
+                            <Table.Td key={key}>
+                              <Text c={cellColor} size="sm">
+                                {student.parentPhone}
+                              </Text>
+                            </Table.Td>
+                          );
+                        case "joinDate":
+                          return (
+                            <Table.Td key={key}>
+                              <Text c={cellColor} size="sm">
+                                {dayjs(student.startJoinDate).format(
+                                  "DD/MM/YYYY",
+                                )}
+                              </Text>
+                            </Table.Td>
+                          );
+                        case "actions":
+                          return (
+                            <Table.Td key={key}>
+                              <Group gap="xs">
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="blue"
+                                  onClick={() =>
+                                    router.push(
+                                      `/admin/students/${student.nis}`,
+                                    )
+                                  }
+                                >
+                                  <IconEdit size={18} />
+                                </ActionIcon>
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="red"
+                                  onClick={() =>
+                                    handleDelete(student.nis, student.name)
+                                  }
+                                >
+                                  <IconTrash size={18} />
+                                </ActionIcon>
+                              </Group>
+                            </Table.Td>
+                          );
+                        default:
+                          return null;
+                      }
+                    })}
+                  </Table.Tr>
+                );
+              })}
             </Table.Tbody>
           </Table>
         </Table.ScrollContainer>
