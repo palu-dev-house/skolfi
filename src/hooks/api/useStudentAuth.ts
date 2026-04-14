@@ -11,6 +11,8 @@ interface StudentUser {
   parentPhone: string;
   mustChangePassword: boolean;
   lastLoginAt: string | null;
+  exitedAt: string | null;
+  exitReason: string | null;
 }
 
 interface LoginResponse {

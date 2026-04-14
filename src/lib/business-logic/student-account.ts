@@ -282,6 +282,8 @@ export async function getStudentProfile(studentNis: string) {
       parentPhone: true,
       mustChangePassword: true,
       lastLoginAt: true,
+      exitedAt: true,
+      exitReason: true,
     },
   });
 

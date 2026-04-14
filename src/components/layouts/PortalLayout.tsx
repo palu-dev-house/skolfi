@@ -1,5 +1,6 @@
 import {
   ActionIcon,
+  Alert,
   AppShell,
   Avatar,
   Box,
@@ -12,6 +13,7 @@ import {
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import {
+  IconAlertTriangle,
   IconCreditCard,
   IconHistory,
   IconHome,
@@ -261,7 +263,20 @@ export default function PortalLayout({
       </AppShell.Navbar>
 
       <AppShell.Main className="portal-main">
-        <Box className="portal-content">{children}</Box>
+        <Box className="portal-content">
+          {userData?.exitedAt && (
+            <Alert
+              icon={<IconAlertTriangle size={18} />}
+              color="yellow"
+              mb="md"
+            >
+              {t("student.exit.portalBanner", {
+                date: new Date(userData.exitedAt).toLocaleDateString(),
+              })}
+            </Alert>
+          )}
+          {children}
+        </Box>
       </AppShell.Main>
       <BottomNav />
     </AppShell>
