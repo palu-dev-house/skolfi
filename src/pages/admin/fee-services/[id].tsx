@@ -9,7 +9,6 @@ import {
   LoadingOverlay,
   Modal,
   NumberInput,
-  Paper,
   Select,
   Stack,
   Table,
