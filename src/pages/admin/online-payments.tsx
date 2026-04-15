@@ -8,7 +8,6 @@ import {
   Text,
   TextInput,
 } from "@mantine/core";
-import { useDebouncedValue } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import {
   IconCheck,
@@ -19,7 +18,8 @@ import {
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
 import type { ReactElement } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import { z } from "zod";
 import AdminLayout from "@/components/layouts/AdminLayout";
 import PageHeader from "@/components/ui/PageHeader/PageHeader";
 import TablePagination from "@/components/ui/TablePagination";
@@ -27,7 +27,15 @@ import {
   type AdminOnlinePayment,
   useAdminOnlinePayments,
 } from "@/hooks/api/useAdminOnlinePayments";
+import { useQueryFilters } from "@/hooks/useQueryFilters";
 import type { NextPageWithLayout } from "@/lib/page-types";
+
+const filterSchema = z.object({
+  search: z.string().optional(),
+  status: z
+    .enum(["PENDING", "SETTLEMENT", "EXPIRE", "CANCEL", "DENY", "FAILURE"])
+    .optional(),
+});
 
 const STATUS_OPTIONS = [
   { value: "", label: "All" },
@@ -75,16 +83,19 @@ function statusNotificationMeta(status: string) {
 
 const OnlinePaymentsPage: NextPageWithLayout = function OnlinePaymentsPage() {
   const t = useTranslations();
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState("");
-  const [debouncedSearch] = useDebouncedValue(search, 300);
+  const { filters, page, drafts, setFilter, setPage } = useQueryFilters({
+    schema: filterSchema,
+    defaultLimit: 10,
+  });
+  const search = filters.search ?? "";
+  const status = filters.status ?? "";
+  const searchDraft = drafts.search ?? search;
 
   const { data, isLoading } = useAdminOnlinePayments(
     {
       page,
       limit: 10,
-      search: debouncedSearch || undefined,
+      search: search || undefined,
       status: status || undefined,
     },
     { refetchInterval: 15_000 },
@@ -139,20 +150,26 @@ const OnlinePaymentsPage: NextPageWithLayout = function OnlinePaymentsPage() {
           <TextInput
             placeholder={t("common.search")}
             leftSection={<IconSearch size={16} />}
-            value={search}
-            onChange={(e) => {
-              setSearch(e.currentTarget.value);
-              setPage(1);
-            }}
+            value={searchDraft}
+            onChange={(e) => setFilter("search", e.currentTarget.value || null)}
             style={{ flex: 1, minWidth: 200 }}
           />
           <Select
             data={STATUS_OPTIONS}
             value={status}
-            onChange={(v) => {
-              setStatus(v || "");
-              setPage(1);
-            }}
+            onChange={(v) =>
+              setFilter(
+                "status",
+                (v as
+                  | "PENDING"
+                  | "SETTLEMENT"
+                  | "EXPIRE"
+                  | "CANCEL"
+                  | "DENY"
+                  | "FAILURE"
+                  | null) || null,
+              )
+            }
             placeholder={t("common.status")}
             clearable
             w={160}
