@@ -282,7 +282,6 @@ const PaymentCardPage: NextPageWithLayout = function PaymentCardPage() {
               {card.months.map((m) => {
                 const key = `${m.period}-${m.year}`;
                 const visible = monthIsVisible(key);
-                if (mode === "selected" && !visible) return null;
                 return (
                   <tr
                     key={key}

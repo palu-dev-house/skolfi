@@ -558,6 +558,10 @@
   color: #111;
 }
 
+.pc-mode-selected .pc-row-empty td.pc-label-col {
+  color: transparent;
+}
+
 .pc-spacer {
   flex: 1;
   min-height: 10mm;
