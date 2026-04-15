@@ -31,6 +31,7 @@ import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
 import type { ReactElement } from "react";
 import { useState } from "react";
+import { z } from "zod";
 import AdminLayout from "@/components/layouts/AdminLayout";
 import PageHeader from "@/components/ui/PageHeader/PageHeader";
 import TablePagination from "@/components/ui/TablePagination";
@@ -45,8 +46,16 @@ import {
   useGenerateAllServiceFeeBills,
   useServiceFeeBills,
 } from "@/hooks/api/useServiceFeeBills";
+import { useQueryFilters } from "@/hooks/useQueryFilters";
 import { PERIODS } from "@/lib/business-logic/tuition-generator";
 import type { NextPageWithLayout } from "@/lib/page-types";
+
+const billFilterSchema = z.object({
+  studentNis: z.string().optional(),
+  period: z.string().optional(),
+  year: z.string().optional(),
+  status: z.enum(["UNPAID", "PARTIAL", "PAID", "VOID"]).optional(),
+});
 
 function formatRp(v: string | number) {
   const n = typeof v === "string" ? parseFloat(v) : v;
@@ -126,11 +135,17 @@ const FeeBillsPage: NextPageWithLayout = function FeeBillsPage() {
 
 function FeeBillTab({ activeYearId }: { activeYearId?: string }) {
   const t = useTranslations();
-  const [page, setPage] = useState(1);
-  const [studentNis, setStudentNis] = useState("");
-  const [period, setPeriod] = useState<string | null>(null);
-  const [year, setYear] = useState<number | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
+  const { filters, page, drafts, setFilter, setPage } = useQueryFilters({
+    schema: billFilterSchema,
+    defaultLimit: 15,
+    debounceKeys: ["studentNis"],
+  });
+  const studentNis = filters.studentNis ?? "";
+  const studentNisDraft = drafts.studentNis ?? studentNis;
+  const period = filters.period ?? null;
+  const yearStr = filters.year ?? null;
+  const year = yearStr ? Number(yearStr) : null;
+  const status = filters.status ?? null;
 
   const { data, isLoading } = useFeeBills({
     page,
@@ -200,8 +215,10 @@ function FeeBillTab({ activeYearId }: { activeYearId?: string }) {
             <TextInput
               leftSection={<IconSearch size={16} />}
               placeholder={t("feeBill.searchStudent")}
-              value={studentNis}
-              onChange={(e) => setStudentNis(e.currentTarget.value)}
+              value={studentNisDraft}
+              onChange={(e) =>
+                setFilter("studentNis", e.currentTarget.value || null)
+              }
               w={240}
             />
             <Select
@@ -211,14 +228,16 @@ function FeeBillTab({ activeYearId }: { activeYearId?: string }) {
                 label: t(`months.${p}`),
               }))}
               value={period}
-              onChange={setPeriod}
+              onChange={(v) => setFilter("period", v || null)}
               clearable
               w={160}
             />
             <NumberInput
               placeholder={t("feeBill.year")}
               value={year ?? ""}
-              onChange={(v) => setYear(typeof v === "number" ? v : null)}
+              onChange={(v) =>
+                setFilter("year", typeof v === "number" ? String(v) : null)
+              }
               w={120}
             />
             <Select
@@ -228,7 +247,12 @@ function FeeBillTab({ activeYearId }: { activeYearId?: string }) {
                 label: t(`tuition.status.${s.toLowerCase()}`),
               }))}
               value={status}
-              onChange={setStatus}
+              onChange={(v) =>
+                setFilter(
+                  "status",
+                  (v as "UNPAID" | "PARTIAL" | "PAID" | "VOID" | null) || null,
+                )
+              }
               clearable
               w={160}
             />
@@ -330,11 +354,17 @@ function FeeBillTab({ activeYearId }: { activeYearId?: string }) {
 
 function ServiceFeeBillTab({ activeYearId }: { activeYearId?: string }) {
   const t = useTranslations();
-  const [page, setPage] = useState(1);
-  const [studentNis, setStudentNis] = useState("");
-  const [period, setPeriod] = useState<string | null>(null);
-  const [year, setYear] = useState<number | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
+  const { filters, page, drafts, setFilter, setPage } = useQueryFilters({
+    schema: billFilterSchema,
+    defaultLimit: 15,
+    debounceKeys: ["studentNis"],
+  });
+  const studentNis = filters.studentNis ?? "";
+  const studentNisDraft = drafts.studentNis ?? studentNis;
+  const period = filters.period ?? null;
+  const yearStr = filters.year ?? null;
+  const year = yearStr ? Number(yearStr) : null;
+  const status = filters.status ?? null;
 
   const { data, isLoading } = useServiceFeeBills({
     page,
@@ -406,8 +436,10 @@ function ServiceFeeBillTab({ activeYearId }: { activeYearId?: string }) {
             <TextInput
               leftSection={<IconSearch size={16} />}
               placeholder={t("feeBill.searchStudent")}
-              value={studentNis}
-              onChange={(e) => setStudentNis(e.currentTarget.value)}
+              value={studentNisDraft}
+              onChange={(e) =>
+                setFilter("studentNis", e.currentTarget.value || null)
+              }
               w={240}
             />
             <Select
@@ -417,14 +449,16 @@ function ServiceFeeBillTab({ activeYearId }: { activeYearId?: string }) {
                 label: t(`months.${p}`),
               }))}
               value={period}
-              onChange={setPeriod}
+              onChange={(v) => setFilter("period", v || null)}
               clearable
               w={160}
             />
             <NumberInput
               placeholder={t("feeBill.year")}
               value={year ?? ""}
-              onChange={(v) => setYear(typeof v === "number" ? v : null)}
+              onChange={(v) =>
+                setFilter("year", typeof v === "number" ? String(v) : null)
+              }
               w={120}
             />
             <Select
@@ -434,7 +468,12 @@ function ServiceFeeBillTab({ activeYearId }: { activeYearId?: string }) {
                 label: t(`tuition.status.${s.toLowerCase()}`),
               }))}
               value={status}
-              onChange={setStatus}
+              onChange={(v) =>
+                setFilter(
+                  "status",
+                  (v as "UNPAID" | "PARTIAL" | "PAID" | "VOID" | null) || null,
+                )
+              }
               clearable
               w={160}
             />
