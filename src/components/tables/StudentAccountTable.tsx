@@ -29,6 +29,7 @@ import {
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { z } from "zod";
 import ColumnSettingsDrawer, {
   useColumnSettings,
 } from "@/components/ui/ColumnSettingsDrawer";
@@ -39,7 +40,11 @@ import {
   useRestoreStudentAccount,
   useStudentAccounts,
 } from "@/hooks/api/useStudentAccounts";
-import { useQueryParams } from "@/hooks/useQueryParams";
+import { useQueryFilters } from "@/hooks/useQueryFilters";
+
+const filtersSchema = z.object({
+  search: z.string().optional(),
+});
 
 interface StudentAccount {
   nis: string;
@@ -141,9 +146,10 @@ function AccountActions({
 
 export default function StudentAccountTable() {
   const t = useTranslations();
-  const { setParams, getParam, getNumParam } = useQueryParams();
-  const page = getNumParam("page", 1)!;
-  const search = getParam("search", "") ?? "";
+  const { filters, drafts, setFilter, page, setPage } = useQueryFilters({
+    schema: filtersSchema,
+  });
+  const search = filters.search ?? "";
   const [includeDeleted, setIncludeDeleted] = useState(false);
 
   const columnDefs = [
@@ -284,10 +290,8 @@ export default function StudentAccountTable() {
           <TextInput
             placeholder={t("studentAccount.searchPlaceholder")}
             leftSection={<IconSearch size={16} />}
-            value={search}
-            onChange={(e) =>
-              setParams({ search: e.currentTarget.value || null, page: 1 })
-            }
+            value={drafts.search}
+            onChange={(e) => setFilter("search", e.currentTarget.value || null)}
             style={{ flex: 1, minWidth: 180 }}
           />
           <Switch
@@ -295,7 +299,7 @@ export default function StudentAccountTable() {
             checked={includeDeleted}
             onChange={(e) => {
               setIncludeDeleted(e.currentTarget.checked);
-              setParams({ page: 1 });
+              setPage(1);
             }}
           />
           <Group gap="xs">
@@ -401,15 +405,11 @@ export default function StudentAccountTable() {
                         switch (key) {
                           case "nis":
                             return (
-                              <Table.Th key={key}>
-                                {t("student.nis")}
-                              </Table.Th>
+                              <Table.Th key={key}>{t("student.nis")}</Table.Th>
                             );
                           case "name":
                             return (
-                              <Table.Th key={key}>
-                                {t("common.name")}
-                              </Table.Th>
+                              <Table.Th key={key}>{t("common.name")}</Table.Th>
                             );
                           case "parent":
                             return (
@@ -517,7 +517,7 @@ export default function StudentAccountTable() {
         <TablePagination
           total={data.pagination.totalPages}
           value={page}
-          onChange={(p) => setParams({ page: p })}
+          onChange={setPage}
         />
       )}
     </Stack>
