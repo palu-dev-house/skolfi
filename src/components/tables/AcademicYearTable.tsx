@@ -23,6 +23,7 @@ import {
 import dayjs from "dayjs";
 import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
+import { z } from "zod";
 import ColumnSettingsDrawer, {
   useColumnSettings,
 } from "@/components/ui/ColumnSettingsDrawer";
@@ -32,13 +33,14 @@ import {
   useDeleteAcademicYear,
   useSetActiveAcademicYear,
 } from "@/hooks/api/useAcademicYears";
-import { useQueryParams } from "@/hooks/useQueryParams";
+import { useQueryFilters } from "@/hooks/useQueryFilters";
+
+const filtersSchema = z.object({});
 
 export default function AcademicYearTable() {
   const t = useTranslations();
   const router = useRouter();
-  const { setParams, getNumParam } = useQueryParams();
-  const page = getNumParam("page", 1)!;
+  const { page, setPage } = useQueryFilters({ schema: filtersSchema });
 
   const columnDefs = [
     { key: "year", label: t("academicYear.year") },
@@ -310,7 +312,7 @@ export default function AcademicYearTable() {
         <TablePagination
           total={data.pagination.totalPages}
           value={page}
-          onChange={(p) => setParams({ page: p })}
+          onChange={setPage}
         />
       )}
     </Stack>
