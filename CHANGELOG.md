@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.1] - 2026-04-15
+
+### Fixes
+- fix(payment-card): use A4 paper instead of A5
+
+
+
 ## [2.12.0] - 2026-04-15
 
 ### Features
