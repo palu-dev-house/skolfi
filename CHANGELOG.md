@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.13.1] - 2026-04-15
+
+### Fixes
+- fix(payment-card): preserve row height in selected mode to avoid overlap
+
+
+
 ## [2.13.0] - 2026-04-15
 
 ### Features
