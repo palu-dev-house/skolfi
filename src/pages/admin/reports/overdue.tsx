@@ -3,16 +3,24 @@ import { IconChartBar } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
 import type { ReactElement } from "react";
+import { z } from "zod";
 import AdminLayout from "@/components/layouts/AdminLayout";
 import OverdueFeeBillReportTable from "@/components/tables/OverdueFeeBillReportTable";
 import OverdueReportTable from "@/components/tables/OverdueReportTable";
 import OverdueServiceFeeBillReportTable from "@/components/tables/OverdueServiceFeeBillReportTable";
 import PageHeader from "@/components/ui/PageHeader/PageHeader";
+import { useQueryFilters } from "@/hooks/useQueryFilters";
 import type { NextPageWithLayout } from "@/lib/page-types";
+
+const filterSchema = z.object({
+  tab: z.enum(["tuition", "feeBill", "serviceFeeBill"]).optional(),
+});
 
 const OverdueReportPage: NextPageWithLayout = function OverdueReportPage() {
   const router = useRouter();
   const t = useTranslations();
+  const { filters, setFilter } = useQueryFilters({ schema: filterSchema });
+  const tab = filters.tab ?? "tuition";
 
   return (
     <>
@@ -31,7 +39,16 @@ const OverdueReportPage: NextPageWithLayout = function OverdueReportPage() {
           </Group>
         }
       />
-      <Tabs defaultValue="tuition" keepMounted={false}>
+      <Tabs
+        value={tab}
+        onChange={(v) =>
+          setFilter(
+            "tab",
+            (v as "tuition" | "feeBill" | "serviceFeeBill" | null) || null,
+          )
+        }
+        keepMounted={false}
+      >
         <Tabs.List mb="md">
           <Tabs.Tab value="tuition">
             {t("report.overdue.tabs.tuition")}

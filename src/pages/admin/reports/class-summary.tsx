@@ -7,17 +7,23 @@ import {
 import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
 import type { ReactElement } from "react";
-import { useState } from "react";
+import { z } from "zod";
 import AdminLayout from "@/components/layouts/AdminLayout";
 import ClassSummaryCards from "@/components/reports/ClassSummaryCards";
 import PageHeader from "@/components/ui/PageHeader/PageHeader";
 import { useExportClassSummary } from "@/hooks/api/useReports";
+import { useQueryFilters } from "@/hooks/useQueryFilters";
 import type { NextPageWithLayout } from "@/lib/page-types";
+
+const filterSchema = z.object({
+  academicYearId: z.string().optional(),
+});
 
 const ClassSummaryPage: NextPageWithLayout = function ClassSummaryPage() {
   const router = useRouter();
   const t = useTranslations();
-  const [academicYearId, setAcademicYearId] = useState<string | null>(null);
+  const { filters, setFilter } = useQueryFilters({ schema: filterSchema });
+  const academicYearId = filters.academicYearId ?? null;
   const { exportReport } = useExportClassSummary();
 
   return (
@@ -56,7 +62,7 @@ const ClassSummaryPage: NextPageWithLayout = function ClassSummaryPage() {
       />
       <ClassSummaryCards
         academicYearId={academicYearId}
-        onAcademicYearChange={setAcademicYearId}
+        onAcademicYearChange={(v) => setFilter("academicYearId", v || null)}
       />
     </>
   );
