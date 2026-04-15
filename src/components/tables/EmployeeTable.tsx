@@ -27,6 +27,7 @@ import {
 import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { z } from "zod";
 import ColumnSettingsDrawer, {
   useColumnSettings,
 } from "@/components/ui/ColumnSettingsDrawer";
@@ -37,15 +38,19 @@ import {
   useEmployees,
   useResetEmployeePassword,
 } from "@/hooks/api/useEmployees";
-import { useQueryParams } from "@/hooks/useQueryParams";
+import { useQueryFilters } from "@/hooks/useQueryFilters";
+
+const filtersSchema = z.object({
+  search: z.string().optional(),
+  role: z.enum(["ADMIN", "CASHIER"]).optional(),
+});
 
 export default function EmployeeTable() {
   const t = useTranslations();
   const router = useRouter();
-  const { setParams, getParam, getNumParam } = useQueryParams();
-  const page = getNumParam("page", 1)!;
-  const search = getParam("search", "") ?? "";
-  const roleFilter = getParam("role") ?? null;
+  const { filters, page, drafts, setFilter, setPage } = useQueryFilters({
+    schema: filtersSchema,
+  });
 
   const columnDefs = [
     { key: "name", label: t("employee.name") },
@@ -61,8 +66,8 @@ export default function EmployeeTable() {
   const { data, isLoading, refetch, isFetching } = useEmployees({
     page,
     limit: 10,
-    search: search || undefined,
-    role: (roleFilter as "ADMIN" | "CASHIER") || undefined,
+    search: filters.search || undefined,
+    role: filters.role || undefined,
   });
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -213,10 +218,8 @@ export default function EmployeeTable() {
         <TextInput
           placeholder={t("employee.searchPlaceholder")}
           leftSection={<IconSearch size={16} />}
-          value={search}
-          onChange={(e) => {
-            setParams({ search: e.currentTarget.value, page: 1 });
-          }}
+          value={drafts.search ?? ""}
+          onChange={(e) => setFilter("search", e.currentTarget.value || null)}
           style={{ flex: 1 }}
         />
         <Select
@@ -225,10 +228,10 @@ export default function EmployeeTable() {
             { value: "ADMIN", label: t("employee.roles.ADMIN") },
             { value: "CASHIER", label: t("employee.roles.CASHIER") },
           ]}
-          value={roleFilter}
-          onChange={(value) => {
-            setParams({ role: value, page: 1 });
-          }}
+          value={filters.role ?? ""}
+          onChange={(value) =>
+            setFilter("role", (value as "ADMIN" | "CASHIER" | null) || null)
+          }
           clearable
           w={160}
         />
@@ -428,7 +431,7 @@ export default function EmployeeTable() {
         <TablePagination
           total={data.pagination.totalPages}
           value={page}
-          onChange={(p) => setParams({ page: p })}
+          onChange={setPage}
         />
       )}
     </Stack>
