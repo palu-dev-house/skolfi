@@ -30,6 +30,7 @@ import {
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { z } from "zod";
 import ColumnSettingsDrawer, {
   useColumnSettings,
 } from "@/components/ui/ColumnSettingsDrawer";
@@ -42,18 +43,27 @@ import {
   usePayments,
 } from "@/hooks/api/usePayments";
 import { useAuth } from "@/hooks/useAuth";
-import { useQueryParams } from "@/hooks/useQueryParams";
+import { useQueryFilters } from "@/hooks/useQueryFilters";
 import { getMonthDisplayName } from "@/lib/business-logic/tuition-generator";
+
+const filterSchema = z.object({
+  classAcademicId: z.string().optional(),
+  studentSearch: z.string().optional(),
+  dateFrom: z.string().optional(),
+  dateTo: z.string().optional(),
+});
 
 export default function PaymentTable() {
   const t = useTranslations();
   const { user } = useAuth();
-  const { setParams, getParam, getNumParam } = useQueryParams();
-  const page = getNumParam("page", 1)!;
-  const classAcademicId = getParam("classAcademicId") ?? null;
-  const studentSearch = getParam("studentSearch", "") ?? "";
-  const dateFrom = getParam("dateFrom", "") ?? "";
-  const dateTo = getParam("dateTo", "") ?? "";
+  const { filters, page, drafts, setFilter, setPage } = useQueryFilters({
+    schema: filterSchema,
+    debounceKeys: ["studentSearch"],
+  });
+  const classAcademicId = filters.classAcademicId ?? null;
+  const dateFrom = filters.dateFrom ?? "";
+  const dateTo = filters.dateTo ?? "";
+  const studentSearch = filters.studentSearch ?? "";
 
   const { data: academicYearsData } = useAcademicYears({ limit: 100 });
   const activeYear = academicYearsData?.academicYears.find((ay) => ay.isActive);
@@ -215,16 +225,16 @@ export default function PaymentTable() {
             leftSection={<IconFilter size={16} />}
             data={classOptions}
             value={classAcademicId}
-            onChange={(value) => setParams({ classAcademicId: value, page: 1 })}
+            onChange={(value) => setFilter("classAcademicId", value || null)}
             clearable
             searchable
           />
           <TextInput
             placeholder={t("payment.searchStudent")}
             leftSection={<IconSearch size={16} />}
-            value={studentSearch}
+            value={drafts.studentSearch ?? ""}
             onChange={(e) =>
-              setParams({ studentSearch: e.currentTarget.value, page: 1 })
+              setFilter("studentSearch", e.currentTarget.value || null)
             }
           />
           <TextInput
@@ -232,19 +242,22 @@ export default function PaymentTable() {
             placeholder={t("payment.fromDate")}
             value={dateFrom}
             onChange={(e) =>
-              setParams({ dateFrom: e.currentTarget.value, page: 1 })
+              setFilter("dateFrom", e.currentTarget.value || null)
             }
           />
           <TextInput
             type="date"
             placeholder={t("payment.toDate")}
             value={dateTo}
-            onChange={(e) =>
-              setParams({ dateTo: e.currentTarget.value, page: 1 })
-            }
+            onChange={(e) => setFilter("dateTo", e.currentTarget.value || null)}
           />
           <Group gap="xs" style={{ flexGrow: 0 }}>
-            <ActionIcon variant="default" size="lg" onClick={() => refetch()} loading={isFetching}>
+            <ActionIcon
+              variant="default"
+              size="lg"
+              onClick={() => refetch()}
+              loading={isFetching}
+            >
               <IconRefresh size={18} />
             </ActionIcon>
             <ColumnSettingsDrawer tableId="payments" columnDefs={columnDefs} />
@@ -358,9 +371,7 @@ export default function PaymentTable() {
                 ))}
               {!isLoading && data?.payments.length === 0 && (
                 <Table.Tr>
-                  <Table.Td
-                    colSpan={orderedKeys.length + (isAdmin ? 1 : 0)}
-                  >
+                  <Table.Td colSpan={orderedKeys.length + (isAdmin ? 1 : 0)}>
                     <Text ta="center" c="dimmed" py="md">
                       {t("payment.notFound")}
                     </Text>
@@ -542,7 +553,7 @@ export default function PaymentTable() {
         <TablePagination
           total={data.pagination.totalPages}
           value={page}
-          onChange={(p) => setParams({ page: p })}
+          onChange={setPage}
         />
       )}
     </Stack>
