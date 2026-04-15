@@ -262,97 +262,95 @@ const PaymentCardPage: NextPageWithLayout = function PaymentCardPage() {
             </>
           )}
 
-          <table className="pc-table">
-            {mode !== "selected" && (
-              <thead>
-                <tr>
-                  <th style={{ width: "5%" }}>No</th>
-                  <th style={{ width: "13%" }}>{t("paymentCard.month")}</th>
-                  <th style={{ width: "11%" }}>{t("paymentCard.tuition")}</th>
-                  <th style={{ width: "11%" }}>{t("paymentCard.transport")}</th>
-                  <th style={{ width: "11%" }}>{t("paymentCard.service")}</th>
-                  <th style={{ width: "11%" }}>{t("paymentCard.total")}</th>
-                  <th style={{ width: "10%" }}>{t("paymentCard.payDate")}</th>
-                  <th style={{ width: "13%" }}>{t("paymentCard.receiptNo")}</th>
-                  <th style={{ width: "15%" }}>{t("paymentCard.cashier")}</th>
-                </tr>
-              </thead>
-            )}
-            <tbody>
-              {card.months.map((m) => {
-                const key = `${m.period}-${m.year}`;
-                const visible = monthIsVisible(key);
-                return (
-                  <tr
-                    key={key}
-                    className={visible ? undefined : "pc-row-empty"}
-                  >
-                    <td className="center pc-label-col">{m.index}</td>
-                    <td className="pc-label-col">{m.periodLabel}</td>
-                    <td className="num">
-                      {visible && m.tuition
-                        ? formatRp(m.tuition.paidAmount)
-                        : ""}
-                    </td>
-                    <td className="num">
-                      {visible ? formatRp(m.feeBills.paidAmount) : ""}
-                    </td>
-                    <td className="num">
-                      {visible ? formatRp(m.serviceFeeBills.paidAmount) : ""}
-                    </td>
-                    <td className="num">
-                      {visible ? formatRp(m.totalPaid) : ""}
-                    </td>
-                    <td className="center">
-                      {visible && m.lastPaymentDate
-                        ? dayjs(m.lastPaymentDate).format("DD/MM/YY")
-                        : ""}
-                    </td>
-                    <td className="center">
-                      {visible ? (m.receiptNos[0] ?? "") : ""}
-                    </td>
-                    <td className="pc-cashier">
-                      {visible ? (m.cashierName ?? "") : ""}
-                    </td>
-                  </tr>
-                );
-              })}
+          {mode === "header" && <div className="pc-spacer" />}
+
+          {mode !== "header" && (
+            <table className="pc-table">
               {mode !== "selected" && (
-                <tr>
-                  <td className="center pc-label-col" colSpan={2}>
-                    {t("paymentCard.totalRow")}
-                  </td>
-                  <td className="num">
-                    {mode === "header" ? "" : formatRp(totalsRow.tuition)}
-                  </td>
-                  <td className="num">
-                    {mode === "header" ? "" : formatRp(totalsRow.fee)}
-                  </td>
-                  <td className="num">
-                    {mode === "header" ? "" : formatRp(totalsRow.svc)}
-                  </td>
-                  <td className="num">
-                    {mode === "header" ? "" : formatRp(totalsRow.grand)}
-                  </td>
-                  <td />
-                  <td />
-                  <td />
-                </tr>
+                <thead>
+                  <tr>
+                    <th style={{ width: "5%" }}>No</th>
+                    <th style={{ width: "13%" }}>{t("paymentCard.month")}</th>
+                    <th style={{ width: "11%" }}>{t("paymentCard.tuition")}</th>
+                    <th style={{ width: "11%" }}>
+                      {t("paymentCard.transport")}
+                    </th>
+                    <th style={{ width: "11%" }}>{t("paymentCard.service")}</th>
+                    <th style={{ width: "11%" }}>{t("paymentCard.total")}</th>
+                    <th style={{ width: "10%" }}>{t("paymentCard.payDate")}</th>
+                    <th style={{ width: "13%" }}>
+                      {t("paymentCard.receiptNo")}
+                    </th>
+                    <th style={{ width: "15%" }}>{t("paymentCard.cashier")}</th>
+                  </tr>
+                </thead>
               )}
-            </tbody>
-          </table>
+              <tbody>
+                {card.months.map((m) => {
+                  const key = `${m.period}-${m.year}`;
+                  const visible = monthIsVisible(key);
+                  return (
+                    <tr
+                      key={key}
+                      className={visible ? undefined : "pc-row-empty"}
+                    >
+                      <td className="center pc-label-col">{m.index}</td>
+                      <td className="pc-label-col">{m.periodLabel}</td>
+                      <td className="num">
+                        {visible && m.tuition
+                          ? formatRp(m.tuition.paidAmount)
+                          : ""}
+                      </td>
+                      <td className="num">
+                        {visible ? formatRp(m.feeBills.paidAmount) : ""}
+                      </td>
+                      <td className="num">
+                        {visible ? formatRp(m.serviceFeeBills.paidAmount) : ""}
+                      </td>
+                      <td className="num">
+                        {visible ? formatRp(m.totalPaid) : ""}
+                      </td>
+                      <td className="center">
+                        {visible && m.lastPaymentDate
+                          ? dayjs(m.lastPaymentDate).format("DD/MM/YY")
+                          : ""}
+                      </td>
+                      <td className="center">
+                        {visible ? (m.receiptNos[0] ?? "") : ""}
+                      </td>
+                      <td className="pc-cashier">
+                        {visible ? (m.cashierName ?? "") : ""}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {mode === "all" && (
+                  <tr>
+                    <td className="center pc-label-col" colSpan={2}>
+                      {t("paymentCard.totalRow")}
+                    </td>
+                    <td className="num">{formatRp(totalsRow.tuition)}</td>
+                    <td className="num">{formatRp(totalsRow.fee)}</td>
+                    <td className="num">{formatRp(totalsRow.svc)}</td>
+                    <td className="num">{formatRp(totalsRow.grand)}</td>
+                    <td />
+                    <td />
+                    <td />
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          )}
+
+          {mode === "all" && <div className="pc-spacer" />}
 
           {mode !== "selected" && (
-            <>
-              <div className="pc-spacer" />
-
-              <div className="pc-notes">
-                <div className="pc-notes-title">{t("paymentCard.notes")}:</div>
-                <div>1. {t("paymentCard.note1")}</div>
-                <div>2. {t("paymentCard.note2")}</div>
-                <div>3. {t("paymentCard.note3")}</div>
-              </div>
-            </>
+            <div className="pc-notes">
+              <div className="pc-notes-title">{t("paymentCard.notes")}:</div>
+              <div>1. {t("paymentCard.note1")}</div>
+              <div>2. {t("paymentCard.note2")}</div>
+              <div>3. {t("paymentCard.note3")}</div>
+            </div>
           )}
         </div>
       )}

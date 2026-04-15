@@ -590,7 +590,16 @@
     display: none !important;
   }
 
+  .pc-page,
+  .pc-page * {
+    visibility: visible;
+  }
+
   .pc-page {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 210mm;
     box-shadow: none;
     margin: 0;
     page-break-after: always;
