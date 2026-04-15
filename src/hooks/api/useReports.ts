@@ -52,6 +52,16 @@ interface OverdueReportResponse {
   };
 }
 
+export interface BillBreakdown {
+  totalBills: number;
+  paid: number;
+  partial: number;
+  unpaid: number;
+  totalAmount: number;
+  totalPaid: number;
+  totalOutstanding: number;
+}
+
 interface ClassSummaryItem {
   class: {
     id: string;
@@ -71,6 +81,8 @@ interface ClassSummaryItem {
     totalEffectiveFees: number;
     totalPaid: number;
     totalOutstanding: number;
+    feeBill: BillBreakdown;
+    serviceFeeBill: BillBreakdown;
   };
 }
 
@@ -90,6 +102,8 @@ interface ClassSummaryResponse {
       totalEffectiveFees: number;
       totalPaid: number;
       totalOutstanding: number;
+      feeBill: BillBreakdown;
+      serviceFeeBill: BillBreakdown;
     };
   };
 }
@@ -239,6 +253,19 @@ export function useClassSummary(filters: ClassSummaryFilters = {}) {
       return data.data;
     },
   });
+}
+
+export function useExportClassSummary() {
+  const exportReport = async (filters: ClassSummaryFilters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.academicYearId) {
+      params.set("academicYearId", filters.academicYearId);
+    }
+    const url = `/api/v1/reports/class-summary/export?${params.toString()}`;
+    window.open(url, "_blank");
+  };
+
+  return { exportReport };
 }
 
 export function useExportOverdueReport() {

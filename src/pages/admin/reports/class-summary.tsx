@@ -1,16 +1,20 @@
 import { Button, Group } from "@mantine/core";
-import { IconAlertTriangle } from "@tabler/icons-react";
+import { IconAlertTriangle, IconFileSpreadsheet } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
 import type { ReactElement } from "react";
+import { useState } from "react";
 import AdminLayout from "@/components/layouts/AdminLayout";
 import ClassSummaryCards from "@/components/reports/ClassSummaryCards";
 import PageHeader from "@/components/ui/PageHeader/PageHeader";
+import { useExportClassSummary } from "@/hooks/api/useReports";
 import type { NextPageWithLayout } from "@/lib/page-types";
 
 const ClassSummaryPage: NextPageWithLayout = function ClassSummaryPage() {
   const router = useRouter();
   const t = useTranslations();
+  const [academicYearId, setAcademicYearId] = useState<string | null>(null);
+  const { exportReport } = useExportClassSummary();
 
   return (
     <>
@@ -19,6 +23,15 @@ const ClassSummaryPage: NextPageWithLayout = function ClassSummaryPage() {
         description={t("report.classSummary.description")}
         actions={
           <Group gap="sm">
+            <Button
+              variant="light"
+              leftSection={<IconFileSpreadsheet size={18} />}
+              onClick={() =>
+                exportReport({ academicYearId: academicYearId ?? undefined })
+              }
+            >
+              {t("report.classSummary.exportExcel")}
+            </Button>
             <Button
               variant="light"
               color="red"
@@ -30,7 +43,10 @@ const ClassSummaryPage: NextPageWithLayout = function ClassSummaryPage() {
           </Group>
         }
       />
-      <ClassSummaryCards />
+      <ClassSummaryCards
+        academicYearId={academicYearId}
+        onAcademicYearChange={setAcademicYearId}
+      />
     </>
   );
 };

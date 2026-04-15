@@ -36,7 +36,6 @@ import {
   IconKey,
   IconLogout,
   IconPackage,
-  IconPrinter,
   IconReceipt,
   IconReceipt2,
   IconReportAnalytics,
@@ -166,11 +165,6 @@ export default function Sidebar() {
       ],
     },
     {
-      icon: IconPrinter,
-      label: t("printReceipts"),
-      href: "/admin/payments/print",
-    },
-    {
       icon: IconCreditCard,
       label: t("onlinePayments"),
       href: "/admin/online-payments",
@@ -209,11 +203,6 @@ export default function Sidebar() {
     { icon: IconSchool, label: t("students"), href: "/admin/students" },
     { icon: IconReceipt, label: t("payments"), href: "/admin/payments" },
     { icon: IconReceipt2, label: t("feeBills"), href: "/admin/fee-bills" },
-    {
-      icon: IconPrinter,
-      label: t("printReceipts"),
-      href: "/admin/payments/print",
-    },
     {
       icon: IconReportAnalytics,
       label: t("reports"),

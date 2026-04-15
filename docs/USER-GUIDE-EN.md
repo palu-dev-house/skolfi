@@ -2,7 +2,7 @@
 
 This guide explains how to use the school tuition (SPP) application for day-to-day operations. It is intended for school staff (Admins and Cashiers) as well as students/parents who use the portal.
 
-**App version:** 2.8.1
+**App version:** 2.13.2
 **UI language:** Available in Bahasa Indonesia and English (switchable via the flag button at the top of the page).
 
 ---
@@ -20,9 +20,16 @@ This guide explains how to use the school tuition (SPP) application for day-to-d
 5. [Scholarships & Discounts](#5-scholarships--discounts)
 6. [Tuition Bills](#6-tuition-bills)
 7. [Payments](#7-payments)
+   - [Transport & Accommodation](#transport--accommodation)
+   - [Service Fee (Uang Perlengkapan)](#service-fee-uang-perlengkapan)
+   - [Generate All Bills](#generate-all-bills)
+   - [Multi-Bill Payment (Cashier)](#multi-bill-payment-cashier)
+   - [Portal — Combined Bills](#portal--combined-bills)
+   - [Student Exit Behavior](#student-exit-behavior)
+   - [Scholarships and Discounts — Tuition Only](#scholarships-and-discounts--tuition-only)
 8. [Student Portal Accounts](#8-student-portal-accounts)
 9. [Online Payments](#9-online-payments)
-10. [Student Exit Status](#10-student-exit-status) — *New feature*
+10. [Student Exit Status](#10-student-exit-status)
 11. [Reports](#11-reports)
 12. [Student / Parent Portal](#12-student--parent-portal)
 13. [Account Settings](#13-account-settings)
@@ -288,10 +295,11 @@ For schools that still use **pre-printed physical payment cards** as proof of pa
 - **Selected months** — pick which months to print. The system auto-checks every month that has been paid (autofill). Helper buttons **Select Paid**, **Select All**, and **Clear** are provided.
 - **All months** — prints every month that has payment data.
 
-**Card columns:** No, Month, Tuition, Transport & Boarding, Supplies, Total, Pay Date, Receipt No. A totals row at the bottom sums the currently visible months.
+**Card columns:** No, Month, Tuition, Transport & Boarding, Supplies, Total, Pay Date, Receipt No., Cashier. A totals row at the bottom sums the currently visible months.
 
 **Print format:**
 - Paper size: **A4 portrait** (210 mm × 297 mm).
+- Row count is **frequency-aware** — the table shows one row per tuition period (10 rows for MONTHLY classes, 4 for QUARTERLY, 2 for SEMESTER). July and August are excluded.
 - Each month row is exactly **12 px** tall to align with the pre-printed card grid.
 - In the browser dialog, ensure the scale is **100%** and margins are **none/default** so the rows do not shift.
 
@@ -432,7 +440,7 @@ The `Payment Settings` menu lets you configure Midtrans server key, client key, 
 
 ## 10. Student Exit Status
 
-*Feature added in v2.8.x to handle students who leave mid-year.*
+*Handles students who leave mid-year so future bills are automatically voided.*
 
 ### 10.1 Problem Solved
 
@@ -799,4 +807,4 @@ This section gives real-world scenarios and how to handle them.
 - **Operational questions:** Contact the primary Admin at the school.
 - **Developer documentation:** See the `docs/` folder in the repository.
 
-*This document was last updated in April 2026.*
+*This document was last updated in April 2026 for app version 2.13.2.*

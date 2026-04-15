@@ -1,10 +1,14 @@
-import { useRouter } from "next/router";
-import { useEffect } from "react";
+import type { GetServerSideProps } from "next";
+
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    redirect: {
+      destination: "/portal",
+      permanent: false,
+    },
+  };
+};
 
 export default function HomePage() {
-  const router = useRouter();
-  useEffect(() => {
-    router.replace("/admin/login");
-  }, [router]);
   return null;
 }

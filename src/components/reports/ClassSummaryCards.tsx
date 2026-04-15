@@ -16,22 +16,38 @@ import {
 } from "@mantine/core";
 import {
   IconAlertTriangle,
+  IconBus,
   IconCash,
   IconCheck,
   IconClock,
   IconDiscount,
   IconFilter,
   IconGift,
+  IconPackage,
   IconUsers,
 } from "@tabler/icons-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
-import { useClassSummary } from "@/hooks/api/useReports";
+import { type BillBreakdown, useClassSummary } from "@/hooks/api/useReports";
 
-export default function ClassSummaryCards() {
+interface ClassSummaryCardsProps {
+  academicYearId?: string | null;
+  onAcademicYearChange?: (value: string | null) => void;
+}
+
+export default function ClassSummaryCards({
+  academicYearId: academicYearIdProp,
+  onAcademicYearChange,
+}: ClassSummaryCardsProps = {}) {
   const t = useTranslations();
-  const [academicYearId, setAcademicYearId] = useState<string | null>(null);
+  const [localYearId, setLocalYearId] = useState<string | null>(null);
+  const academicYearId =
+    academicYearIdProp !== undefined ? academicYearIdProp : localYearId;
+  const setAcademicYearId = (value: string | null) => {
+    if (onAcademicYearChange) onAcademicYearChange(value);
+    else setLocalYearId(value);
+  };
 
   const { data: academicYearsData } = useAcademicYears({ limit: 100 });
   const activeYear = academicYearsData?.academicYears.find((ay) => ay.isActive);
@@ -344,7 +360,8 @@ export default function ClassSummaryCards() {
                       {t("report.classSummary.paid")}: {cls.statistics.paid}
                     </Badge>
                     <Badge color="yellow" variant="light" size="sm">
-                      {t("report.classSummary.partial")}: {cls.statistics.partial}
+                      {t("report.classSummary.partial")}:{" "}
+                      {cls.statistics.partial}
                     </Badge>
                     <Badge color="red" variant="light" size="sm">
                       {t("report.classSummary.unpaid")}: {cls.statistics.unpaid}
@@ -445,6 +462,24 @@ export default function ClassSummaryCards() {
                       </Text>
                     </div>
                   </SimpleGrid>
+
+                  {cls.statistics.feeBill.totalBills > 0 && (
+                    <BillSection
+                      title={t("report.classSummary.feeBillSection")}
+                      icon={<IconBus size={14} />}
+                      stats={cls.statistics.feeBill}
+                      t={t}
+                    />
+                  )}
+
+                  {cls.statistics.serviceFeeBill.totalBills > 0 && (
+                    <BillSection
+                      title={t("report.classSummary.serviceFeeSection")}
+                      icon={<IconPackage size={14} />}
+                      stats={cls.statistics.serviceFeeBill}
+                      t={t}
+                    />
+                  )}
                 </Stack>
               </Card>
             );
@@ -463,5 +498,74 @@ export default function ClassSummaryCards() {
         </Paper>
       )}
     </Stack>
+  );
+}
+
+function BillSection({
+  title,
+  icon,
+  stats,
+  t,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  stats: BillBreakdown;
+  t: (key: string) => string;
+}) {
+  return (
+    <Paper withBorder p="xs" radius="sm">
+      <Stack gap={6}>
+        <Group gap={6} align="center">
+          <ThemeIcon size="xs" variant="light" color="blue">
+            {icon}
+          </ThemeIcon>
+          <Text size="xs" fw={600}>
+            {title}
+          </Text>
+          <Text size="xs" c="dimmed">
+            ({stats.totalBills})
+          </Text>
+        </Group>
+        <Group gap="xs" wrap="wrap">
+          <Badge color="green" variant="light" size="xs">
+            {t("report.classSummary.paid")}: {stats.paid}
+          </Badge>
+          <Badge color="yellow" variant="light" size="xs">
+            {t("report.classSummary.partial")}: {stats.partial}
+          </Badge>
+          <Badge color="red" variant="light" size="xs">
+            {t("report.classSummary.unpaid")}: {stats.unpaid}
+          </Badge>
+        </Group>
+        <SimpleGrid cols={2}>
+          <div>
+            <Text size="xs" c="dimmed">
+              {t("report.classSummary.collected")}
+            </Text>
+            <Text size="xs" fw={500} c="green">
+              <NumberFormatter
+                value={stats.totalPaid}
+                prefix="Rp "
+                thousandSeparator="."
+                decimalSeparator=","
+              />
+            </Text>
+          </div>
+          <div>
+            <Text size="xs" c="dimmed">
+              {t("report.classSummary.outstanding")}
+            </Text>
+            <Text size="xs" fw={500} c="red">
+              <NumberFormatter
+                value={stats.totalOutstanding}
+                prefix="Rp "
+                thousandSeparator="."
+                decimalSeparator=","
+              />
+            </Text>
+          </div>
+        </SimpleGrid>
+      </Stack>
+    </Paper>
   );
 }

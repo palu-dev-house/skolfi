@@ -27,6 +27,7 @@ import {
   IconSearch,
   IconTrash,
 } from "@tabler/icons-react";
+import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
 import type { ReactElement } from "react";
 import { useState } from "react";
@@ -54,6 +55,13 @@ function formatRp(v: string | number) {
 
 const STATUSES = ["UNPAID", "PARTIAL", "PAID", "VOID"] as const;
 
+const STATUS_COLORS: Record<string, string> = {
+  UNPAID: "red",
+  PARTIAL: "yellow",
+  PAID: "green",
+  VOID: "gray",
+};
+
 interface FeeBillGenerateResult {
   created: number;
   skipped: number;
@@ -69,7 +77,21 @@ interface ServiceFeeBillGenerateResult {
 
 const FeeBillsPage: NextPageWithLayout = function FeeBillsPage() {
   const t = useTranslations();
-  const [tab, setTab] = useState<"fee" | "service">("fee");
+  const router = useRouter();
+  const tabParam = router.query.tab;
+  const tab: "fee" | "service" = tabParam === "service" ? "service" : "fee";
+  const setTab = (next: "fee" | "service") => {
+    if (!router.isReady) return;
+    const { tab: _ignore, ...rest } = router.query;
+    router.replace(
+      {
+        pathname: router.pathname,
+        query: next === "fee" ? rest : { ...rest, tab: next },
+      },
+      undefined,
+      { shallow: true },
+    );
+  };
   const { data: ayData } = useAcademicYears({ limit: 100 });
   const activeYear = ayData?.academicYears.find((ay) => ay.isActive);
 
@@ -262,7 +284,7 @@ function FeeBillTab({ activeYearId }: { activeYearId?: string }) {
                   <Table.Td>{formatRp(b.amount)}</Table.Td>
                   <Table.Td>{formatRp(b.paidAmount)}</Table.Td>
                   <Table.Td>
-                    <Badge>
+                    <Badge color={STATUS_COLORS[b.status] ?? "gray"}>
                       {t(`tuition.status.${b.status.toLowerCase()}`)}
                     </Badge>
                   </Table.Td>
@@ -468,7 +490,7 @@ function ServiceFeeBillTab({ activeYearId }: { activeYearId?: string }) {
                   <Table.Td>{formatRp(b.amount)}</Table.Td>
                   <Table.Td>{formatRp(b.paidAmount)}</Table.Td>
                   <Table.Td>
-                    <Badge>
+                    <Badge color={STATUS_COLORS[b.status] ?? "gray"}>
                       {t(`tuition.status.${b.status.toLowerCase()}`)}
                     </Badge>
                   </Table.Td>

@@ -2,7 +2,7 @@
 
 Panduan ini menjelaskan cara menggunakan aplikasi SPP sekolah untuk kegiatan sehari-hari. Dokumen ini ditujukan untuk staf sekolah (Admin dan Kasir) serta siswa/orang tua yang menggunakan portal.
 
-**Versi aplikasi:** 2.8.1
+**Versi aplikasi:** 2.13.2
 **Bahasa UI:** Tersedia dalam Bahasa Indonesia dan English (dapat diubah lewat tombol bendera di bagian atas).
 
 ---
@@ -20,9 +20,16 @@ Panduan ini menjelaskan cara menggunakan aplikasi SPP sekolah untuk kegiatan seh
 5. [Beasiswa & Diskon](#5-beasiswa--diskon)
 6. [Tagihan SPP](#6-tagihan-spp)
 7. [Pembayaran](#7-pembayaran)
+   - [Transport & Akomodasi](#transport--akomodasi)
+   - [Uang Perlengkapan](#uang-perlengkapan)
+   - [Buat Semua Tagihan](#buat-semua-tagihan)
+   - [Pembayaran Multi-Tagihan (Kasir)](#pembayaran-multi-tagihan-kasir)
+   - [Portal — Tagihan Gabungan](#portal--tagihan-gabungan)
+   - [Perilaku Keluar Siswa](#perilaku-keluar-siswa)
+   - [Beasiswa dan Diskon — Hanya untuk SPP](#beasiswa-dan-diskon--hanya-untuk-spp)
 8. [Akun Portal Siswa](#8-akun-portal-siswa)
 9. [Pembayaran Online](#9-pembayaran-online)
-10. [Status Keluar Siswa](#10-status-keluar-siswa) — *Fitur baru*
+10. [Status Keluar Siswa](#10-status-keluar-siswa)
 11. [Laporan](#11-laporan)
 12. [Portal Siswa / Orang Tua](#12-portal-siswa--orang-tua)
 13. [Pengaturan Akun](#13-pengaturan-akun)
@@ -284,14 +291,15 @@ Untuk sekolah yang masih menggunakan **kartu SPP fisik pra-cetak** sebagai bukti
 3. Pilih **Tahun Ajaran** (otomatis memakai tahun aktif).
 
 **Tiga mode cetak:**
-- **Header saja** — hanya mencetak judul, identitas siswa, dan kerangka tabel 12 bulan. Gunakan untuk menyiapkan kartu kosong yang nanti diisi tangan.
+- **Header saja** — hanya mencetak judul, identitas siswa, dan kerangka tabel kosong sesuai frekuensi kelas. Gunakan untuk menyiapkan kartu kosong yang nanti diisi tangan.
 - **Bulan terpilih** — pilih bulan mana saja yang ingin dicetak. Sistem otomatis mencentang semua bulan yang sudah pernah dibayar (autofill). Tersedia tombol **Pilih Lunas**, **Pilih Semua**, dan **Kosongkan**.
-- **Semua bulan** — mencetak seluruh 12 bulan yang ada data bayarnya.
+- **Semua bulan** — mencetak seluruh bulan yang ada data bayarnya.
 
-**Kolom pada kartu:** No, Bulan, SPP, Transport & Asrama, Perlengkapan, Total, Tanggal Bayar, No. Kuitansi. Baris total di bawah menjumlahkan semua bulan yang sedang ditampilkan.
+**Kolom pada kartu:** No, Bulan, SPP, Transport & Asrama, Perlengkapan, Total, Tanggal Bayar, No. Kuitansi, Kasir. Baris total di bawah menjumlahkan semua bulan yang sedang ditampilkan.
 
 **Format cetak:**
 - Ukuran kertas: **A4 portrait** (210 mm × 297 mm).
+- Jumlah baris **mengikuti frekuensi kelas** — 10 baris untuk kelas MONTHLY, 4 untuk QUARTERLY, 2 untuk SEMESTER. Juli dan Agustus dikecualikan.
 - Tiap baris bulan tingginya tepat **12 px** agar pas di grid kartu pra-cetak.
 - Di dialog browser, pastikan skala cetak **100%** dan margin **none/default** agar posisi baris tidak bergeser.
 
@@ -432,7 +440,7 @@ Menu `Pengaturan Pembayaran` untuk mengatur Midtrans server key, client key, met
 
 ## 10. Status Keluar Siswa
 
-*Fitur ditambahkan pada v2.8.x untuk menangani siswa yang keluar di tengah tahun ajaran.*
+*Menangani siswa yang keluar di tengah tahun ajaran sehingga tagihan periode berikutnya otomatis dibatalkan.*
 
 ### 10.1 Masalah yang Diselesaikan
 
@@ -799,4 +807,4 @@ Bagian ini memberi contoh skenario nyata dan cara menanganinya.
 - **Pertanyaan operasional:** Hubungi Admin utama di sekolah.
 - **Dokumentasi teknis (developer):** Lihat folder `docs/` pada repository.
 
-*Dokumen ini diperbarui pada April 2026.*
+*Dokumen ini diperbarui pada April 2026 untuk aplikasi versi 2.13.2.*

@@ -557,6 +557,26 @@ export function calculateGenericOverdueSummary(
 /**
  * Get class summary statistics
  */
+export interface BillBreakdown {
+  totalBills: number;
+  paid: number;
+  partial: number;
+  unpaid: number;
+  totalAmount: number;
+  totalPaid: number;
+  totalOutstanding: number;
+}
+
+const EMPTY_BREAKDOWN = (): BillBreakdown => ({
+  totalBills: 0,
+  paid: 0,
+  partial: 0,
+  unpaid: 0,
+  totalAmount: 0,
+  totalPaid: 0,
+  totalOutstanding: 0,
+});
+
 export async function getClassSummary(
   filters: {
     academicYearId?: string;
@@ -582,6 +602,8 @@ export async function getClassSummary(
       totalEffectiveFees: number;
       totalPaid: number;
       totalOutstanding: number;
+      feeBill: BillBreakdown;
+      serviceFeeBill: BillBreakdown;
     };
   }>
 > {
@@ -603,9 +625,65 @@ export async function getClassSummary(
           status: true,
         },
       },
+      studentClasses: {
+        select: { studentNis: true },
+      },
+      serviceFeeBills: {
+        select: {
+          amount: true,
+          paidAmount: true,
+          status: true,
+          voidedByExit: true,
+        },
+      },
     },
     orderBy: [{ grade: "asc" }, { section: "asc" }],
   });
+
+  // Map studentNis -> classAcademicId for the fetched classes
+  const studentToClass = new Map<string, string>();
+  for (const cls of classes) {
+    for (const sc of cls.studentClasses || []) {
+      studentToClass.set(sc.studentNis, cls.id);
+    }
+  }
+
+  // Fetch FeeBills for all enrolled students, filtered to the academic year when provided.
+  const feeBills = studentToClass.size
+    ? await prisma.feeBill.findMany({
+        where: {
+          studentNis: { in: [...studentToClass.keys()] },
+          ...(filters.academicYearId
+            ? { feeService: { academicYearId: filters.academicYearId } }
+            : {}),
+        },
+        select: {
+          studentNis: true,
+          amount: true,
+          paidAmount: true,
+          status: true,
+          voidedByExit: true,
+        },
+      })
+    : [];
+
+  const feeBillStatsByClass = new Map<string, BillBreakdown>();
+  for (const bill of feeBills) {
+    if (bill.voidedByExit) continue;
+    const classId = studentToClass.get(bill.studentNis);
+    if (!classId) continue;
+    const stats = feeBillStatsByClass.get(classId) ?? EMPTY_BREAKDOWN();
+    const amount = Number(bill.amount);
+    const paid = Number(bill.paidAmount);
+    stats.totalBills += 1;
+    stats.totalAmount += amount;
+    stats.totalPaid += paid;
+    stats.totalOutstanding += Math.max(amount - paid, 0);
+    if (bill.status === "PAID") stats.paid += 1;
+    else if (bill.status === "PARTIAL") stats.partial += 1;
+    else if (bill.status === "UNPAID") stats.unpaid += 1;
+    feeBillStatsByClass.set(classId, stats);
+  }
 
   return classes.map((cls) => {
     const tuitions = cls.tuitions || [];
@@ -642,6 +720,22 @@ export async function getClassSummary(
     // Outstanding = effective fees - what's been paid
     const totalOutstanding = Math.max(totalEffectiveFees - totalPaid, 0);
 
+    const serviceBills = (cls.serviceFeeBills || []).filter(
+      (b) => !b.voidedByExit,
+    );
+    const serviceFeeBillStats = EMPTY_BREAKDOWN();
+    for (const bill of serviceBills) {
+      const amount = Number(bill.amount);
+      const paidAmt = Number(bill.paidAmount);
+      serviceFeeBillStats.totalBills += 1;
+      serviceFeeBillStats.totalAmount += amount;
+      serviceFeeBillStats.totalPaid += paidAmt;
+      serviceFeeBillStats.totalOutstanding += Math.max(amount - paidAmt, 0);
+      if (bill.status === "PAID") serviceFeeBillStats.paid += 1;
+      else if (bill.status === "PARTIAL") serviceFeeBillStats.partial += 1;
+      else if (bill.status === "UNPAID") serviceFeeBillStats.unpaid += 1;
+    }
+
     return {
       class: {
         id: cls.id,
@@ -661,6 +755,8 @@ export async function getClassSummary(
         totalEffectiveFees,
         totalPaid,
         totalOutstanding,
+        feeBill: feeBillStatsByClass.get(cls.id) ?? EMPTY_BREAKDOWN(),
+        serviceFeeBill: serviceFeeBillStats,
       },
     };
   });

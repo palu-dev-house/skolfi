@@ -1,5 +1,5 @@
-import { Button, Group } from "@mantine/core";
-import { IconPlus, IconPrinter } from "@tabler/icons-react";
+import { Button } from "@mantine/core";
+import { IconPlus } from "@tabler/icons-react";
 import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
 import type { ReactElement } from "react";
@@ -18,21 +18,12 @@ const PaymentsPage: NextPageWithLayout = function PaymentsPage() {
         title={t("payment.title")}
         description={t("payment.description")}
         actions={
-          <Group>
-            <Button
-              variant="light"
-              leftSection={<IconPrinter size={18} />}
-              onClick={() => router.push("/admin/payments/print")}
-            >
-              {t("invoice.print")}
-            </Button>
-            <Button
-              leftSection={<IconPlus size={18} />}
-              onClick={() => router.push("/admin/payments/new")}
-            >
-              {t("payment.newPayment")}
-            </Button>
-          </Group>
+          <Button
+            leftSection={<IconPlus size={18} />}
+            onClick={() => router.push("/admin/payments/new")}
+          >
+            {t("payment.newPayment")}
+          </Button>
         }
       />
       <PaymentTable />

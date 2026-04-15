@@ -24,7 +24,6 @@ import {
   IconAlertCircle,
   IconCash,
   IconCheck,
-  IconPrinter,
   IconUser,
 } from "@tabler/icons-react";
 import { useRouter } from "next/router";
@@ -497,17 +496,6 @@ export default function PaymentForm() {
               )}
 
               <Group justify="flex-end">
-                <Button
-                  variant="light"
-                  leftSection={<IconPrinter size={16} />}
-                  onClick={() =>
-                    router.push(
-                      `/admin/payments/print?transactionId=${result.transactionId}`,
-                    )
-                  }
-                >
-                  {t("invoice.print")}
-                </Button>
                 <Button onClick={() => setResult(null)}>
                   {t("common.close")}
                 </Button>
