@@ -28,6 +28,7 @@ import {
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { z } from "zod";
 import ColumnSettingsDrawer, {
   useColumnSettings,
 } from "@/components/ui/ColumnSettingsDrawer";
@@ -40,11 +41,18 @@ import {
   useMassUpdateTuitions,
   useTuitions,
 } from "@/hooks/api/useTuitions";
-import { useQueryParams } from "@/hooks/useQueryParams";
+import { useQueryFilters } from "@/hooks/useQueryFilters";
 import {
   getPeriodDisplayName,
   PERIODS,
 } from "@/lib/business-logic/tuition-generator";
+
+const filtersSchema = z.object({
+  classAcademicId: z.string().optional(),
+  status: z.enum(["UNPAID", "PARTIAL", "PAID", "VOID"]).optional(),
+  period: z.string().optional(),
+  studentSearch: z.string().optional(),
+});
 
 const STATUS_COLORS: Record<PaymentStatus, string> = {
   UNPAID: "red",
@@ -55,12 +63,14 @@ const STATUS_COLORS: Record<PaymentStatus, string> = {
 
 export default function TuitionTable() {
   const t = useTranslations();
-  const { setParams, getParam, getNumParam } = useQueryParams();
-  const page = getNumParam("page", 1)!;
-  const classAcademicId = getParam("classAcademicId") ?? null;
-  const status = getParam("status") ?? null;
-  const period = getParam("period") ?? null;
-  const studentSearch = getParam("studentSearch", "") ?? "";
+  const { filters, page, drafts, setFilter, setPage } = useQueryFilters({
+    schema: filtersSchema,
+    debounceKeys: ["studentSearch"],
+  });
+  const classAcademicId = filters.classAcademicId ?? null;
+  const status = filters.status ?? null;
+  const period = filters.period ?? null;
+  const studentSearch = filters.studentSearch ?? "";
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -240,8 +250,8 @@ export default function TuitionTable() {
             placeholder={t("tuition.filterByClass")}
             leftSection={<IconFilter size={16} />}
             data={classOptions}
-            value={classAcademicId}
-            onChange={(value) => setParams({ classAcademicId: value, page: 1 })}
+            value={filters.classAcademicId ?? ""}
+            onChange={(value) => setFilter("classAcademicId", value || null)}
             clearable
             searchable
           />
@@ -253,29 +263,36 @@ export default function TuitionTable() {
               { value: "PAID", label: t("tuition.status.paid") },
               { value: "VOID", label: t("tuition.status.void") },
             ]}
-            value={status}
-            onChange={(value) => setParams({ status: value, page: 1 })}
+            value={filters.status ?? ""}
+            onChange={(value) =>
+              setFilter("status", (value as PaymentStatus | null) || null)
+            }
             clearable
           />
           <Select
             placeholder={t("tuition.filterByPeriod")}
             data={periodOptions}
-            value={period}
-            onChange={(value) => setParams({ period: value, page: 1 })}
+            value={filters.period ?? ""}
+            onChange={(value) => setFilter("period", value || null)}
             clearable
             searchable
           />
           <TextInput
             placeholder={t("tuition.searchStudent")}
             leftSection={<IconSearch size={16} />}
-            value={studentSearch}
+            value={drafts.studentSearch ?? ""}
             onChange={(e) =>
-              setParams({ studentSearch: e.currentTarget.value, page: 1 })
+              setFilter("studentSearch", e.currentTarget.value || null)
             }
             style={{ flexGrow: 0 }}
           />
           <Group gap="xs" style={{ flexGrow: 0 }}>
-            <ActionIcon variant="default" size="lg" onClick={() => refetch()} loading={isFetching}>
+            <ActionIcon
+              variant="default"
+              size="lg"
+              onClick={() => refetch()}
+              loading={isFetching}
+            >
               <IconRefresh size={18} />
             </ActionIcon>
             <ColumnSettingsDrawer tableId="tuitions" columnDefs={columnDefs} />
@@ -572,7 +589,7 @@ export default function TuitionTable() {
         <TablePagination
           total={data.pagination.totalPages}
           value={page}
-          onChange={(p) => setParams({ page: p })}
+          onChange={setPage}
         />
       )}
     </Stack>
