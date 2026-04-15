@@ -556,6 +556,48 @@ Class-wise payment summary
 }
 ```
 
+#### GET /api/v1/reports/fee-service-summary
+Fee service (transport + accommodation) aggregated summary
+
+**Query Parameters:**
+- `academicYearId` (string, optional)
+- `category` ("TRANSPORT" | "ACCOMMODATION", optional)
+- `feeServiceId` (string, optional)
+- `billStatus` ("UNPAID" | "PARTIAL" | "PAID" | "VOID", optional)
+- `classId` (string, optional)
+- `monthFrom`, `monthTo` ("YYYY-MM", optional)
+- `search` (string, optional)
+- `page`, `limit` (number, optional)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "data": [
+      {
+        "feeServiceId": "uuid",
+        "feeServiceName": "Bus Route A",
+        "category": "TRANSPORT",
+        "activeStudents": 24,
+        "totalBilled": "12000000",
+        "totalPaid": "8000000",
+        "outstanding": "4000000",
+        "overdueBills": 3
+      }
+    ],
+    "total": 8,
+    "totalPages": 1,
+    "page": 1,
+    "limit": 20,
+    "totals": { "billed": "…", "paid": "…", "outstanding": "…" }
+  }
+}
+```
+
+#### GET /api/v1/reports/fee-service-summary/export
+Export fee service summary to Excel (honors the same filters).
+
 #### GET /api/v1/reports/payment-history
 Payment history report
 

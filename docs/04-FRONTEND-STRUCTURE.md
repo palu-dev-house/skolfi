@@ -108,7 +108,8 @@ src/
 │   │   └── useReports.ts
 │   ├── useAuth.ts
 │   ├── usePermissions.ts
-│   └── useExcelExport.ts
+│   ├── useExcelExport.ts
+│   └── useQueryFilters.ts         # URL-persisted filters + pagination
 │
 ├── lib/                          # Utilities & configurations
 │   ├── api-client.ts             # Axios/Fetch wrapper
@@ -837,3 +838,31 @@ export function usePermissions() {
   };
 }
 ```
+
+## URL-Persisted Filters (`hooks/useQueryFilters.ts`)
+
+All admin list/report pages persist filter + pagination state in the URL via
+`useQueryFilters`. Each page defines a Zod schema describing its filter keys.
+
+```typescript
+import { z } from "zod";
+import { useQueryFilters } from "@/hooks/useQueryFilters";
+
+const filterSchema = z.object({
+  academicYearId: z.string().optional(),
+  classAcademicId: z.string().optional(),
+  search: z.string().optional(),
+});
+
+const { filters, page, drafts, setFilter, setFilters, setPage } =
+  useQueryFilters({ schema: filterSchema, defaultLimit: 10 });
+```
+
+**Guarantees:**
+- Filter keys live in the URL query string — refresh, back/forward, and links
+  restore state.
+- Changing any filter resets `page` to 1; changing `page` never clears filters.
+- Keys matching `search`/`q` are debounced (300ms). `drafts[key]` exposes the
+  live input value for controlled inputs while URL writes are deferred.
+- Values equal to defaults are pruned from the URL.
+- Arrays are comma-separated (`?categories=TRANSPORT,ACCOMMODATION`).
