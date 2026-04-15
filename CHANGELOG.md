@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.12.0] - 2026-04-15
+
+### Features
+- feat(reports): add overdue tabs for tuition, fee bills, and service fees
+- feat(students): payment card print with header/selected/all modes
+
+### Fixes
+- fix(admin): bill list response, sidebar active highlight, print label, naming
+
+### Other
+- docs: document overdue tabs and A5 payment card print
+
+
+
 ## [2.11.0] - 2026-04-15
 
 ### Features
