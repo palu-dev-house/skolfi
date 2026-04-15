@@ -1,5 +1,42 @@
 # Changelog
 
+## [2.16.0] - 2026-04-15
+
+### Features
+- feat(hooks): add useQueryFilters for URL-persisted filters
+- feat(reports): add service fee summary business logic
+- feat(api): add fee service summary report endpoint
+- feat(api): add fee service summary xlsx export
+- feat(hooks): add useFeeServiceSummary query + export hooks
+- feat(i18n): add fee service summary translations
+- feat(reports): add fee service summary filter bar
+- feat(reports): add fee service summary table
+- feat(reports): add fee service summary page and nav links
+- rebrand to SkolFi and document new report features
+
+### Other
+- docs(spec): service fee report + URL-persisted filters design
+- docs(plan): service fee report + URL-persisted filters implementation plan
+- refactor(reports): rename service-fee-summary to fee-service-summary
+- docs: align plan and spec with FeeService naming
+- refactor(employees): persist list filters in URL
+- refactor(tuitions): persist list filters in URL
+- refactor(payments): persist list filters in URL
+- refactor(students): persist list filters in URL
+- refactor(student-accounts): persist list filters in URL
+- refactor(scholarships): persist list filters in URL
+- refactor(academic-years): persist list filters in URL
+- refactor(classes): persist list filters in URL
+- refactor(reports): persist overdue report filters in URL
+- refactor(service-fees): persist list filters in URL
+- refactor(fee-services): persist list filters in URL
+- refactor(online-payments): persist list filters in URL
+- refactor(reports): persist tab and academic year filter in URL
+- refactor(fee-bills): persist tab filters in URL with debounced student search
+- docs: document fee-service-summary endpoint and useQueryFilters hook
+
+
+
 ## [2.15.0] - 2026-04-15
 
 ### Features
