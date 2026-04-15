@@ -29,6 +29,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import type { ReactElement } from "react";
 import { useState } from "react";
+import { z } from "zod";
 import FeeServiceForm, {
   type FeeServiceFormValues,
 } from "@/components/forms/FeeServiceForm";
@@ -42,18 +43,30 @@ import {
   useFeeServices,
   useUpdateFeeService,
 } from "@/hooks/api/useFeeServices";
+import { useQueryFilters } from "@/hooks/useQueryFilters";
 import type { NextPageWithLayout } from "@/lib/page-types";
+
+const filterSchema = z.object({
+  academicYearId: z.string().optional(),
+  category: z.enum(["TRANSPORT", "ACCOMMODATION"]).optional(),
+  activeOnly: z.enum(["true", "false"]).optional(),
+  search: z.string().optional(),
+});
 
 const FeeServicesPage: NextPageWithLayout = function FeeServicesPage() {
   const t = useTranslations();
   const { data: ayData } = useAcademicYears({ limit: 100 });
   const activeYear = ayData?.academicYears.find((ay) => ay.isActive);
 
-  const [page, setPage] = useState(1);
-  const [academicYearId, setAcademicYearId] = useState<string | null>(null);
-  const [category, setCategory] = useState<string | null>(null);
-  const [activeOnly, setActiveOnly] = useState(true);
-  const [search, setSearch] = useState("");
+  const { filters, page, drafts, setFilter, setPage } = useQueryFilters({
+    schema: filterSchema,
+    defaultLimit: 10,
+  });
+  const academicYearId = filters.academicYearId ?? null;
+  const category = filters.category ?? null;
+  const activeOnly = filters.activeOnly !== "false";
+  const search = filters.search ?? "";
+  const searchDraft = drafts.search ?? search;
 
   const effectiveYearId = academicYearId ?? activeYear?.id;
 
@@ -179,7 +192,7 @@ const FeeServicesPage: NextPageWithLayout = function FeeServicesPage() {
             placeholder={t("feeService.academicYear")}
             data={yearOptions}
             value={academicYearId}
-            onChange={setAcademicYearId}
+            onChange={(v) => setFilter("academicYearId", v || null)}
             clearable
             w={220}
           />
@@ -193,21 +206,28 @@ const FeeServicesPage: NextPageWithLayout = function FeeServicesPage() {
               },
             ]}
             value={category}
-            onChange={setCategory}
+            onChange={(v) =>
+              setFilter(
+                "category",
+                (v as "TRANSPORT" | "ACCOMMODATION" | null) || null,
+              )
+            }
             clearable
             w={200}
           />
           <TextInput
             leftSection={<IconSearch size={16} />}
             placeholder={t("common.search")}
-            value={search}
-            onChange={(e) => setSearch(e.currentTarget.value)}
+            value={searchDraft}
+            onChange={(e) => setFilter("search", e.currentTarget.value || null)}
             w={240}
           />
           <Switch
             label={t("feeService.activeOnly")}
             checked={activeOnly}
-            onChange={(e) => setActiveOnly(e.currentTarget.checked)}
+            onChange={(e) =>
+              setFilter("activeOnly", e.currentTarget.checked ? null : "false")
+            }
           />
         </Group>
       </Paper>
