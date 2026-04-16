@@ -1,5 +1,7 @@
 import { AppShell, Box } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { useRouter } from "next/router";
+import { useEffect } from "react";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import Header from "@/components/layouts/Header";
 import Sidebar from "@/components/layouts/Sidebar";
@@ -13,9 +15,16 @@ export default function AdminLayout({
 }) {
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
   const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
-  const { isLoading } = useAuth();
+  const { isLoading, isAuthenticated } = useAuth();
+  const router = useRouter();
 
-  if (isLoading) {
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.replace("/admin/login");
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  if (isLoading || !isAuthenticated) {
     return (
       <Box
         style={{
