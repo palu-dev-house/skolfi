@@ -116,44 +116,6 @@ const HelpPage: NextPageWithLayout<Props> = function HelpPage({
 
   return (
     <>
-      <style jsx global>{`
-        @media print {
-          .admin-sidebar,
-          .mantine-AppShell-header,
-          .mantine-AppShell-navbar,
-          .help-toc,
-          .help-print-btn,
-          .help-version {
-            display: none !important;
-          }
-          .mantine-AppShell-main {
-            padding: 0 !important;
-          }
-          .help-content {
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-          }
-          .help-content-col {
-            flex: 0 0 100% !important;
-            max-width: 100% !important;
-          }
-          .mantine-Grid-root {
-            display: block !important;
-          }
-          a {
-            color: inherit !important;
-            text-decoration: none !important;
-          }
-          h1, h2, h3, h4 {
-            page-break-after: avoid;
-          }
-          p, li {
-            page-break-inside: avoid;
-          }
-        }
-      `}</style>
-
       <PageHeader title={t("help")} description={t("helpDescription")} />
 
       <Group justify="flex-end" mb="md" className="help-print-btn">

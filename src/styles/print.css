@@ -609,3 +609,57 @@
     page-break-after: always;
   }
 }
+
+/* ============================================
+   HELP PAGE PRINT
+   ============================================ */
+
+@media print {
+  /* Hide chrome */
+  .help-toc,
+  .help-print-btn,
+  .help-version {
+    display: none !important;
+  }
+
+  .mantine-AppShell-header,
+  .mantine-AppShell-navbar,
+  .mantine-AppShell-footer {
+    display: none !important;
+  }
+
+  .mantine-AppShell-main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Help content: remove border, full width */
+  .help-content {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 10px !important;
+  }
+
+  .help-content-col {
+    display: block !important;
+    flex: none !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Typography */
+  h1,
+  h2,
+  h3,
+  h4 {
+    page-break-after: avoid;
+  }
+  p,
+  li {
+    page-break-inside: avoid;
+  }
+  table {
+    page-break-inside: avoid;
+  }
+}
