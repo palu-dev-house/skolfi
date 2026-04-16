@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.16.2] - 2026-04-16
+
+### Fixes
+- add VOID status color to bill and payment badges
+
+
+
 ## [2.16.1] - 2026-04-16
 
 ### Fixes
