@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.18.2] - 2026-04-16
+
+### Fixes
+- move help page print styles to print.css for proper rendering
+
+
+
 ## [2.18.1] - 2026-04-16
 
 ### Other
