@@ -40,6 +40,7 @@ Panduan ini menjelaskan cara menggunakan **SkolFi**, aplikasi SPP sekolah, untuk
 14. [Pertanyaan Umum](#14-pertanyaan-umum)
 15. [Alur Kerja (Workflow)](#15-alur-kerja-workflow)
 16. [Studi Kasus](#16-studi-kasus)
+17. [Untuk Developer](#untuk-developer)
 
 ---
 
@@ -864,10 +865,35 @@ Bagian ini memberi contoh skenario nyata dan cara menanganinya.
 
 ---
 
+## Untuk Developer
+
+### Biome (Linter & Formatter)
+
+Proyek ini menggunakan [Biome](https://biomejs.dev/) sebagai linter dan formatter. Konfigurasi ada di `biome.json` pada root proyek.
+
+| Perintah | Deskripsi |
+|---|---|
+| `pnpm lint` | Jalankan linter (Biome check) |
+| `pnpm format` | Format otomatis semua file |
+
+File yang di-lint: `*.ts`, `*.tsx`, `*.js`, `*.jsx`, `*.mjs`, `*.json`, `*.css`.
+
+### Husky & lint-staged (Pre-commit Hook)
+
+Setiap kali `git commit`, **Husky** menjalankan **lint-staged** secara otomatis. Hook ini memastikan semua file yang di-stage melewati pemeriksaan Biome sebelum commit berhasil dibuat.
+
+**Alur:**
+1. Developer menjalankan `git commit`.
+2. Husky memicu hook pre-commit → `pnpm exec lint-staged`.
+3. lint-staged menjalankan `biome check --write` pada file yang di-stage.
+4. Jika ada error, commit ditolak — perbaiki error lalu commit ulang.
+
+> **Catatan:** Jangan gunakan `--no-verify` untuk melewati hook kecuali benar-benar diperlukan.
+
 ## Bantuan Lebih Lanjut
 
 - **Bug / error teknis:** Hubungi administrator IT sekolah.
 - **Pertanyaan operasional:** Hubungi Admin utama di sekolah.
 - **Dokumentasi teknis (developer):** Lihat folder `docs/` pada repository.
 
-*Dokumen ini diperbarui pada April 2026 untuk aplikasi versi 2.13.2.*
+*Dokumen ini diperbarui pada April 2026 untuk aplikasi versi 2.16.*

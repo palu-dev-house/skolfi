@@ -40,6 +40,7 @@ This guide explains how to use **SkolFi**, the school tuition (SPP) application,
 14. [FAQ](#14-faq)
 15. [Workflows](#15-workflows)
 16. [Case Studies](#16-case-studies)
+17. [For Developers](#for-developers)
 
 ---
 
@@ -864,10 +865,35 @@ This section gives real-world scenarios and how to handle them.
 
 ---
 
+## For Developers
+
+### Biome (Linter & Formatter)
+
+This project uses [Biome](https://biomejs.dev/) as its linter and formatter. Configuration is in `biome.json` at the project root.
+
+| Command | Description |
+|---|---|
+| `pnpm lint` | Run linter (Biome check) |
+| `pnpm format` | Auto-format all files |
+
+Linted file types: `*.ts`, `*.tsx`, `*.js`, `*.jsx`, `*.mjs`, `*.json`, `*.css`.
+
+### Husky & lint-staged (Pre-commit Hook)
+
+Every `git commit` automatically triggers **Husky** which runs **lint-staged**. This hook ensures all staged files pass Biome checks before a commit is created.
+
+**Flow:**
+1. Developer runs `git commit`.
+2. Husky fires the pre-commit hook → `pnpm exec lint-staged`.
+3. lint-staged runs `biome check --write` on staged files.
+4. If errors are found, the commit is rejected — fix the errors and commit again.
+
+> **Note:** Do not use `--no-verify` to skip hooks unless absolutely necessary.
+
 ## Further Help
 
 - **Bugs / technical errors:** Contact your school's IT administrator.
 - **Operational questions:** Contact the primary Admin at the school.
 - **Developer documentation:** See the `docs/` folder in the repository.
 
-*This document was last updated in April 2026 for app version 2.13.2.*
+*This document was last updated in April 2026 for app version 2.16.*
