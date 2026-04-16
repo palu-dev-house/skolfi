@@ -20,7 +20,7 @@ This guide explains how to use **SkolFi**, the school tuition (SPP) application,
 5. [Scholarships & Discounts](#5-scholarships--discounts)
 6. [Tuition Bills](#6-tuition-bills)
 7. [Payments](#7-payments)
-   - [Transport & Accommodation](#transport--accommodation)
+   - [Transport](#transport)
    - [Service Fee (Uang Perlengkapan)](#service-fee-uang-perlengkapan)
    - [Generate All Bills](#generate-all-bills)
    - [Multi-Bill Payment (Cashier)](#multi-bill-payment-cashier)
@@ -321,15 +321,22 @@ Use the filters on the payments page to see:
 
 ---
 
-## Transport & Accommodation
+## Transport
 
-Transport and dorm fees are managed as **services** with per-student subscriptions and price history.
+Transport fees are managed as **services** with per-student subscriptions and price history.
 
 ### Create a service
 
-1. Open **Services** from the Fees & Services menu.
-2. Click **Add Service** and fill in Name, Category (Transport or Accommodation), and optional notes.
+1. Open **Transport** from the Fees & Services menu.
+2. Click **Add Service** and fill in Name, Category, and optional notes.
 3. Save. A service with no price cannot generate bills yet.
+
+### Import services from Excel
+
+1. On the Transport page, click the **Import** button.
+2. Download the Excel template — it includes academic years and categories as reference.
+3. Fill in the service data (Academic Year, Category, Name, Description) following the template format.
+4. Upload the file and click **Process Import**. Duplicate services (same name + year + category) are skipped.
 
 ### Set prices and price history
 
@@ -363,6 +370,13 @@ A **service fee** is a mandatory per-class charge billed at admin-configured mon
 
 Every student enrolled in that class will get a bill on each billing month.
 
+### Import service fees from Excel
+
+1. On the Service Fees page, click the **Import** button.
+2. Download the Excel template — it includes class names and months as reference.
+3. Fill in the data (Class, Name, Amount, Billing Months) following the template format.
+4. Upload the file and click **Process Import**. Duplicate entries (same name + class) are skipped.
+
 ### Billing months
 
 Edit the service fee to add or remove billing months. Next generation respects the new list; existing bills are untouched.
@@ -382,7 +396,7 @@ The **Generate All Bills** button at the top of **All Bills** creates any missin
 
 ## Multi-Bill Payment (Cashier)
 
-On the cashier payment page the outstanding list combines tuition, transport/accommodation bills, and service-fee bills for the selected student. A single **Process Payment** action creates one transaction that covers all selected items.
+On the cashier payment page the outstanding list combines tuition, transport bills, and service-fee bills for the selected student. A single **Process Payment** action creates one transaction that covers all selected items.
 
 - Each payment row is linked to exactly one bill (tuition, fee bill, or service-fee bill).
 - All rows in a transaction share the same **Transaction ID**, so the receipt prints as one slip.
@@ -396,7 +410,7 @@ Students and parents see all three bill types in one outstanding list on the por
 
 When a student is marked as exited:
 
-- Active **transport/accommodation subscriptions** have their End Date set to the exit date.
+- Active **transport subscriptions** have their End Date set to the exit date.
 - **Unpaid** future bills (including fee bills and service-fee bills) are **voided** — `voidedByExit` flag set, amount zeroed. They no longer count toward totals.
 - **Partially paid** bills are kept, and a warning is surfaced so staff can decide how to settle them.
 - Paid bills are never touched.
@@ -405,7 +419,7 @@ Undoing an exit restores subscriptions and reinstates voided bills (amounts re-r
 
 ## Scholarships and Discounts — Tuition Only
 
-**Important:** Scholarships and discounts apply only to tuition. Transport, accommodation, and service-fee bills are billed in full regardless of a student's scholarship or discount status. The cashier screen does not offer scholarship/discount fields on non-tuition line items.
+**Important:** Scholarships and discounts apply only to tuition. Transport and service-fee bills are billed in full regardless of a student's scholarship or discount status. The cashier screen does not offer scholarship/discount fields on non-tuition line items.
 
 ---
 
@@ -537,19 +551,19 @@ Useful for monthly/quarterly meetings with the principal.
 
 **Menu:** `Reports → Fee Services`
 
-A unified view of **transport and accommodation** fee services, grouped by service. Use this when you want to see how each bus route or boarding package is performing without digging through the bill list.
+A unified view of **transport** fee services, grouped by service. Use this when you want to see how each bus route is performing without digging through the bill list.
 
 **Summary cards (top):** grand totals for *Billed*, *Paid*, and *Outstanding* across the currently filtered services.
 
 **Per-row info:**
-- Fee service name and category badge (Transport / Accommodation).
+- Fee service name and category badge.
 - Active students subscribed to the service.
 - Total billed, total paid, outstanding.
 - Count of overdue bills.
 
 **Available filters:**
 - Academic year
-- Category (Transport / Accommodation)
+- Category
 - Specific fee service
 - Bill status (Unpaid / Partial / Paid / Void)
 - Class

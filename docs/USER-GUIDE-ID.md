@@ -20,7 +20,7 @@ Panduan ini menjelaskan cara menggunakan **SkolFi**, aplikasi SPP sekolah, untuk
 5. [Beasiswa & Diskon](#5-beasiswa--diskon)
 6. [Tagihan SPP](#6-tagihan-spp)
 7. [Pembayaran](#7-pembayaran)
-   - [Transport & Akomodasi](#transport--akomodasi)
+   - [Transport](#transport)
    - [Uang Perlengkapan](#uang-perlengkapan)
    - [Buat Semua Tagihan](#buat-semua-tagihan)
    - [Pembayaran Multi-Tagihan (Kasir)](#pembayaran-multi-tagihan-kasir)
@@ -299,7 +299,7 @@ Untuk sekolah yang masih menggunakan **kartu SPP fisik pra-cetak** sebagai bukti
 - **Bulan terpilih** — pilih bulan mana saja yang ingin dicetak. Sistem otomatis mencentang semua bulan yang sudah pernah dibayar (autofill). Tersedia tombol **Pilih Lunas**, **Pilih Semua**, dan **Kosongkan**.
 - **Semua bulan** — mencetak seluruh bulan yang ada data bayarnya.
 
-**Kolom pada kartu:** No, Bulan, SPP, Transport & Asrama, Perlengkapan, Total, Tanggal Bayar, No. Kuitansi, Kasir. Baris total di bawah menjumlahkan semua bulan yang sedang ditampilkan.
+**Kolom pada kartu:** No, Bulan, SPP, Transport, Perlengkapan, Total, Tanggal Bayar, No. Kuitansi, Kasir. Baris total di bawah menjumlahkan semua bulan yang sedang ditampilkan.
 
 **Format cetak:**
 - Ukuran kertas: **A4 portrait** (210 mm × 297 mm).
@@ -321,15 +321,22 @@ Filter pada halaman pembayaran untuk melihat:
 
 ---
 
-## Transport & Akomodasi
+## Transport
 
-Tagihan transport dan asrama dikelola sebagai **layanan** dengan langganan per siswa dan riwayat harga.
+Tagihan transport dikelola sebagai **layanan** dengan langganan per siswa dan riwayat harga.
 
 ### Membuat layanan
 
-1. Buka menu **Layanan** pada grup Layanan & Biaya.
-2. Klik **Tambah Layanan** lalu isi Nama, Kategori (Transport atau Akomodasi), dan catatan opsional.
+1. Buka menu **Transport** pada grup Layanan & Biaya.
+2. Klik **Tambah Layanan** lalu isi Nama, Kategori, dan catatan opsional.
 3. Simpan. Layanan tanpa harga tidak bisa membuat tagihan.
+
+### Import layanan dari Excel
+
+1. Pada halaman Transport, klik tombol **Impor**.
+2. Download template Excel — template sudah berisi daftar tahun ajaran dan kategori sebagai referensi.
+3. Isi data layanan (Tahun Ajaran, Kategori, Nama, Deskripsi) sesuai format template.
+4. Upload file dan klik **Proses Import**. Layanan yang sudah ada (duplikat nama + tahun ajaran + kategori) akan dilewati.
 
 ### Mengatur harga dan riwayat harga
 
@@ -363,6 +370,13 @@ Jika ada layanan yang belum punya harga pada suatu periode, akan muncul peringat
 
 Setiap siswa di kelas tersebut akan mendapat tagihan di setiap bulan penagihan.
 
+### Import uang perlengkapan dari Excel
+
+1. Pada halaman Uang Perlengkapan, klik tombol **Impor**.
+2. Download template Excel — template sudah berisi daftar kelas dan bulan sebagai referensi.
+3. Isi data (Kelas, Nama, Jumlah, Bulan Penagihan) sesuai format template.
+4. Upload file dan klik **Proses Import**. Data yang sudah ada (duplikat nama + kelas) akan dilewati.
+
 ### Bulan penagihan
 
 Edit uang perlengkapan untuk menambah/menghapus bulan penagihan. Eksekusi berikutnya mengikuti daftar baru; tagihan lama tidak berubah.
@@ -373,7 +387,7 @@ Perubahan jumlah hanya berlaku untuk tagihan yang dibuat berikutnya. Tagihan lam
 
 ## Buat Semua Tagihan
 
-Tombol **Buat Semua Tagihan** pada halaman **Semua Tagihan** membuat tagihan yang belum ada untuk tahun ajaran aktif di tiga jalur (SPP, transport/akomodasi, uang perlengkapan).
+Tombol **Buat Semua Tagihan** pada halaman **Semua Tagihan** membuat tagihan yang belum ada untuk tahun ajaran aktif di tiga jalur (SPP, transport, uang perlengkapan).
 
 - **Idempoten:** aman dijalankan berulang.
 - **Tidak merusak:** tagihan yang sudah dibayar tidak disentuh.
@@ -382,7 +396,7 @@ Tombol **Buat Semua Tagihan** pada halaman **Semua Tagihan** membuat tagihan yan
 
 ## Pembayaran Multi-Tagihan (Kasir)
 
-Pada halaman pembayaran kasir, daftar tagihan menggabungkan SPP, tagihan transport/akomodasi, dan uang perlengkapan untuk siswa yang dipilih. Sekali klik **Proses Pembayaran** membuat satu transaksi yang mencakup semua item terpilih.
+Pada halaman pembayaran kasir, daftar tagihan menggabungkan SPP, tagihan transport, dan uang perlengkapan untuk siswa yang dipilih. Sekali klik **Proses Pembayaran** membuat satu transaksi yang mencakup semua item terpilih.
 
 - Setiap baris payment terkait tepat satu tagihan (SPP, fee bill, atau service-fee bill).
 - Semua baris dalam satu transaksi berbagi **ID Transaksi** yang sama, jadi kuitansi dicetak sebagai satu slip.
@@ -396,7 +410,7 @@ Siswa/orang tua melihat tiga jenis tagihan dalam satu daftar di halaman pembayar
 
 Saat siswa ditandai keluar:
 
-- **Langganan transport/akomodasi** yang aktif diberi Tanggal Berakhir sama dengan tanggal keluar.
+- **Langganan transport** yang aktif diberi Tanggal Berakhir sama dengan tanggal keluar.
 - Tagihan **belum dibayar** untuk bulan-bulan berikutnya (termasuk fee bill dan uang perlengkapan) **dibatalkan** — flag `voidedByExit` diset, jumlah menjadi 0. Tidak dihitung lagi di total.
 - Tagihan **sebagian dibayar** tetap utuh, dan ada peringatan agar staf memutuskan cara menyelesaikannya.
 - Tagihan yang sudah lunas tidak pernah diubah.
@@ -506,7 +520,7 @@ Jika Anda menjalankan **Generate Tagihan** setelah menandai siswa keluar, sistem
 Menampilkan daftar tagihan yang **lewat jatuh tempo** dan belum lunas. Laporan dipisah menjadi tiga tab sesuai jenis tagihan:
 
 - **SPP** — tagihan SPP bulanan (tuition).
-- **Transport & Asrama** — tagihan layanan berlangganan (fee bills).
+- **Transport** — tagihan layanan berlangganan (fee bills).
 - **Uang Perlengkapan** — tagihan one-time per kelas (service fee bills).
 
 Setiap tab menggunakan filter dan format tabel yang sama, jadi Anda bisa beralih antar jenis tagihan tanpa kehilangan konteks.
@@ -537,19 +551,19 @@ Berguna untuk rapat bulanan/kuartal dengan kepala sekolah.
 
 **Menu:** `Laporan → Fee Services`
 
-Tampilan terpadu untuk layanan **transport dan akomodasi**, dikelompokkan per layanan. Gunakan laporan ini untuk melihat kinerja tiap rute bus atau paket asrama tanpa harus menelusuri daftar tagihan satu per satu.
+Tampilan terpadu untuk layanan **transport**, dikelompokkan per layanan. Gunakan laporan ini untuk melihat kinerja tiap rute bus tanpa harus menelusuri daftar tagihan satu per satu.
 
 **Kartu ringkasan (atas):** total keseluruhan *Ditagihkan*, *Dibayar*, dan *Tunggakan* untuk layanan yang sedang difilter.
 
 **Info per baris:**
-- Nama layanan dan badge kategori (Transport / Akomodasi).
+- Nama layanan dan badge kategori.
 - Jumlah siswa aktif yang berlangganan.
 - Total ditagihkan, total dibayar, tunggakan.
 - Jumlah tagihan yang jatuh tempo.
 
 **Filter tersedia:**
 - Tahun ajaran
-- Kategori (Transport / Akomodasi)
+- Kategori
 - Layanan tertentu
 - Status tagihan (Belum Bayar / Sebagian / Lunas / Void)
 - Kelas

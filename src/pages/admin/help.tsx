@@ -134,6 +134,13 @@ const HelpPage: NextPageWithLayout<Props> = function HelpPage({
             box-shadow: none !important;
             padding: 0 !important;
           }
+          .help-content-col {
+            flex: 0 0 100% !important;
+            max-width: 100% !important;
+          }
+          .mantine-Grid-root {
+            display: block !important;
+          }
           a {
             color: inherit !important;
             text-decoration: none !important;
@@ -193,7 +200,7 @@ const HelpPage: NextPageWithLayout<Props> = function HelpPage({
         </Grid.Col>
 
         {/* Content */}
-        <Grid.Col span={{ base: 12, md: 9 }}>
+        <Grid.Col span={{ base: 12, md: 9 }} className="help-content-col">
           <Paper withBorder p="xl" className="help-content">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
