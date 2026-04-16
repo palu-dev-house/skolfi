@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.18.5] - 2026-04-16
+
+### Fixes
+- redirect to /admin/login when admin auth is missing or invalid
+
+
+
 ## [2.18.4] - 2026-04-16
 
 ### Fixes
