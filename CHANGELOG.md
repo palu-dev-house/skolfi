@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.17.1] - 2026-04-16
+
+### Fixes
+- improve help page print layout and update docs with import guides
+
+
+
 ## [2.17.0] - 2026-04-16
 
 ### Features
