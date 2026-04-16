@@ -24,8 +24,10 @@ import {
   IconAlertCircle,
   IconCash,
   IconCheck,
+  IconPrinter,
   IconUser,
 } from "@tabler/icons-react";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
@@ -73,6 +75,7 @@ export default function PaymentForm() {
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [inputs, setInputs] = useState<Record<string, ItemInput>>({});
   const [result, setResult] = useState<CreatePaymentResult | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const { data: studentsData } = useStudents({ limit: 1000 });
   const { data: tuitionsData } = useTuitions({
@@ -273,6 +276,20 @@ export default function PaymentForm() {
           required
         />
 
+        {studentNis && (
+          <Group>
+            <Button
+              component={Link}
+              href={`/admin/students/${studentNis}/payment-card`}
+              target="_blank"
+              variant="light"
+              leftSection={<IconPrinter size={18} />}
+            >
+              {t("paymentCard.title")}
+            </Button>
+          </Group>
+        )}
+
         {studentNis && outstanding.length === 0 && (
           <Alert icon={<IconCheck size={18} />} color="green" variant="light">
             {t("payment.allComplete")}
@@ -420,7 +437,7 @@ export default function PaymentForm() {
             <Group>
               <Button
                 leftSection={<IconCash size={18} />}
-                onClick={handleSubmit}
+                onClick={() => setConfirmOpen(true)}
                 loading={createPayment.isPending}
                 disabled={selectedCount === 0 || totalSelected <= 0}
               >
@@ -435,6 +452,44 @@ export default function PaymentForm() {
             </Group>
           </>
         )}
+
+        <Modal
+          opened={confirmOpen}
+          onClose={() => setConfirmOpen(false)}
+          title={t("payment.confirmPayment")}
+          size="md"
+        >
+          <Stack gap="md">
+            <Text>
+              {t("payment.confirmPaymentMessage", {
+                count: selectedCount,
+              })}
+            </Text>
+            <Text fw={600} size="lg" ta="center">
+              <NumberFormatter
+                value={totalSelected}
+                prefix="Rp "
+                thousandSeparator="."
+                decimalSeparator=","
+              />
+            </Text>
+            <Group justify="flex-end">
+              <Button variant="light" onClick={() => setConfirmOpen(false)}>
+                {t("common.cancel")}
+              </Button>
+              <Button
+                leftSection={<IconCash size={18} />}
+                loading={createPayment.isPending}
+                onClick={() => {
+                  setConfirmOpen(false);
+                  handleSubmit();
+                }}
+              >
+                {t("payment.processPayment")}
+              </Button>
+            </Group>
+          </Stack>
+        </Modal>
 
         {result && (
           <Modal

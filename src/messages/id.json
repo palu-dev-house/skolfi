@@ -410,7 +410,8 @@
     "multiItemExplainer": "Pembayaran akan dibuat dan dialokasikan ke setiap tagihan terpilih. Satu kuitansi dihasilkan per transaksi.",
     "transactionId": "ID Transaksi",
     "transactionCreated": "Transaksi #{id} berhasil dibuat",
-    "partialFailureTitle": "Beberapa tagihan gagal diproses"
+    "partialFailureTitle": "Beberapa tagihan gagal diproses",
+    "confirmPaymentMessage": "Proses pembayaran untuk {count} tagihan dengan total:"
   },
   "nav": {
     "home": "Beranda",

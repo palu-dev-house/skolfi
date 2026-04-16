@@ -410,7 +410,8 @@
     "multiItemExplainer": "One payment will be created and allocated across every selected item. A single receipt is generated per transaction.",
     "transactionId": "Transaction ID",
     "transactionCreated": "Transaction #{id} created successfully",
-    "partialFailureTitle": "Some items failed to process"
+    "partialFailureTitle": "Some items failed to process",
+    "confirmPaymentMessage": "Process payment for {count} bills with total:"
   },
   "nav": {
     "home": "Home",
