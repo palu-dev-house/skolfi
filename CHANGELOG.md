@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.18.3] - 2026-04-16
+
+### Other
+- docs: add Biome and Husky developer section to user guides
+
+
+
 ## [2.18.2] - 2026-04-16
 
 ### Fixes
