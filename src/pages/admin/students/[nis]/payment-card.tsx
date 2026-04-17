@@ -20,7 +20,7 @@ import AdminLayout from "@/components/layouts/AdminLayout";
 import PageHeader from "@/components/ui/PageHeader/PageHeader";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import { usePaymentCard } from "@/hooks/api/usePaymentCard";
-import { useStudent } from "@/hooks/api/useStudents";
+import { useStudent, useStudents } from "@/hooks/api/useStudents";
 import type { NextPageWithLayout } from "@/lib/page-types";
 
 type PrintMode = "header" | "selected" | "all";
@@ -32,12 +32,30 @@ function formatRp(value: number): string {
 
 const PaymentCardPage: NextPageWithLayout = function PaymentCardPage() {
   const router = useRouter();
-  const { nis } = router.query as { nis: string };
+  const { nis: urlNis } = router.query as { nis: string };
   const t = useTranslations();
 
+  const [selectedNis, setSelectedNis] = useState<string | null>(null);
+  const [studentSearch, setStudentSearch] = useState("");
   const [academicYearId, setAcademicYearId] = useState<string | null>(null);
   const [mode, setMode] = useState<PrintMode>("header");
   const [selectedMonths, setSelectedMonths] = useState<Set<string>>(new Set());
+
+  // Pre-fill from URL param
+  const nis = selectedNis || urlNis;
+
+  const { data: studentsData } = useStudents({
+    limit: 50,
+    search: studentSearch || undefined,
+  });
+  const studentOptions = useMemo(
+    () =>
+      studentsData?.students.map((s) => ({
+        value: s.nis,
+        label: `${s.name} (${s.nis})`,
+      })) || [],
+    [studentsData],
+  );
 
   const { data: student } = useStudent(nis);
   const { data: academicYearsData } = useAcademicYears({ limit: 100 });
@@ -142,6 +160,17 @@ const PaymentCardPage: NextPageWithLayout = function PaymentCardPage() {
         <Card withBorder mb="md">
           <Stack gap="md">
             <Group gap="md" align="flex-end" wrap="wrap">
+              <Select
+                label={t("paymentCard.student")}
+                placeholder={t("paymentCard.searchStudent")}
+                data={studentOptions}
+                value={nis || null}
+                onChange={setSelectedNis}
+                searchable
+                onSearchChange={setStudentSearch}
+                w={300}
+                nothingFoundMessage={t("common.noResults")}
+              />
               <Select
                 label={t("paymentCard.academicYear")}
                 placeholder={t("paymentCard.selectYear")}
@@ -254,10 +283,6 @@ const PaymentCardPage: NextPageWithLayout = function PaymentCardPage() {
                 <div>: {card.student.name}</div>
                 <div className="pc-student-label">{t("paymentCard.class")}</div>
                 <div>: {card.class?.className ?? "-"}</div>
-                <div className="pc-student-label">
-                  {t("paymentCard.academicYearLabel")}
-                </div>
-                <div>: {card.academicYear.year}</div>
               </div>
             </>
           )}

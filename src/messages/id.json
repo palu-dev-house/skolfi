@@ -1301,6 +1301,8 @@
   "paymentCard": {
     "title": "Kartu Bukti Pembayaran",
     "cardTitle": "KARTU BUKTI PEMBAYARAN",
+    "student": "Siswa",
+    "searchStudent": "Cari siswa...",
     "academicYear": "Tahun Ajaran",
     "academicYearLabel": "Tahun Ajaran",
     "selectYear": "Pilih tahun ajaran",

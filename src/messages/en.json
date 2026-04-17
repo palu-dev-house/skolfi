@@ -1301,6 +1301,8 @@
   "paymentCard": {
     "title": "Payment Card",
     "cardTitle": "PAYMENT PROOF CARD",
+    "student": "Student",
+    "searchStudent": "Search student...",
     "academicYear": "Academic Year",
     "academicYearLabel": "Academic Year",
     "selectYear": "Select academic year",
