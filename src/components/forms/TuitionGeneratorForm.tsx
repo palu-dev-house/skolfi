@@ -4,7 +4,6 @@ import {
   Alert,
   Badge,
   Button,
-  Divider,
   Group,
   List,
   NumberFormatter,
@@ -24,7 +23,6 @@ import {
 import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import type { PaymentFrequency } from "@/generated/prisma/client";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
 import { useClassAcademics } from "@/hooks/api/useClassAcademics";
 import { useDiscounts } from "@/hooks/api/useDiscounts";
@@ -55,18 +53,8 @@ export default function TuitionGeneratorForm() {
   const router = useRouter();
   const [academicYearId, setAcademicYearId] = useState<string | null>(null);
   const [classAcademicId, setClassAcademicId] = useState<string | null>(null);
-  const [paymentFrequency, setPaymentFrequency] =
-    useState<PaymentFrequency>("MONTHLY");
   const [monthlyFee, setMonthlyFee] = useState<number | string>(500000);
-  const [quarterlyFee, setQuarterlyFee] = useState<number | string>("");
-  const [semesterFee, setSemesterFee] = useState<number | string>("");
   const [result, setResult] = useState<GenerationResult | null>(null);
-
-  const FREQUENCY_OPTIONS = [
-    { value: "MONTHLY", label: t("tuition.frequencyMonthly") },
-    { value: "QUARTERLY", label: t("tuition.frequencyQuarterly") },
-    { value: "SEMESTER", label: t("tuition.frequencySemester") },
-  ];
 
   const { data: academicYearsData, isLoading: loadingYears } = useAcademicYears(
     {
@@ -81,14 +69,12 @@ export default function TuitionGeneratorForm() {
 
   const generateTuitions = useGenerateTuitions();
 
-  // Fetch applicable discounts for the selected class
   const { data: discountsData } = useDiscounts({
     academicYearId: academicYearId || undefined,
     isActive: true,
     limit: 100,
   });
 
-  // Filter discounts applicable to the selected class
   const applicableDiscounts = discountsData?.discounts.filter(
     (d) => !d.classAcademicId || d.classAcademicId === classAcademicId,
   );
@@ -105,44 +91,7 @@ export default function TuitionGeneratorForm() {
     }
   });
 
-  // Calculate fees
   const monthlyFeeNum = Number(monthlyFee) || 0;
-  const quarterlyFeeNum = Number(quarterlyFee) || 0;
-  const semesterFeeNum = Number(semesterFee) || 0;
-
-  const defaultQuarterlyFee = monthlyFeeNum * 3;
-  const defaultSemesterFee = monthlyFeeNum * 6;
-
-  // Calculate discounts
-  const quarterlyDiscount =
-    quarterlyFeeNum > 0 && quarterlyFeeNum < defaultQuarterlyFee
-      ? defaultQuarterlyFee - quarterlyFeeNum
-      : 0;
-  const semesterDiscount =
-    semesterFeeNum > 0 && semesterFeeNum < defaultSemesterFee
-      ? defaultSemesterFee - semesterFeeNum
-      : 0;
-
-  const quarterlyDiscountPercent =
-    quarterlyDiscount > 0
-      ? ((quarterlyDiscount / defaultQuarterlyFee) * 100).toFixed(1)
-      : 0;
-  const semesterDiscountPercent =
-    semesterDiscount > 0
-      ? ((semesterDiscount / defaultSemesterFee) * 100).toFixed(1)
-      : 0;
-
-  // Determine fee amount based on frequency
-  const getFeeAmount = () => {
-    switch (paymentFrequency) {
-      case "QUARTERLY":
-        return quarterlyFeeNum || defaultQuarterlyFee;
-      case "SEMESTER":
-        return semesterFeeNum || defaultSemesterFee;
-      default:
-        return monthlyFeeNum;
-    }
-  };
 
   const handleGenerate = () => {
     if (!classAcademicId || !monthlyFee) {
@@ -157,8 +106,8 @@ export default function TuitionGeneratorForm() {
     generateTuitions.mutate(
       {
         classAcademicId,
-        feeAmount: getFeeAmount(),
-        paymentFrequency,
+        feeAmount: monthlyFeeNum,
+        paymentFrequency: "MONTHLY",
       },
       {
         onSuccess: (data) => {
@@ -221,18 +170,6 @@ export default function TuitionGeneratorForm() {
           required
         />
 
-        <Divider label={t("tuition.paymentConfig")} labelPosition="center" />
-
-        <Select
-          label={t("tuition.frequency")}
-          description={t("tuition.frequencyDescription")}
-          data={FREQUENCY_OPTIONS}
-          value={paymentFrequency}
-          onChange={(value) =>
-            setPaymentFrequency((value as PaymentFrequency) || "MONTHLY")
-          }
-        />
-
         <NumberInput
           label={t("tuition.monthlyFee")}
           description={t("tuition.monthlyFeeDescription")}
@@ -246,138 +183,22 @@ export default function TuitionGeneratorForm() {
           required
         />
 
-        {paymentFrequency === "QUARTERLY" && monthlyFeeNum > 0 && (
-          <Stack gap="xs">
-            <NumberInput
-              label={t("tuition.quarterlyFee")}
-              description={
-                <Text size="xs" c="dimmed">
-                  {t("tuition.defaultNoDiscount")}{" "}
-                  <NumberFormatter
-                    value={defaultQuarterlyFee}
-                    prefix="Rp "
-                    thousandSeparator="."
-                    decimalSeparator=","
-                  />
-                </Text>
-              }
-              placeholder={t("tuition.quarterlyFeePlaceholder")}
-              value={quarterlyFee}
-              onChange={setQuarterlyFee}
-              min={0}
-              prefix="Rp "
-              thousandSeparator="."
-              decimalSeparator=","
-            />
-            {quarterlyDiscount > 0 && (
-              <Alert
-                icon={<IconInfoCircle size={16} />}
-                color="green"
-                variant="light"
-              >
-                <Group gap="xs">
-                  <Badge color="green" variant="light">
-                    {t("tuition.discountPercent", {
-                      percent: quarterlyDiscountPercent,
-                    })}
-                  </Badge>
-                  <Text size="sm">
-                    {t("tuition.studentsSaveQuarter", {
-                      amount: `Rp ${quarterlyDiscount.toLocaleString("id-ID")}`,
-                    })}
-                  </Text>
-                </Group>
-              </Alert>
-            )}
-          </Stack>
-        )}
-
-        {paymentFrequency === "SEMESTER" && monthlyFeeNum > 0 && (
-          <Stack gap="xs">
-            <NumberInput
-              label={t("tuition.semesterFee")}
-              description={
-                <Text size="xs" c="dimmed">
-                  {t("tuition.defaultNoDiscount")}{" "}
-                  <NumberFormatter
-                    value={defaultSemesterFee}
-                    prefix="Rp "
-                    thousandSeparator="."
-                    decimalSeparator=","
-                  />
-                </Text>
-              }
-              placeholder={t("tuition.semesterFeePlaceholder")}
-              value={semesterFee}
-              onChange={setSemesterFee}
-              min={0}
-              prefix="Rp "
-              thousandSeparator="."
-              decimalSeparator=","
-            />
-            {semesterDiscount > 0 && (
-              <Alert
-                icon={<IconInfoCircle size={16} />}
-                color="green"
-                variant="light"
-              >
-                <Group gap="xs">
-                  <Badge color="green" variant="light">
-                    {t("tuition.discountPercent", {
-                      percent: semesterDiscountPercent,
-                    })}
-                  </Badge>
-                  <Text size="sm">
-                    {t("tuition.studentsSaveSemester", {
-                      amount: `Rp ${semesterDiscount.toLocaleString("id-ID")}`,
-                    })}
-                  </Text>
-                </Group>
-              </Alert>
-            )}
-          </Stack>
-        )}
-
         {monthlyFeeNum > 0 && (
           <Alert variant="light" color="blue">
             <Text size="sm" fw={500}>
               {t("tuition.annualFeeSummary")}
             </Text>
-            <Stack gap={4} mt="xs">
-              <Group justify="space-between">
-                <Text size="sm">{t("tuition.monthlyTimes")}</Text>
-                <Text size="sm" fw={500}>
-                  <NumberFormatter
-                    value={monthlyFeeNum * 12}
-                    prefix="Rp "
-                    thousandSeparator="."
-                    decimalSeparator=","
-                  />
-                </Text>
-              </Group>
-              <Group justify="space-between">
-                <Text size="sm">{t("tuition.quarterlyTimes")}</Text>
-                <Text size="sm" fw={500}>
-                  <NumberFormatter
-                    value={(quarterlyFeeNum || defaultQuarterlyFee) * 4}
-                    prefix="Rp "
-                    thousandSeparator="."
-                    decimalSeparator=","
-                  />
-                </Text>
-              </Group>
-              <Group justify="space-between">
-                <Text size="sm">{t("tuition.semesterTimes")}</Text>
-                <Text size="sm" fw={500}>
-                  <NumberFormatter
-                    value={(semesterFeeNum || defaultSemesterFee) * 2}
-                    prefix="Rp "
-                    thousandSeparator="."
-                    decimalSeparator=","
-                  />
-                </Text>
-              </Group>
-            </Stack>
+            <Group justify="space-between" mt="xs">
+              <Text size="sm">{t("tuition.monthlyTimes")}</Text>
+              <Text size="sm" fw={500}>
+                <NumberFormatter
+                  value={monthlyFeeNum * 12}
+                  prefix="Rp "
+                  thousandSeparator="."
+                  decimalSeparator=","
+                />
+              </Text>
+            </Group>
           </Alert>
         )}
 
@@ -437,7 +258,10 @@ export default function TuitionGeneratorForm() {
           >
             {t("tuition.generateTuitions")}
           </Button>
-          <Button variant="light" onClick={() => router.push("/tuitions")}>
+          <Button
+            variant="light"
+            onClick={() => router.push("/admin/tuitions")}
+          >
             {t("tuition.viewTuitions")}
           </Button>
         </Group>

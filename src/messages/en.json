@@ -248,6 +248,11 @@
     "paymentConfig": "Payment Configuration",
     "selectAcademicYear": "Select academic year",
     "selectClassPlaceholder": "Select class",
+    "importTitle": "Import Tuitions",
+    "importDescription": "Import tuition records from Excel for multiple classes at once",
+    "importStep1": "Download the Excel template",
+    "importStep2": "Fill in class names and fee amounts",
+    "importStep3": "Upload the file and process the import",
     "massUpdate": {
       "title": "Update Payment Status",
       "confirm": "Are you sure you want to update {count} tuitions to {status}?",

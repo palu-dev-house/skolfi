@@ -459,14 +459,9 @@ export default function TuitionTable() {
                       case "student":
                         return (
                           <Table.Td key={key}>
-                            <Stack gap={0}>
-                              <Text size="sm" fw={500}>
-                                {tuition.student?.name}
-                              </Text>
-                              <Text size="xs" c="dimmed">
-                                {tuition.studentNis}
-                              </Text>
-                            </Stack>
+                            <Text size="sm" fw={500}>
+                              {tuition.student?.name}
+                            </Text>
                           </Table.Td>
                         );
                       case "class":

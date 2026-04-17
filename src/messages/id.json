@@ -248,6 +248,11 @@
     "paymentConfig": "Konfigurasi Pembayaran",
     "selectAcademicYear": "Pilih tahun ajaran",
     "selectClassPlaceholder": "Pilih kelas",
+    "importTitle": "Import Tagihan SPP",
+    "importDescription": "Import tagihan SPP dari file Excel untuk beberapa kelas sekaligus",
+    "importStep1": "Download template Excel",
+    "importStep2": "Isi data kelas dan nominal biaya sesuai format",
+    "importStep3": "Upload file dan proses import",
     "massUpdate": {
       "title": "Ubah Status Pembayaran",
       "confirm": "Apakah Anda yakin ingin mengubah {count} tagihan menjadi {status}?",

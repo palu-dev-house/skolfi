@@ -240,6 +240,35 @@ export function useDeleteTuition() {
   });
 }
 
+interface ImportTuitionsResponse {
+  success: boolean;
+  data: {
+    generated: number;
+    skipped: number;
+    errors: Array<{ row: number; error?: string; errors?: string[] }>;
+  };
+}
+
+export function useImportTuitions() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const { data } = await apiClient.post<ImportTuitionsResponse>(
+        "/tuitions/import",
+        formData,
+      );
+      return data.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.tuitions.lists(),
+      });
+    },
+  });
+}
+
 export function useMassUpdateTuitions() {
   const queryClient = useQueryClient();
 
