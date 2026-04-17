@@ -70,7 +70,7 @@ interface CreatePaymentResult {
 export default function PaymentForm() {
   const t = useTranslations();
   const router = useRouter();
-  const [studentNis, setStudentNis] = useState<string | null>(null);
+  const [studentId, setStudentNis] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [inputs, setInputs] = useState<Record<string, ItemInput>>({});
@@ -80,21 +80,21 @@ export default function PaymentForm() {
   const { data: studentsData } = useStudents({ limit: 1000 });
   const { data: tuitionsData } = useTuitions({
     limit: 100,
-    studentNis: studentNis || undefined,
+    studentId: studentId || undefined,
   });
   const { data: feeBillsData } = useFeeBills({
     limit: 100,
-    studentNis: studentNis || undefined,
+    studentId: studentId || undefined,
   });
   const { data: serviceFeeBillsData } = useServiceFeeBills({
     limit: 100,
-    studentNis: studentNis || undefined,
+    studentId: studentId || undefined,
   });
 
   const createPayment = useCreatePayment();
 
   const outstanding: OutstandingRow[] = useMemo(() => {
-    if (!studentNis) return [];
+    if (!studentId) return [];
     const rows: OutstandingRow[] = [];
 
     for (const tu of tuitionsData?.tuitions ?? []) {
@@ -152,7 +152,7 @@ export default function PaymentForm() {
     }
 
     return rows;
-  }, [studentNis, tuitionsData, feeBillsData, serviceFeeBillsData, t]);
+  }, [studentId, tuitionsData, feeBillsData, serviceFeeBillsData, t]);
 
   const toggle = (row: OutstandingRow) => {
     setSelected((prev) => {
@@ -189,7 +189,7 @@ export default function PaymentForm() {
   const selectedCount = Object.values(selected).filter(Boolean).length;
 
   const handleSubmit = () => {
-    if (!studentNis) return;
+    if (!studentId) return;
     const items = outstanding
       .filter((row) => selected[row.key])
       .map((row) => {
@@ -222,7 +222,7 @@ export default function PaymentForm() {
 
     createPayment.mutate(
       {
-        studentNis,
+        studentId,
         notes: notes || undefined,
         items,
       },
@@ -265,7 +265,7 @@ export default function PaymentForm() {
           placeholder={t("payment.searchStudentPlaceholder")}
           leftSection={<IconUser size={18} />}
           data={studentOptions}
-          value={studentNis}
+          value={studentId}
           onChange={(v) => {
             setStudentNis(v);
             setSelected({});
@@ -276,11 +276,11 @@ export default function PaymentForm() {
           required
         />
 
-        {studentNis && (
+        {studentId && (
           <Group>
             <Button
               component={Link}
-              href={`/admin/students/${studentNis}/payment-card`}
+              href={`/admin/students/${studentId}/payment-card`}
               target="_blank"
               variant="light"
               leftSection={<IconPrinter size={18} />}
@@ -290,13 +290,13 @@ export default function PaymentForm() {
           </Group>
         )}
 
-        {studentNis && outstanding.length === 0 && (
+        {studentId && outstanding.length === 0 && (
           <Alert icon={<IconCheck size={18} />} color="green" variant="light">
             {t("payment.allComplete")}
           </Alert>
         )}
 
-        {studentNis && outstanding.length > 0 && (
+        {studentId && outstanding.length > 0 && (
           <Card withBorder>
             <Stack gap="sm">
               <Text fw={600}>{t("payment.outstandingItems")}</Text>
@@ -416,7 +416,7 @@ export default function PaymentForm() {
           </Card>
         )}
 
-        {studentNis && outstanding.length > 0 && (
+        {studentId && outstanding.length > 0 && (
           <>
             <Textarea
               label={t("payment.notesOptional")}

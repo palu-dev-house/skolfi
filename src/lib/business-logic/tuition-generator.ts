@@ -16,7 +16,7 @@ export interface TuitionGenerationParams {
   feeAmount: number;
   periodDiscounts?: PeriodDiscount[]; // Optional period-specific discounts
   students: Array<{
-    nis: string;
+    id: string;
     startJoinDate: Date;
     exitedAt: Date | null;
   }>;
@@ -28,7 +28,7 @@ export interface TuitionGenerationParams {
 
 export interface GeneratedTuition {
   classAcademicId: string;
-  studentNis: string;
+  studentId: string;
   period: string;
   month?: Month; // For backward compatibility with MONTHLY
   year: number;
@@ -427,7 +427,7 @@ export function generateTuitions(
 
         const tuition: GeneratedTuition = {
           classAcademicId,
-          studentNis: student.nis,
+          studentId: student.id,
           period,
           year,
           feeAmount: periodFee,
@@ -455,7 +455,7 @@ export function generateMonthlyTuitions(params: {
   classAcademicId: string;
   feeAmount: number;
   students: Array<{
-    nis: string;
+    id: string;
     startJoinDate: Date;
     exitedAt: Date | null;
   }>;

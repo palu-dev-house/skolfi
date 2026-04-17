@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const scholarshipSchema = z.object({
-  studentNis: z.string().min(1),
+  studentId: z.string().min(1),
   classAcademicId: z.string().min(1),
   nominal: z.coerce.number().positive(),
   scholarshipName: z.string().min(1),

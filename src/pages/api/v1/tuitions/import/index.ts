@@ -61,7 +61,7 @@ async function POST(request: NextRequest) {
           where: { classAcademicId: row.classAcademicId },
           include: {
             student: {
-              select: { nis: true, startJoinDate: true, exitedAt: true },
+              select: { id: true, startJoinDate: true, exitedAt: true },
             },
           },
         });
@@ -78,7 +78,7 @@ async function POST(request: NextRequest) {
           frequency: "MONTHLY",
           feeAmount: row.feeAmount,
           students: students.map((s) => ({
-            nis: s.nis,
+            id: s.id,
             startJoinDate: s.startJoinDate,
             exitedAt: s.exitedAt,
           })),
@@ -92,17 +92,17 @@ async function POST(request: NextRequest) {
         const existingTuitions = await prisma.tuition.findMany({
           where: {
             classAcademicId: row.classAcademicId,
-            studentNis: { in: students.map((s) => s.nis) },
+            studentId: { in: students.map((s) => s.id) },
           },
-          select: { studentNis: true, period: true, year: true },
+          select: { studentId: true, period: true, year: true },
         });
 
         const existingKeys = new Set(
-          existingTuitions.map((t) => `${t.studentNis}-${t.period}-${t.year}`),
+          existingTuitions.map((t) => `${t.studentId}-${t.period}-${t.year}`),
         );
 
         const newTuitions = tuitionsToCreate.filter(
-          (t) => !existingKeys.has(`${t.studentNis}-${t.period}-${t.year}`),
+          (t) => !existingKeys.has(`${t.studentId}-${t.period}-${t.year}`),
         );
 
         // Fetch applicable discounts
@@ -123,7 +123,7 @@ async function POST(request: NextRequest) {
 
               return {
                 classAcademicId: t.classAcademicId,
-                studentNis: t.studentNis,
+                studentId: t.studentId,
                 period: t.period,
                 month: t.month,
                 year: t.year,

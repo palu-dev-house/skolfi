@@ -2,7 +2,7 @@ import type { PaymentStatus, PrismaClient } from "@/generated/prisma/client";
 
 export interface OverdueItem {
   tuitionId: string;
-  studentNis: string;
+  studentId: string;
   studentName: string;
   parentPhone: string;
   className: string;
@@ -120,7 +120,7 @@ export async function getOverdueTuitions(
   // Fetch scholarships for all relevant student+class combinations
   const scholarshipMap = new Map<string, number>();
   const studentClassPairs = tuitions.map((t) => ({
-    studentNis: t.studentNis,
+    studentId: t.studentId,
     classAcademicId: t.classAcademicId,
   }));
 
@@ -128,7 +128,7 @@ export async function getOverdueTuitions(
     const scholarships = await prisma.scholarship.findMany({
       where: {
         OR: studentClassPairs.map((pair) => ({
-          studentNis: pair.studentNis,
+          studentId: pair.studentId,
           classAcademicId: pair.classAcademicId,
         })),
       },
@@ -136,14 +136,14 @@ export async function getOverdueTuitions(
 
     // Sum scholarships per student+class
     scholarships.forEach((s) => {
-      const key = `${s.studentNis}-${s.classAcademicId}`;
+      const key = `${s.studentId}-${s.classAcademicId}`;
       const current = scholarshipMap.get(key) || 0;
       scholarshipMap.set(key, current + Number(s.nominal));
     });
   }
 
   return tuitions.map((t) => {
-    const scholarshipKey = `${t.studentNis}-${t.classAcademicId}`;
+    const scholarshipKey = `${t.studentId}-${t.classAcademicId}`;
     const scholarshipAmount = scholarshipMap.get(scholarshipKey) || 0;
     const feeAmount = Number(t.feeAmount);
     const discountAmount = Number(t.discountAmount) || 0;
@@ -155,7 +155,7 @@ export async function getOverdueTuitions(
 
     return {
       tuitionId: t.id,
-      studentNis: t.studentNis,
+      studentId: t.studentId,
       studentName: t.student.name,
       parentPhone: t.student.parentPhone,
       className: t.classAcademic.className,
@@ -184,13 +184,13 @@ export function groupOverdueByStudent(
   const grouped = new Map<string, OverdueByStudent>();
 
   items.forEach((item) => {
-    const key = `${item.studentNis}-${item.className}`;
+    const key = `${item.studentId}-${item.className}`;
 
     if (!grouped.has(key)) {
-      const details = studentDetails.get(item.studentNis);
+      const details = studentDetails.get(item.studentId);
       grouped.set(key, {
         student: {
-          nis: item.studentNis,
+          nis: item.studentId,
           name: item.studentName,
           parentName: details?.parentName || "",
           parentPhone: item.parentPhone,
@@ -230,7 +230,7 @@ export function groupOverdueByStudent(
  * Calculate overdue summary statistics
  */
 export function calculateOverdueSummary(items: OverdueItem[]): OverdueSummary {
-  const uniqueStudents = new Set(items.map((i) => i.studentNis));
+  const uniqueStudents = new Set(items.map((i) => i.studentId));
 
   return {
     totalStudents: uniqueStudents.size,
@@ -241,7 +241,7 @@ export function calculateOverdueSummary(items: OverdueItem[]): OverdueSummary {
 
 export interface OverdueFeeBillItem {
   feeBillId: string;
-  studentNis: string;
+  studentId: string;
   studentName: string;
   parentPhone: string;
   parentName: string;
@@ -261,7 +261,7 @@ export interface OverdueFeeBillItem {
 
 export interface OverdueServiceFeeBillItem {
   serviceFeeBillId: string;
-  studentNis: string;
+  studentId: string;
   studentName: string;
   parentPhone: string;
   parentName: string;
@@ -379,7 +379,7 @@ export async function getOverdueFeeBills(
       const paidAmount = Number(b.paidAmount);
       return {
         feeBillId: b.id,
-        studentNis: b.studentNis,
+        studentId: b.studentId,
         studentName: b.student.name,
         parentPhone: b.student.parentPhone,
         parentName: b.student.parentName,
@@ -439,7 +439,7 @@ export async function getOverdueServiceFeeBills(
     const paidAmount = Number(b.paidAmount);
     return {
       serviceFeeBillId: b.id,
-      studentNis: b.studentNis,
+      studentId: b.studentId,
       studentName: b.student.name,
       parentPhone: b.student.parentPhone,
       parentName: b.student.parentName,
@@ -463,11 +463,11 @@ export function groupFeeBillsByStudent(
 ): OverdueFeeBillByStudent[] {
   const grouped = new Map<string, OverdueFeeBillByStudent>();
   for (const item of items) {
-    const key = `${item.studentNis}-${item.className}`;
+    const key = `${item.studentId}-${item.className}`;
     if (!grouped.has(key)) {
       grouped.set(key, {
         student: {
-          nis: item.studentNis,
+          nis: item.studentId,
           name: item.studentName,
           parentName: item.parentName,
           parentPhone: item.parentPhone,
@@ -506,11 +506,11 @@ export function groupServiceFeeBillsByStudent(
 ): OverdueServiceFeeBillByStudent[] {
   const grouped = new Map<string, OverdueServiceFeeBillByStudent>();
   for (const item of items) {
-    const key = `${item.studentNis}-${item.className}`;
+    const key = `${item.studentId}-${item.className}`;
     if (!grouped.has(key)) {
       grouped.set(key, {
         student: {
-          nis: item.studentNis,
+          nis: item.studentId,
           name: item.studentName,
           parentName: item.parentName,
           parentPhone: item.parentPhone,
@@ -544,9 +544,9 @@ export function groupServiceFeeBillsByStudent(
 }
 
 export function calculateGenericOverdueSummary(
-  items: { studentNis: string; outstandingAmount: number }[],
+  items: { studentId: string; outstandingAmount: number }[],
 ): OverdueSummary {
-  const unique = new Set(items.map((i) => i.studentNis));
+  const unique = new Set(items.map((i) => i.studentId));
   return {
     totalStudents: unique.size,
     totalOverdueAmount: items.reduce((sum, i) => sum + i.outstandingAmount, 0),
@@ -617,7 +617,7 @@ export async function getClassSummary(
     include: {
       tuitions: {
         select: {
-          studentNis: true,
+          studentId: true,
           feeAmount: true,
           scholarshipAmount: true,
           discountAmount: true,
@@ -626,7 +626,7 @@ export async function getClassSummary(
         },
       },
       studentClasses: {
-        select: { studentNis: true },
+        select: { studentId: true },
       },
       serviceFeeBills: {
         select: {
@@ -640,11 +640,11 @@ export async function getClassSummary(
     orderBy: [{ grade: "asc" }, { section: "asc" }],
   });
 
-  // Map studentNis -> classAcademicId for the fetched classes
+  // Map studentId -> classAcademicId for the fetched classes
   const studentToClass = new Map<string, string>();
   for (const cls of classes) {
     for (const sc of cls.studentClasses || []) {
-      studentToClass.set(sc.studentNis, cls.id);
+      studentToClass.set(sc.studentId, cls.id);
     }
   }
 
@@ -652,13 +652,13 @@ export async function getClassSummary(
   const feeBills = studentToClass.size
     ? await prisma.feeBill.findMany({
         where: {
-          studentNis: { in: [...studentToClass.keys()] },
+          studentId: { in: [...studentToClass.keys()] },
           ...(filters.academicYearId
             ? { feeService: { academicYearId: filters.academicYearId } }
             : {}),
         },
         select: {
-          studentNis: true,
+          studentId: true,
           amount: true,
           paidAmount: true,
           status: true,
@@ -670,7 +670,7 @@ export async function getClassSummary(
   const feeBillStatsByClass = new Map<string, BillBreakdown>();
   for (const bill of feeBills) {
     if (bill.voidedByExit) continue;
-    const classId = studentToClass.get(bill.studentNis);
+    const classId = studentToClass.get(bill.studentId);
     if (!classId) continue;
     const stats = feeBillStatsByClass.get(classId) ?? EMPTY_BREAKDOWN();
     const amount = Number(bill.amount);
@@ -687,7 +687,7 @@ export async function getClassSummary(
 
   return classes.map((cls) => {
     const tuitions = cls.tuitions || [];
-    const uniqueStudents = new Set(tuitions.map((t) => t.studentNis));
+    const uniqueStudents = new Set(tuitions.map((t) => t.studentId));
     const paid = tuitions.filter((t) => t.status === "PAID").length;
     const unpaid = tuitions.filter((t) => t.status === "UNPAID").length;
     const partial = tuitions.filter((t) => t.status === "PARTIAL").length;

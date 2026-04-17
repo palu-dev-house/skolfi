@@ -77,7 +77,7 @@ export default function PortalLayout({
   }, [isLoginPage, loading, isError, userData, router]);
 
   const user = userData
-    ? { studentNis: userData.nis, studentName: userData.name }
+    ? { studentId: userData.nis, studentName: userData.name }
     : null;
 
   const handleLogout = () => {
@@ -195,7 +195,7 @@ export default function PortalLayout({
                   {user?.studentName}
                 </Text>
                 <Text size="xs" c="dimmed">
-                  NIS: {user?.studentNis}
+                  NIS: {user?.studentId}
                 </Text>
               </Box>
             </Group>

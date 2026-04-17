@@ -182,7 +182,7 @@ const FeeServiceDetailPage: NextPageWithLayout =
             subscribe.mutate(
               {
                 feeServiceId: id,
-                studentNis: values.studentNis,
+                studentId: values.studentId,
                 startDate: dayjs(values.startDate).format("YYYY-MM-DD"),
                 endDate: values.endDate
                   ? dayjs(values.endDate).format("YYYY-MM-DD")
@@ -308,7 +308,7 @@ function SubscribersCard({
 }: {
   subs: Array<{
     id: string;
-    studentNis: string;
+    studentId: string;
     startDate: string;
     endDate: string | null;
     student?: { name: string };
@@ -351,8 +351,8 @@ function SubscribersCard({
           ) : (
             subs.map((s) => (
               <Table.Tr key={s.id}>
-                <Table.Td>{s.student?.name ?? s.studentNis}</Table.Td>
-                <Table.Td>{s.studentNis}</Table.Td>
+                <Table.Td>{s.student?.name ?? s.studentId}</Table.Td>
+                <Table.Td>{s.studentId}</Table.Td>
                 <Table.Td>{dayjs(s.startDate).format("DD MMM YYYY")}</Table.Td>
                 <Table.Td>
                   {s.endDate ? (
@@ -370,7 +370,7 @@ function SubscribersCard({
                       variant="subtle"
                       color="red"
                       onClick={() =>
-                        onEnd(s.id, s.student?.name ?? s.studentNis)
+                        onEnd(s.id, s.student?.name ?? s.studentId)
                       }
                     >
                       {t("feeService.endSubscription")}
@@ -397,7 +397,7 @@ function RecentBillsCard({
     paidAmount: string;
     status: string;
     student?: { name: string; nis: string };
-    studentNis: string;
+    studentId: string;
   }>;
 }) {
   const t = useTranslations();
@@ -428,7 +428,7 @@ function RecentBillsCard({
           ) : (
             bills.map((b) => (
               <Table.Tr key={b.id}>
-                <Table.Td>{b.student?.name ?? b.studentNis}</Table.Td>
+                <Table.Td>{b.student?.name ?? b.studentId}</Table.Td>
                 <Table.Td>
                   {t(`months.${b.period}`)} {b.year}
                 </Table.Td>
@@ -509,7 +509,7 @@ function SubscribeModal({
   onClose: () => void;
   feeServiceId: string;
   onSubmit: (v: {
-    studentNis: string;
+    studentId: string;
     startDate: Date;
     endDate: Date | null;
     notes: string;
@@ -529,13 +529,13 @@ function SubscribeModal({
   );
   const form = useForm({
     initialValues: {
-      studentNis: "",
+      studentId: "",
       startDate: new Date() as Date,
       endDate: null as Date | null,
       notes: "",
     },
     validate: {
-      studentNis: (v) => (v ? null : t("common.required")),
+      studentId: (v) => (v ? null : t("common.required")),
     },
   });
 
@@ -557,7 +557,7 @@ function SubscribeModal({
             required
             searchable
             data={options}
-            {...form.getInputProps("studentNis")}
+            {...form.getInputProps("studentId")}
           />
           <DatePickerInput
             label={t("feeService.startDate")}

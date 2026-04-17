@@ -31,7 +31,7 @@ export const paymentItemSchema = z
   });
 
 export const paymentSchema = z.object({
-  studentNis: z.string().min(1),
+  studentId: z.string().min(1),
   paymentDate: z.string().datetime().optional(),
   notes: z.string().max(500).optional(),
   items: z.array(paymentItemSchema).min(1).max(50),

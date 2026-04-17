@@ -24,9 +24,9 @@ async function GET(request: NextRequest) {
   );
 
   // Get student details
-  const studentNisList = [...new Set(overdueItems.map((i) => i.studentNis))];
+  const studentIdList = [...new Set(overdueItems.map((i) => i.studentId))];
   const students = await prisma.student.findMany({
-    where: { nis: { in: studentNisList } },
+    where: { nis: { in: studentIdList } },
     select: { nis: true, parentName: true },
   });
   const studentDetails = new Map(
@@ -35,9 +35,9 @@ async function GET(request: NextRequest) {
 
   // Prepare Excel data
   const excelData = overdueItems.map((item) => ({
-    "Student NIS": item.studentNis,
+    "Student NIS": item.studentId,
     "Student Name": item.studentName,
-    "Parent Name": studentDetails.get(item.studentNis)?.parentName || "",
+    "Parent Name": studentDetails.get(item.studentId)?.parentName || "",
     "Parent Phone": item.parentPhone,
     Class: item.className,
     Grade: item.grade,
@@ -77,7 +77,7 @@ async function GET(request: NextRequest) {
   const summaryData = [
     {
       Metric: "Total Students with Overdue",
-      Value: new Set(overdueItems.map((i) => i.studentNis)).size,
+      Value: new Set(overdueItems.map((i) => i.studentId)).size,
     },
     { Metric: "Total Overdue Records", Value: overdueItems.length },
     {

@@ -21,7 +21,7 @@ interface Payment {
   tuition?: {
     id: string;
     classAcademicId: string;
-    studentNis: string;
+    studentId: string;
     period: string;
     month: Month;
     year: number;
@@ -131,7 +131,7 @@ interface PaymentItemPayload {
 }
 
 interface CreatePaymentPayload {
-  studentNis: string;
+  studentId: string;
   paymentDate?: string;
   notes?: string;
   items: PaymentItemPayload[];

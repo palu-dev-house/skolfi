@@ -15,7 +15,7 @@ async function GET(
   const t = await getServerT(request);
   const { nis } = await params;
 
-  const student = await prisma.student.findUnique({ where: { nis } });
+  const student = await prisma.student.findFirst({ where: { nis } });
 
   if (!student) {
     return errorResponse(
@@ -40,7 +40,7 @@ async function PUT(
 
   try {
     const body = await request.json();
-    const existing = await prisma.student.findUnique({ where: { nis } });
+    const existing = await prisma.student.findFirst({ where: { nis } });
 
     if (!existing) {
       return errorResponse(
@@ -64,7 +64,7 @@ async function PUT(
     }
 
     const student = await prisma.student.update({
-      where: { nis },
+      where: { id: existing.id },
       data: {
         ...(body.name && { name: body.name }),
         ...(body.nik && { nik: body.nik }),
@@ -94,7 +94,7 @@ async function DELETE(
   const t = await getServerT(request);
   const { nis } = await params;
 
-  const existing = await prisma.student.findUnique({ where: { nis } });
+  const existing = await prisma.student.findFirst({ where: { nis } });
   if (!existing) {
     return errorResponse(
       t("api.notFound", { resource: "Student" }),
@@ -103,7 +103,7 @@ async function DELETE(
     );
   }
 
-  await prisma.student.delete({ where: { nis } });
+  await prisma.student.delete({ where: { id: existing.id } });
 
   return successResponse({
     message: t("api.deleteSuccess", { resource: "Student" }),

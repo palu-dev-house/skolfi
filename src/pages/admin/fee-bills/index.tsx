@@ -51,7 +51,7 @@ import { PERIODS } from "@/lib/business-logic/tuition-generator";
 import type { NextPageWithLayout } from "@/lib/page-types";
 
 const billFilterSchema = z.object({
-  studentNis: z.string().optional(),
+  studentId: z.string().optional(),
   period: z.string().optional(),
   year: z.string().optional(),
   status: z.enum(["UNPAID", "PARTIAL", "PAID", "VOID"]).optional(),
@@ -138,10 +138,10 @@ function FeeBillTab({ activeYearId }: { activeYearId?: string }) {
   const { filters, page, drafts, setFilter, setPage } = useQueryFilters({
     schema: billFilterSchema,
     defaultLimit: 15,
-    debounceKeys: ["studentNis"],
+    debounceKeys: ["studentId"],
   });
-  const studentNis = filters.studentNis ?? "";
-  const studentNisDraft = drafts.studentNis ?? studentNis;
+  const studentId = filters.studentId ?? "";
+  const studentIdDraft = drafts.studentId ?? studentId;
   const period = filters.period ?? null;
   const yearStr = filters.year ?? null;
   const year = yearStr ? Number(yearStr) : null;
@@ -150,7 +150,7 @@ function FeeBillTab({ activeYearId }: { activeYearId?: string }) {
   const { data, isLoading } = useFeeBills({
     page,
     limit: 15,
-    studentNis: studentNis || undefined,
+    studentId: studentId || undefined,
     period: period || undefined,
     year: year ?? undefined,
     status: status as (typeof STATUSES)[number] | undefined,
@@ -215,9 +215,9 @@ function FeeBillTab({ activeYearId }: { activeYearId?: string }) {
             <TextInput
               leftSection={<IconSearch size={16} />}
               placeholder={t("feeBill.searchStudent")}
-              value={studentNisDraft}
+              value={studentIdDraft}
               onChange={(e) =>
-                setFilter("studentNis", e.currentTarget.value || null)
+                setFilter("studentId", e.currentTarget.value || null)
               }
               w={240}
             />
@@ -300,7 +300,7 @@ function FeeBillTab({ activeYearId }: { activeYearId?: string }) {
             ) : (
               data.feeBills.map((b) => (
                 <Table.Tr key={b.id}>
-                  <Table.Td>{b.student?.name ?? b.studentNis}</Table.Td>
+                  <Table.Td>{b.student?.name ?? b.studentId}</Table.Td>
                   <Table.Td>{b.feeService?.name ?? "-"}</Table.Td>
                   <Table.Td>
                     {t(`months.${b.period}`)} {b.year}
@@ -357,10 +357,10 @@ function ServiceFeeBillTab({ activeYearId }: { activeYearId?: string }) {
   const { filters, page, drafts, setFilter, setPage } = useQueryFilters({
     schema: billFilterSchema,
     defaultLimit: 15,
-    debounceKeys: ["studentNis"],
+    debounceKeys: ["studentId"],
   });
-  const studentNis = filters.studentNis ?? "";
-  const studentNisDraft = drafts.studentNis ?? studentNis;
+  const studentId = filters.studentId ?? "";
+  const studentIdDraft = drafts.studentId ?? studentId;
   const period = filters.period ?? null;
   const yearStr = filters.year ?? null;
   const year = yearStr ? Number(yearStr) : null;
@@ -369,7 +369,7 @@ function ServiceFeeBillTab({ activeYearId }: { activeYearId?: string }) {
   const { data, isLoading } = useServiceFeeBills({
     page,
     limit: 15,
-    studentNis: studentNis || undefined,
+    studentId: studentId || undefined,
     period: period || undefined,
     year: year ?? undefined,
     status: status as (typeof STATUSES)[number] | undefined,
@@ -436,9 +436,9 @@ function ServiceFeeBillTab({ activeYearId }: { activeYearId?: string }) {
             <TextInput
               leftSection={<IconSearch size={16} />}
               placeholder={t("feeBill.searchStudent")}
-              value={studentNisDraft}
+              value={studentIdDraft}
               onChange={(e) =>
-                setFilter("studentNis", e.currentTarget.value || null)
+                setFilter("studentId", e.currentTarget.value || null)
               }
               w={240}
             />
@@ -521,7 +521,7 @@ function ServiceFeeBillTab({ activeYearId }: { activeYearId?: string }) {
             ) : (
               data.serviceFeeBills.map((b) => (
                 <Table.Tr key={b.id}>
-                  <Table.Td>{b.student?.name ?? b.studentNis}</Table.Td>
+                  <Table.Td>{b.student?.name ?? b.studentId}</Table.Td>
                   <Table.Td>{b.serviceFee?.name ?? "-"}</Table.Td>
                   <Table.Td>
                     {t(`months.${b.period}`)} {b.year}

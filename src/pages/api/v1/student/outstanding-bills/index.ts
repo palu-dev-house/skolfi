@@ -13,12 +13,12 @@ async function GET(request: NextRequest) {
       return errorResponse(t("api.unauthorized"), "UNAUTHORIZED", 401);
     }
 
-    const nis = session.studentNis;
+    const studentId = session.studentId;
 
     const [tuitions, feeBills, serviceFeeBills] = await Promise.all([
       prisma.tuition.findMany({
         where: {
-          studentNis: nis,
+          studentId,
           status: { in: ["UNPAID", "PARTIAL"] },
         },
         include: {
@@ -33,7 +33,7 @@ async function GET(request: NextRequest) {
       }),
       prisma.feeBill.findMany({
         where: {
-          studentNis: nis,
+          studentId,
           status: { in: ["UNPAID", "PARTIAL"] },
           voidedByExit: false,
         },
@@ -44,7 +44,7 @@ async function GET(request: NextRequest) {
       }),
       prisma.serviceFeeBill.findMany({
         where: {
-          studentNis: nis,
+          studentId,
           status: { in: ["UNPAID", "PARTIAL"] },
           voidedByExit: false,
         },

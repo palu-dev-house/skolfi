@@ -13,7 +13,7 @@ async function GET(request: NextRequest) {
   const page = Number(searchParams.get("page") || "1");
   const limit = Number(searchParams.get("limit") || "10");
   const classAcademicId = searchParams.get("classAcademicId") || undefined;
-  const studentNis = searchParams.get("studentNis") || undefined;
+  const studentId = searchParams.get("studentId") || undefined;
   const statusParam = searchParams.get("status");
   const status =
     statusParam && statusParam !== "null" ? statusParam : undefined;
@@ -35,8 +35,8 @@ async function GET(request: NextRequest) {
     where.classAcademicId = classAcademicId;
   }
 
-  if (studentNis) {
-    where.studentNis = studentNis;
+  if (studentId) {
+    where.studentId = studentId;
   }
 
   if (status) {
@@ -107,7 +107,7 @@ async function GET(request: NextRequest) {
     tuitions.map(async (tuition) => {
       const scholarships = await prisma.scholarship.findMany({
         where: {
-          studentNis: tuition.studentNis,
+          studentId: tuition.studentId,
           classAcademicId: tuition.classAcademicId,
         },
         select: {

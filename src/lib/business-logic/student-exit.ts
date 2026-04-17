@@ -120,7 +120,7 @@ export async function recordStudentExit(
   const { nis, exitDate, reason, employeeId } = params;
 
   return prisma.$transaction(async (tx) => {
-    const student = await tx.student.findUnique({ where: { nis } });
+    const student = await tx.student.findFirst({ where: { nis } });
     if (!student) {
       throw new StudentExitError("NOT_FOUND", `Student ${nis} not found`);
     }
@@ -147,13 +147,13 @@ export async function recordStudentExit(
     }
 
     await tx.student.update({
-      where: { nis },
+      where: { id: student.id },
       data: { exitedAt: exitDate, exitReason: reason, exitedBy: employeeId },
     });
 
     const candidates = await tx.tuition.findMany({
       where: {
-        studentNis: nis,
+        studentId: nis,
         status: { in: ["UNPAID", "PARTIAL"] },
       },
       select: {
@@ -208,7 +208,7 @@ export async function recordStudentExit(
     // --- FeeSubscription: cap endDate at exitDate for still-active subs ---
     await tx.feeSubscription.updateMany({
       where: {
-        studentNis: nis,
+        studentId: nis,
         OR: [{ endDate: null }, { endDate: { gt: exitDate } }],
       },
       data: { endDate: exitDate },
@@ -216,7 +216,7 @@ export async function recordStudentExit(
 
     // --- FeeBill: void future unpaid, warn on future partial ---
     const feeBillCandidates = await tx.feeBill.findMany({
-      where: { studentNis: nis, status: { in: ["UNPAID", "PARTIAL"] } },
+      where: { studentId: nis, status: { in: ["UNPAID", "PARTIAL"] } },
       select: {
         id: true,
         period: true,
@@ -258,7 +258,7 @@ export async function recordStudentExit(
 
     // --- ServiceFeeBill: void future unpaid, warn on future partial ---
     const serviceBillCandidates = await tx.serviceFeeBill.findMany({
-      where: { studentNis: nis, status: { in: ["UNPAID", "PARTIAL"] } },
+      where: { studentId: nis, status: { in: ["UNPAID", "PARTIAL"] } },
       select: {
         id: true,
         period: true,
@@ -321,7 +321,7 @@ export async function undoStudentExit(
   const { nis } = params;
 
   return prisma.$transaction(async (tx) => {
-    const student = await tx.student.findUnique({ where: { nis } });
+    const student = await tx.student.findFirst({ where: { nis } });
     if (!student) {
       throw new StudentExitError("NOT_FOUND", `Student ${nis} not found`);
     }
@@ -334,7 +334,7 @@ export async function undoStudentExit(
 
     // Find tuitions auto-voided by this exit, with their class fee config.
     const voided = await tx.tuition.findMany({
-      where: { studentNis: nis, voidedByExit: true },
+      where: { studentId: nis, voidedByExit: true },
       select: {
         id: true,
         classAcademic: {
@@ -375,13 +375,13 @@ export async function undoStudentExit(
     // --- Restore FeeSubscription rows capped at exit date ---
     const exitedAt = student.exitedAt; // snapshot before clearing below
     const _subsRestored = await tx.feeSubscription.updateMany({
-      where: { studentNis: nis, endDate: exitedAt },
+      where: { studentId: nis, endDate: exitedAt },
       data: { endDate: null },
     });
 
     // --- Restore FeeBill rows voided by this exit; re-resolve price per period ---
     const voidedFeeBills = await tx.feeBill.findMany({
-      where: { studentNis: nis, voidedByExit: true },
+      where: { studentId: nis, voidedByExit: true },
       select: {
         id: true,
         feeServiceId: true,
@@ -419,7 +419,7 @@ export async function undoStudentExit(
 
     // --- Restore ServiceFeeBill rows voided by this exit ---
     const voidedServiceBills = await tx.serviceFeeBill.findMany({
-      where: { studentNis: nis, voidedByExit: true },
+      where: { studentId: nis, voidedByExit: true },
       select: {
         id: true,
         serviceFee: {
@@ -447,7 +447,7 @@ export async function undoStudentExit(
     }
 
     await tx.student.update({
-      where: { nis },
+      where: { id: student.id },
       data: { exitedAt: null, exitReason: null, exitedBy: null },
     });
 

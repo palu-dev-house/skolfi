@@ -32,7 +32,7 @@ export interface TuitionFilters {
   page?: number;
   limit?: number;
   classAcademicId?: string;
-  studentNis?: string;
+  studentId?: string;
   status?: "UNPAID" | "PAID" | "PARTIAL" | "VOID";
   period?: string;
   month?: string; // Backward compatibility
@@ -45,14 +45,14 @@ export interface ScholarshipFilters {
   page?: number;
   limit?: number;
   classAcademicId?: string;
-  studentNis?: string;
+  studentId?: string;
   isFullScholarship?: boolean;
 }
 
 export interface PaymentFilters {
   page?: number;
   limit?: number;
-  studentNis?: string;
+  studentId?: string;
   classAcademicId?: string;
   employeeId?: string;
   paymentDateFrom?: string;
@@ -116,7 +116,7 @@ export interface FeeServiceFilters {
 export interface FeeSubscriptionFilters {
   page?: number;
   limit?: number;
-  studentNis?: string;
+  studentId?: string;
   feeServiceId?: string;
   active?: boolean;
 }
@@ -124,7 +124,7 @@ export interface FeeSubscriptionFilters {
 export interface FeeBillFilters {
   page?: number;
   limit?: number;
-  studentNis?: string;
+  studentId?: string;
   feeServiceId?: string;
   period?: string;
   year?: number;
@@ -142,7 +142,7 @@ export interface ServiceFeeFilters {
 export interface ServiceFeeBillFilters {
   page?: number;
   limit?: number;
-  studentNis?: string;
+  studentId?: string;
   classAcademicId?: string;
   serviceFeeId?: string;
   period?: string;

@@ -101,7 +101,7 @@ async function POST(request: NextRequest) {
 
         // Get existing scholarships for this student+class to calculate total
         const existingScholarships = await prisma.scholarship.findMany({
-          where: { studentNis: row.studentNis, classAcademicId },
+          where: { studentId: row.studentId, classAcademicId },
         });
         const existingTotal = existingScholarships.reduce(
           (sum, s) => sum + Number(s.nominal),
@@ -114,7 +114,7 @@ async function POST(request: NextRequest) {
         // Create scholarship (multiple scholarships allowed per student per class)
         await prisma.scholarship.create({
           data: {
-            studentNis: row.studentNis,
+            studentId: row.studentId,
             classAcademicId,
             name: (row as { name?: string }).name || "Imported Scholarship",
             nominal: row.nominal,
@@ -127,7 +127,7 @@ async function POST(request: NextRequest) {
           // Only auto-pay if this scholarship pushed it over the threshold
           const result = await applyScholarship(
             {
-              studentNis: row.studentNis,
+              studentId: row.studentId,
               classAcademicId,
               nominal: newTotal,
               monthlyFee: feeAmount,

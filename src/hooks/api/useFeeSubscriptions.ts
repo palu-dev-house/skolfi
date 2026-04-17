@@ -6,7 +6,7 @@ import { type FeeSubscriptionFilters, queryKeys } from "@/lib/query-keys";
 
 export interface FeeSubscription {
   id: string;
-  studentNis: string;
+  studentId: string;
   feeServiceId: string;
   startDate: string;
   endDate: string | null;
@@ -61,7 +61,7 @@ export function useCreateFeeSubscription() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: {
-      studentNis: string;
+      studentId: string;
       feeServiceId: string;
       startDate: string;
       endDate?: string | null;

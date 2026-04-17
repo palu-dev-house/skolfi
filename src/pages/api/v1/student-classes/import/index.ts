@@ -33,9 +33,9 @@ async function POST(request: NextRequest) {
   }
 
   // Get all students for validation
-  const studentNisList = [...new Set(rows.map((r) => r.studentNis))];
+  const studentIdList = [...new Set(rows.map((r) => r.studentId))];
   const students = await prisma.student.findMany({
-    where: { nis: { in: studentNisList } },
+    where: { nis: { in: studentIdList } },
     select: { nis: true },
   });
   const validStudentNis = new Set(students.map((s) => s.nis));
@@ -50,14 +50,14 @@ async function POST(request: NextRequest) {
 
   // Process rows
   const errors: Array<{ row: number; nis: string; error: string }> = [];
-  const toCreate: Array<{ studentNis: string; classAcademicId: string }> = [];
+  const toCreate: Array<{ studentId: string; classAcademicId: string }> = [];
 
   for (const row of rows) {
-    if (!validStudentNis.has(row.studentNis)) {
+    if (!validStudentNis.has(row.studentId)) {
       errors.push({
         row: row.rowNumber,
-        nis: row.studentNis,
-        error: `Student with NIS ${row.studentNis} not found`,
+        nis: row.studentId,
+        error: `Student with NIS ${row.studentId} not found`,
       });
       continue;
     }
@@ -66,14 +66,14 @@ async function POST(request: NextRequest) {
     if (!classId) {
       errors.push({
         row: row.rowNumber,
-        nis: row.studentNis,
+        nis: row.studentId,
         error: `Class "${row.className}" not found`,
       });
       continue;
     }
 
     toCreate.push({
-      studentNis: row.studentNis,
+      studentId: row.studentId,
       classAcademicId: classId,
     });
   }
@@ -82,19 +82,19 @@ async function POST(request: NextRequest) {
   const existingAssignments = await prisma.studentClass.findMany({
     where: {
       OR: toCreate.map((tc) => ({
-        studentNis: tc.studentNis,
+        studentId: tc.studentId,
         classAcademicId: tc.classAcademicId,
       })),
     },
-    select: { studentNis: true, classAcademicId: true },
+    select: { studentId: true, classAcademicId: true },
   });
 
   const existingSet = new Set(
-    existingAssignments.map((ea) => `${ea.studentNis}-${ea.classAcademicId}`),
+    existingAssignments.map((ea) => `${ea.studentId}-${ea.classAcademicId}`),
   );
 
   const newAssignments = toCreate.filter(
-    (tc) => !existingSet.has(`${tc.studentNis}-${tc.classAcademicId}`),
+    (tc) => !existingSet.has(`${tc.studentId}-${tc.classAcademicId}`),
   );
 
   const skipped = toCreate.length - newAssignments.length;

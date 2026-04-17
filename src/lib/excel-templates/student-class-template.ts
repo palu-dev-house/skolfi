@@ -53,7 +53,7 @@ export function generateStudentClassTemplate(
 }
 
 export interface StudentClassImportRow {
-  studentNis: string;
+  studentId: string;
   className: string;
   rowNumber: number;
 }
@@ -90,10 +90,10 @@ export function parseStudentClassImport(buffer: ArrayBuffer): {
       continue; // Skip empty rows
     }
 
-    const studentNis = String(row[0] || "").trim();
+    const studentId = String(row[0] || "").trim();
     const className = String(row[2] || "").trim();
 
-    if (!studentNis) {
+    if (!studentId) {
       errors.push(`Row ${rowNumber}: Student NIS is required`);
       continue;
     }
@@ -104,7 +104,7 @@ export function parseStudentClassImport(buffer: ArrayBuffer): {
     }
 
     rows.push({
-      studentNis,
+      studentId,
       className,
       rowNumber,
     });

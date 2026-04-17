@@ -48,7 +48,7 @@ async function POST(request: NextRequest) {
         // Recalculate effective fee for status determination
         const scholarships = await tx.scholarship.findMany({
           where: {
-            studentNis: tuition.studentNis,
+            studentId: tuition.studentId,
             classAcademicId: tuition.classAcademicId,
           },
         });

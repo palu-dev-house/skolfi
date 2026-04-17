@@ -30,9 +30,9 @@ async function GET(request: NextRequest) {
     );
 
     // Get student details for grouping
-    const studentNisList = [...new Set(overdueItems.map((i) => i.studentNis))];
+    const studentIdList = [...new Set(overdueItems.map((i) => i.studentId))];
     const students = await prisma.student.findMany({
-      where: { nis: { in: studentNisList } },
+      where: { nis: { in: studentIdList } },
       select: { nis: true, parentName: true },
     });
     const studentDetails = new Map(

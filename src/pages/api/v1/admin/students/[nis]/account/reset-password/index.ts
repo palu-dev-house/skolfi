@@ -19,7 +19,7 @@ async function POST(
     const { nis } = await params;
 
     const result = await resetPassword({
-      studentNis: nis,
+      studentId: nis,
       resetBy: session.employeeId,
     });
 

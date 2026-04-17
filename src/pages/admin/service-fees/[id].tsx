@@ -207,7 +207,7 @@ const ServiceFeeDetailPage: NextPageWithLayout =
                 ) : (
                   bills?.serviceFeeBills.map((b) => (
                     <Table.Tr key={b.id}>
-                      <Table.Td>{b.student?.name ?? b.studentNis}</Table.Td>
+                      <Table.Td>{b.student?.name ?? b.studentId}</Table.Td>
                       <Table.Td>
                         {t(`months.${b.period}`)} {b.year}
                       </Table.Td>

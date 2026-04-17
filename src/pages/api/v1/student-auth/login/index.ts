@@ -33,7 +33,7 @@ async function POST(request: NextRequest) {
     }
 
     const token = await signStudentToken({
-      studentNis: result.student.nis,
+      studentId: result.student.id,
       studentName: result.student.name,
     });
 
@@ -41,7 +41,7 @@ async function POST(request: NextRequest) {
       message: t("api.loginSuccess"),
       mustChangePassword: result.student.mustChangePassword,
       user: {
-        studentNis: result.student.nis,
+        studentId: result.student.id,
         studentName: result.student.name,
       },
     });

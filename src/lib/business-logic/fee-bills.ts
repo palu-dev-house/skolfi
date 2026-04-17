@@ -206,7 +206,7 @@ export async function generateFeeBillsForSubscription(
       data: {
         subscriptionId: subscription.id,
         feeServiceId: subscription.feeServiceId,
-        studentNis: subscription.studentNis,
+        studentId: subscription.studentId,
         period,
         year,
         amount,
@@ -273,7 +273,7 @@ export async function generateAllFeeBills(
         subscriptions: {
           include: {
             feeService: { include: { prices: true } },
-            student: { select: { nis: true, exitedAt: true } },
+            student: { select: { id: true, exitedAt: true } },
           },
         },
       },

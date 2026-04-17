@@ -57,12 +57,12 @@ type Line = {
  */
 export async function createOnlinePayment(
   args: {
-    studentNis: string;
+    studentId: string;
     items: OnlinePaymentItemInput[];
   },
   prisma: PrismaClient,
 ): Promise<OnlinePaymentResult> {
-  const { studentNis, items } = args;
+  const { studentId, items } = args;
 
   // Assert single bill target invariant per item
   for (const item of items) {
@@ -85,7 +85,7 @@ export async function createOnlinePayment(
 
   // Get student info
   const student = await prisma.student.findUnique({
-    where: { nis: studentNis },
+    where: { id: studentId },
   });
   if (!student) throw new Error("Student not found");
 
@@ -99,19 +99,19 @@ export async function createOnlinePayment(
   const [tuitions, feeBills, serviceFeeBills] = await Promise.all([
     tuitionIds.length
       ? prisma.tuition.findMany({
-          where: { id: { in: tuitionIds }, studentNis },
+          where: { id: { in: tuitionIds }, studentId },
           include: { classAcademic: true },
         })
       : Promise.resolve([]),
     feeBillIds.length
       ? prisma.feeBill.findMany({
-          where: { id: { in: feeBillIds }, studentNis },
+          where: { id: { in: feeBillIds }, studentId },
           include: { feeService: true },
         })
       : Promise.resolve([]),
     serviceFeeBillIds.length
       ? prisma.serviceFeeBill.findMany({
-          where: { id: { in: serviceFeeBillIds }, studentNis },
+          where: { id: { in: serviceFeeBillIds }, studentId },
           include: { serviceFee: true },
         })
       : Promise.resolve([]),
@@ -189,7 +189,7 @@ export async function createOnlinePayment(
   const grossAmount = lines.reduce((sum, l) => sum + l.price, 0);
 
   // Create Snap transaction
-  const orderId = generateOrderId(studentNis);
+  const orderId = generateOrderId(studentId);
   const snapResult = await createSnapTransaction({
     orderId,
     grossAmount,
@@ -209,7 +209,7 @@ export async function createOnlinePayment(
   const onlinePayment = await prisma.onlinePayment.create({
     data: {
       orderId,
-      studentNis,
+      studentId,
       grossAmount,
       snapToken: snapResult.token,
       snapRedirectUrl: snapResult.redirectUrl,
@@ -463,7 +463,7 @@ export async function settleOnlinePayment(
 
     // Update student lastPaymentAt
     await tx.student.update({
-      where: { nis: onlinePayment.studentNis },
+      where: { id: onlinePayment.studentId },
       data: { lastPaymentAt: new Date() },
     });
   });
@@ -498,7 +498,7 @@ export async function updateOnlinePaymentStatus(
  */
 export async function cancelOnlinePayment(
   onlinePaymentId: string,
-  studentNis: string,
+  studentId: string,
   prisma: PrismaClient,
 ): Promise<void> {
   const onlinePayment = await prisma.onlinePayment.findUnique({
@@ -506,7 +506,7 @@ export async function cancelOnlinePayment(
   });
 
   if (!onlinePayment) throw new Error("Online payment not found");
-  if (onlinePayment.studentNis !== studentNis) {
+  if (onlinePayment.studentId !== studentId) {
     throw new Error("Unauthorized");
   }
   if (onlinePayment.status !== "PENDING") {

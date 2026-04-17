@@ -65,10 +65,18 @@ async function POST(request: NextRequest) {
     const parsed = await parseWithLocale(studentSchema, body, request);
     if (!parsed.success) return parsed.response;
 
-    const { nis, nik, name, address, parentName, parentPhone, startJoinDate } =
-      parsed.data;
+    const {
+      nis,
+      schoolLevel,
+      nik,
+      name,
+      address,
+      parentName,
+      parentPhone,
+      startJoinDate,
+    } = parsed.data;
 
-    const existingNis = await prisma.student.findUnique({ where: { nis } });
+    const existingNis = await prisma.student.findFirst({ where: { nis } });
     if (existingNis) {
       return errorResponse(
         t("api.alreadyExists", { resource: "NIS" }),
@@ -96,6 +104,7 @@ async function POST(request: NextRequest) {
     const student = await prisma.student.create({
       data: {
         nis,
+        schoolLevel,
         nik,
         name,
         address,

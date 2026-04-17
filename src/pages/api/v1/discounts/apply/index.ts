@@ -70,7 +70,7 @@ async function POST(request: NextRequest) {
         affectedTuitions: previewResult.tuitions.map((t) => ({
           id: t.id,
           studentName: (t as { student?: { name: string } }).student?.name,
-          studentNis: t.studentNis,
+          studentId: t.studentId,
           className: (t as { classAcademic?: { className: string } })
             .classAcademic?.className,
           period: t.period,

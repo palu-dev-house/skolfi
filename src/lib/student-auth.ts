@@ -7,7 +7,7 @@ const JWT_SECRET = new TextEncoder().encode(
 );
 
 export interface StudentJwtPayload {
-  studentNis: string;
+  studentId: string;
   studentName: string;
   type: "student";
 }

@@ -12,7 +12,7 @@ async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const page = Number(searchParams.get("page") || "1");
   const limit = Number(searchParams.get("limit") || "10");
-  const studentNis = searchParams.get("studentNis") || undefined;
+  const studentId = searchParams.get("studentId") || undefined;
   const classAcademicId = searchParams.get("classAcademicId") || undefined;
   const serviceFeeId = searchParams.get("serviceFeeId") || undefined;
   const periodParam = searchParams.get("period");
@@ -26,7 +26,7 @@ async function GET(request: NextRequest) {
     statusParam && statusParam !== "null" ? statusParam : undefined;
 
   const where: Prisma.ServiceFeeBillWhereInput = {};
-  if (studentNis) where.studentNis = studentNis;
+  if (studentId) where.studentId = studentId;
   if (classAcademicId) where.classAcademicId = classAcademicId;
   if (serviceFeeId) where.serviceFeeId = serviceFeeId;
   if (period) where.period = period;

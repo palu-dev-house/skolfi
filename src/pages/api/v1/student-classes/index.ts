@@ -19,7 +19,7 @@ async function GET(request: NextRequest) {
   const page = Number(searchParams.get("page")) || 1;
   const limit = Number(searchParams.get("limit")) || 10;
   const classAcademicId = searchParams.get("classAcademicId") || undefined;
-  const studentNis = searchParams.get("studentNis") || undefined;
+  const studentId = searchParams.get("studentId") || undefined;
   const academicYearId = searchParams.get("academicYearId") || undefined;
   const search = searchParams.get("search") || undefined;
 
@@ -29,8 +29,8 @@ async function GET(request: NextRequest) {
     where.classAcademicId = classAcademicId;
   }
 
-  if (studentNis) {
-    where.studentNis = studentNis;
+  if (studentId) {
+    where.studentId = studentId;
   }
 
   if (academicYearId) {
@@ -106,7 +106,7 @@ async function POST(request: NextRequest) {
   const parsed = await parseWithLocale(studentClassAssignSchema, body, request);
   if (!parsed.success) return parsed.response;
 
-  const { classAcademicId, studentNisList } = parsed.data;
+  const { classAcademicId, studentIdList } = parsed.data;
 
   // Verify class exists
   const classAcademic = await prisma.classAcademic.findUnique({
@@ -123,12 +123,12 @@ async function POST(request: NextRequest) {
 
   // Verify all students exist
   const students = await prisma.student.findMany({
-    where: { nis: { in: studentNisList } },
+    where: { nis: { in: studentIdList } },
     select: { nis: true },
   });
 
   const existingNis = new Set(students.map((s) => s.nis));
-  const missingNis = studentNisList.filter(
+  const missingNis = studentIdList.filter(
     (nis: string) => !existingNis.has(nis),
   );
 
@@ -144,13 +144,13 @@ async function POST(request: NextRequest) {
   const existingAssignments = await prisma.studentClass.findMany({
     where: {
       classAcademicId,
-      studentNis: { in: studentNisList },
+      studentId: { in: studentIdList },
     },
-    select: { studentNis: true },
+    select: { studentId: true },
   });
 
-  const alreadyAssigned = new Set(existingAssignments.map((a) => a.studentNis));
-  const toAssign = studentNisList.filter(
+  const alreadyAssigned = new Set(existingAssignments.map((a) => a.studentId));
+  const toAssign = studentIdList.filter(
     (nis: string) => !alreadyAssigned.has(nis),
   );
 
@@ -160,8 +160,8 @@ async function POST(request: NextRequest) {
 
   // Create assignments
   const created = await prisma.studentClass.createMany({
-    data: toAssign.map((studentNis: string) => ({
-      studentNis,
+    data: toAssign.map((studentId: string) => ({
+      studentId,
       classAcademicId,
     })),
   });
@@ -185,12 +185,12 @@ async function DELETE(request: NextRequest) {
   const parsed = await parseWithLocale(studentClassRemoveSchema, body, request);
   if (!parsed.success) return parsed.response;
 
-  const { classAcademicId, studentNisList } = parsed.data;
+  const { classAcademicId, studentIdList } = parsed.data;
 
   const deleted = await prisma.studentClass.deleteMany({
     where: {
       classAcademicId,
-      studentNis: { in: studentNisList },
+      studentId: { in: studentIdList },
     },
   });
 

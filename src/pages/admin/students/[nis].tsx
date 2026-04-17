@@ -462,7 +462,7 @@ function formatRp(v: string | number) {
 function SubscriptionsSection({ nis }: { nis: string }) {
   const t = useTranslations();
   const { data, isLoading } = useFeeSubscriptions({
-    studentNis: nis,
+    studentId: nis,
     limit: 50,
   });
   const { data: services } = useFeeServices({ isActive: true, limit: 200 });
@@ -482,7 +482,7 @@ function SubscriptionsSection({ nis }: { nis: string }) {
     create.mutate(
       {
         feeServiceId,
-        studentNis: nis,
+        studentId: nis,
         startDate,
         endDate: endDate ?? undefined,
       },
@@ -636,14 +636,14 @@ function FeeBillsSection({ nis }: { nis: string }) {
   const [status, setStatus] = useState<string | null>(null);
 
   const { data: feeBillsData } = useFeeBills({
-    studentNis: nis,
+    studentId: nis,
     page,
     limit: 10,
     period: period || undefined,
     status: status as "UNPAID" | "PARTIAL" | "PAID" | "VOID" | undefined,
   });
   const { data: serviceFeeBillsData } = useServiceFeeBills({
-    studentNis: nis,
+    studentId: nis,
     page,
     limit: 10,
     period: period || undefined,

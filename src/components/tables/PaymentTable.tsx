@@ -79,7 +79,7 @@ export default function PaymentTable() {
     page,
     limit: 10,
     classAcademicId: classAcademicId || undefined,
-    studentNis: studentSearch || undefined,
+    studentId: studentSearch || undefined,
     paymentDateFrom: dateFrom || undefined,
     paymentDateTo: dateTo || undefined,
   });

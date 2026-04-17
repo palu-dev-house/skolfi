@@ -6,7 +6,7 @@ import { queryKeys, type ScholarshipFilters } from "@/lib/query-keys";
 
 interface Scholarship {
   id: string;
-  studentNis: string;
+  studentId: string;
   classAcademicId: string;
   name: string;
   nominal: string;
@@ -103,7 +103,7 @@ export function useCreateScholarship() {
 
   return useMutation({
     mutationFn: async (scholarship: {
-      studentNis: string;
+      studentId: string;
       classAcademicId: string;
       name?: string;
       nominal: number;

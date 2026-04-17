@@ -23,7 +23,7 @@ async function POST(
     const { nis } = await params;
 
     const result = await createStudentAccount({
-      studentNis: nis,
+      studentId: nis,
       createdBy: session.employeeId,
     });
 

@@ -32,7 +32,7 @@ import { useTuitions } from "@/hooks/api/useTuitions";
 interface CreationResult {
   scholarship: {
     id: string;
-    studentNis: string;
+    studentId: string;
     classAcademicId: string;
     nominal: string;
     isFullScholarship: boolean;
@@ -48,7 +48,7 @@ export default function ScholarshipForm() {
   const router = useRouter();
   const [academicYearId, setAcademicYearId] = useState<string | null>(null);
   const [classAcademicId, setClassAcademicId] = useState<string | null>(null);
-  const [studentNis, setStudentNis] = useState<string | null>(null);
+  const [studentId, setStudentNis] = useState<string | null>(null);
   const [scholarshipName, setScholarshipName] = useState<string | null>(
     "Academic",
   );
@@ -94,7 +94,7 @@ export default function ScholarshipForm() {
   const createScholarship = useCreateScholarship();
 
   const handleSubmit = () => {
-    if (!studentNis || !classAcademicId || !nominal || !scholarshipName) {
+    if (!studentId || !classAcademicId || !nominal || !scholarshipName) {
       notifications.show({
         title: t("common.validationError"),
         message: t("common.fillRequired"),
@@ -105,7 +105,7 @@ export default function ScholarshipForm() {
 
     createScholarship.mutate(
       {
-        studentNis,
+        studentId,
         classAcademicId,
         name: scholarshipName,
         nominal: Number(nominal),
@@ -183,7 +183,7 @@ export default function ScholarshipForm() {
           label={t("scholarship.student")}
           placeholder={t("scholarship.selectStudent")}
           data={studentOptions}
-          value={studentNis}
+          value={studentId}
           onChange={setStudentNis}
           disabled={loadingStudents}
           searchable
@@ -301,7 +301,7 @@ export default function ScholarshipForm() {
             leftSection={<IconGift size={18} />}
             onClick={handleSubmit}
             loading={createScholarship.isPending}
-            disabled={!studentNis || !classAcademicId || !nominal}
+            disabled={!studentId || !classAcademicId || !nominal}
           >
             {t("scholarship.createButton")}
           </Button>

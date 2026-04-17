@@ -13,7 +13,7 @@ async function GET(request: NextRequest) {
       return errorResponse(t("api.unauthorized"), "UNAUTHORIZED", 401);
     }
 
-    const profile = await getStudentProfile(session.studentNis);
+    const profile = await getStudentProfile(session.studentId);
 
     return successResponse(profile);
   } catch (error) {

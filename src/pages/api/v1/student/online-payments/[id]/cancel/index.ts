@@ -19,7 +19,7 @@ async function POST(
 
     const { id } = await params;
 
-    await cancelOnlinePayment(id, session.studentNis, prisma);
+    await cancelOnlinePayment(id, session.studentId, prisma);
 
     return successResponse({ success: true });
   } catch (error) {

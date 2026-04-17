@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 
 interface StudentRow {
   NIS: string;
+  "School Level": string;
   NIK: string;
   "Student Name": string;
   Address: string;
@@ -48,7 +49,12 @@ async function POST(request: NextRequest) {
       const row = data[i];
       const rowNum = i + 2;
 
-      if (!row.NIS || !row.NIK || !row["Student Name"]) {
+      if (
+        !row.NIS ||
+        !row["School Level"] ||
+        !row.NIK ||
+        !row["Student Name"]
+      ) {
         errors.push({
           row: rowNum,
           nis: row.NIS || "",
@@ -58,13 +64,13 @@ async function POST(request: NextRequest) {
       }
 
       try {
-        const existing = await prisma.student.findUnique({
+        const existing = await prisma.student.findFirst({
           where: { nis: row.NIS },
         });
 
         if (existing) {
           await prisma.student.update({
-            where: { nis: row.NIS },
+            where: { id: existing.id },
             data: {
               nik: row.NIK,
               name: row["Student Name"],
@@ -86,6 +92,7 @@ async function POST(request: NextRequest) {
           await prisma.student.create({
             data: {
               nis: row.NIS,
+              schoolLevel: row["School Level"] as "SD" | "SMP" | "SMA",
               nik: row.NIK,
               name: row["Student Name"],
               address: row.Address,

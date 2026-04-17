@@ -8,7 +8,7 @@ interface RecentPayment {
   amount: number;
   paymentDate: string;
   studentName: string;
-  studentNis: string;
+  studentId: string;
   className: string;
   processedBy: string;
   scholarshipAmount: number;

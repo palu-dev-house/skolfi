@@ -22,7 +22,7 @@ async function POST(request: NextRequest) {
     // Check rate limit (3 per minute)
     const rateLimitResult = await checkRateLimit(
       "changePassword",
-      session.studentNis,
+      session.studentId,
     );
     if (!rateLimitResult.success) {
       return await rateLimitErrorResponse(rateLimitResult, request);
@@ -35,7 +35,7 @@ async function POST(request: NextRequest) {
     const { currentPassword, newPassword } = parsed.data;
 
     await changePassword({
-      studentNis: session.studentNis,
+      studentId: session.studentId,
       currentPassword,
       newPassword,
     });

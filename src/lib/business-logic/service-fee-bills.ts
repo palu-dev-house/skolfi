@@ -12,7 +12,7 @@ interface AcademicYearCtx {
 }
 
 interface StudentCtx {
-  nis: string;
+  id: string;
   exitedAt: Date | null;
 }
 
@@ -57,9 +57,9 @@ export async function generateServiceFeeBillsForFee(
 
       const existing = await tx.serviceFeeBill.findUnique({
         where: {
-          serviceFeeId_studentNis_period_year: {
+          serviceFeeId_studentId_period_year: {
             serviceFeeId: serviceFee.id,
-            studentNis: student.nis,
+            studentId: student.id,
             period,
             year,
           },
@@ -74,7 +74,7 @@ export async function generateServiceFeeBillsForFee(
       await tx.serviceFeeBill.create({
         data: {
           serviceFeeId: serviceFee.id,
-          studentNis: student.nis,
+          studentId: student.id,
           classAcademicId: serviceFee.classAcademicId,
           period,
           year,
@@ -151,7 +151,7 @@ export async function generateServiceFeeBills(opts: {
         },
         studentClasses: {
           include: {
-            student: { select: { nis: true, exitedAt: true } },
+            student: { select: { id: true, exitedAt: true } },
           },
         },
       },
@@ -163,7 +163,7 @@ export async function generateServiceFeeBills(opts: {
 
     for (const cls of classes) {
       const students: StudentCtx[] = cls.studentClasses.map((sc) => ({
-        nis: sc.student.nis,
+        id: sc.student.id,
         exitedAt: sc.student.exitedAt,
       }));
 
@@ -186,7 +186,7 @@ export async function generateServiceFeeBills(opts: {
 
 /**
  * Active ClassAcademic × active ServiceFee × billingMonths × enrolled students.
- * Safe to re-run (idempotent via @@unique([serviceFeeId, studentNis, period, year])).
+ * Safe to re-run (idempotent via @@unique([serviceFeeId, studentId, period, year])).
  * If academicYearId is omitted the active academic year is used.
  */
 export async function generateAllServiceFeeBills(opts: {
@@ -219,7 +219,7 @@ export async function generateAllServiceFeeBills(opts: {
         serviceFees: { where: { isActive: true } },
         studentClasses: {
           include: {
-            student: { select: { nis: true, exitedAt: true } },
+            student: { select: { id: true, exitedAt: true } },
           },
         },
       },
@@ -231,7 +231,7 @@ export async function generateAllServiceFeeBills(opts: {
 
     for (const cls of classes) {
       const students: StudentCtx[] = cls.studentClasses.map((sc) => ({
-        nis: sc.student.nis,
+        id: sc.student.id,
         exitedAt: sc.student.exitedAt,
       }));
 

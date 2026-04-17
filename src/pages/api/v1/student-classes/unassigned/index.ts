@@ -16,31 +16,31 @@ async function GET(request: NextRequest) {
   const limit = Number(searchParams.get("limit")) || 50;
 
   // Get students already assigned to this class or any class in the academic year
-  let assignedStudentNis: string[] = [];
+  let assignedStudentIds: string[] = [];
 
   if (classAcademicId) {
     // Get students already in this specific class
     const assigned = await prisma.studentClass.findMany({
       where: { classAcademicId },
-      select: { studentNis: true },
+      select: { studentId: true },
     });
-    assignedStudentNis = assigned.map((a) => a.studentNis);
+    assignedStudentIds = assigned.map((a) => a.studentId);
   } else if (academicYearId) {
     // Get students already in any class for this academic year
     const assigned = await prisma.studentClass.findMany({
       where: {
         classAcademic: { academicYearId },
       },
-      select: { studentNis: true },
+      select: { studentId: true },
     });
-    assignedStudentNis = assigned.map((a) => a.studentNis);
+    assignedStudentIds = assigned.map((a) => a.studentId);
   }
 
   // Build query for unassigned students
   const where: Record<string, unknown> = {};
 
-  if (assignedStudentNis.length > 0) {
-    where.nis = { notIn: assignedStudentNis };
+  if (assignedStudentIds.length > 0) {
+    where.id = { notIn: assignedStudentIds };
   }
 
   if (search) {

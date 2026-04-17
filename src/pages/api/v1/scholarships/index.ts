@@ -24,7 +24,7 @@ async function GET(request: NextRequest) {
   const page = Number(searchParams.get("page") || "1");
   const limit = Number(searchParams.get("limit") || "10");
   const classAcademicId = searchParams.get("classAcademicId") || undefined;
-  const studentNis = searchParams.get("studentNis") || undefined;
+  const studentId = searchParams.get("studentId") || undefined;
   const isFullScholarship = searchParams.get("isFullScholarship");
 
   const where: Prisma.ScholarshipWhereInput = {};
@@ -33,8 +33,8 @@ async function GET(request: NextRequest) {
     where.classAcademicId = classAcademicId;
   }
 
-  if (studentNis) {
-    where.studentNis = studentNis;
+  if (studentId) {
+    where.studentId = studentId;
   }
 
   if (
@@ -89,12 +89,12 @@ async function POST(request: NextRequest) {
     const parsed = await parseWithLocale(scholarshipSchema, body, request);
     if (!parsed.success) return parsed.response;
 
-    const { studentNis, classAcademicId, nominal } = parsed.data;
+    const { studentId, classAcademicId, nominal } = parsed.data;
     const name = body.name;
 
     // Check if student exists
     const student = await prisma.student.findUnique({
-      where: { nis: studentNis },
+      where: { id: studentId },
     });
 
     if (!student) {
@@ -121,7 +121,7 @@ async function POST(request: NextRequest) {
     const idempotencyKey = generateIdempotencyKey(
       auth.employeeId,
       "create_scholarship",
-      { studentNis, classAcademicId, nominal },
+      { studentId, classAcademicId, nominal },
     );
     const { isDuplicate, result } = await withIdempotency(
       idempotencyKey,
@@ -131,7 +131,7 @@ async function POST(request: NextRequest) {
 
         // Get existing scholarships for this student+class to calculate total
         const existingScholarships = await prisma.scholarship.findMany({
-          where: { studentNis, classAcademicId },
+          where: { studentId, classAcademicId },
         });
         const existingTotal = existingScholarships.reduce(
           (sum, s) => sum + Number(s.nominal),
@@ -146,7 +146,7 @@ async function POST(request: NextRequest) {
         // Create scholarship
         const scholarship = await prisma.scholarship.create({
           data: {
-            studentNis,
+            studentId,
             classAcademicId,
             name: name || "Scholarship",
             nominal,
@@ -169,7 +169,7 @@ async function POST(request: NextRequest) {
           if (adminEmployee) {
             applicationResult = await applyScholarship(
               {
-                studentNis,
+                studentId,
                 classAcademicId,
                 nominal: newTotal, // Use total scholarship amount
                 monthlyFee: feeAmount,

@@ -90,7 +90,7 @@ const ClassStudentsPage: NextPageWithLayout = function ClassStudentsPage() {
       confirmProps: { color: "red" },
       onConfirm: () => {
         removeStudents.mutate(
-          { classAcademicId: classId, studentNisList: selectedStudents },
+          { classAcademicId: classId, studentIdList: selectedStudents },
           {
             onSuccess: () => {
               setSelectedStudents([]);
@@ -124,7 +124,7 @@ const ClassStudentsPage: NextPageWithLayout = function ClassStudentsPage() {
     }
 
     assignStudents.mutate(
-      { classAcademicId: classId, studentNisList: selectedToAdd },
+      { classAcademicId: classId, studentIdList: selectedToAdd },
       {
         onSuccess: (data) => {
           setSelectedToAdd([]);
@@ -339,7 +339,7 @@ const ClassStudentsPage: NextPageWithLayout = function ClassStudentsPage() {
                             removeStudents.mutate(
                               {
                                 classAcademicId: classId,
-                                studentNisList: [student.nis],
+                                studentIdList: [student.nis],
                               },
                               {
                                 onSuccess: () => {

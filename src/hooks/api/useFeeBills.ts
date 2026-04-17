@@ -8,7 +8,7 @@ import { type FeeBillFilters, queryKeys } from "@/lib/query-keys";
 export interface FeeBill {
   id: string;
   feeServiceId: string;
-  studentNis: string;
+  studentId: string;
   period: string;
   year: number;
   amount: string;

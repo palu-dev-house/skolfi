@@ -44,7 +44,7 @@ async function GET(
       },
     });
 
-    if (!payment || payment.studentNis !== session.studentNis) {
+    if (!payment || payment.studentId !== session.studentId) {
       return errorResponse(t("api.notFound"), "NOT_FOUND", 404);
     }
 

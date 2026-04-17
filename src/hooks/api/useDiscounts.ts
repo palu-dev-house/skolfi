@@ -77,7 +77,7 @@ interface ApplyPreviewResponse {
     affectedTuitions: Array<{
       id: string;
       studentName: string;
-      studentNis: string;
+      studentId: string;
       className: string;
       period: string;
       year: number;

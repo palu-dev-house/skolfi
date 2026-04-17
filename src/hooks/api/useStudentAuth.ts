@@ -21,7 +21,7 @@ interface LoginResponse {
     message: string;
     mustChangePassword: boolean;
     user: {
-      studentNis: string;
+      studentId: string;
       studentName: string;
     };
   };

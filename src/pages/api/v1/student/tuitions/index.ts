@@ -16,7 +16,7 @@ async function GET(request: NextRequest) {
     // Get tuitions with pending payment info
     const tuitions = await prisma.tuition.findMany({
       where: {
-        studentNis: session.studentNis,
+        studentId: session.studentId,
       },
       orderBy: [{ dueDate: "asc" }],
       select: {

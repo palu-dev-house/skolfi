@@ -1,7 +1,7 @@
 import type { PrismaClient } from "@/generated/prisma/client";
 
 export interface ScholarshipApplicationParams {
-  studentNis: string;
+  studentId: string;
   classAcademicId: string;
   nominal: number;
   monthlyFee: number;
@@ -27,7 +27,7 @@ export async function applyScholarship(
   prisma: PrismaClient,
   _systemEmployeeId: string, // No longer needed, kept for API compatibility
 ): Promise<ScholarshipApplicationResult> {
-  const { studentNis, classAcademicId, nominal, monthlyFee } = params;
+  const { studentId, classAcademicId, nominal, monthlyFee } = params;
 
   // Determine if full scholarship (covers full monthly fee)
   const isFullScholarship = nominal >= monthlyFee;
@@ -41,7 +41,7 @@ export async function applyScholarship(
   // Find all unpaid/partial tuitions for this student in this class
   const tuitions = await prisma.tuition.findMany({
     where: {
-      studentNis,
+      studentId,
       classAcademicId,
       status: { in: ["UNPAID", "PARTIAL"] },
     },

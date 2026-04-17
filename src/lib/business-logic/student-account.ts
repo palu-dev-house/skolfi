@@ -6,24 +6,24 @@ import { prisma } from "@/lib/prisma";
 // ============================================
 
 interface CreateStudentAccountInput {
-  studentNis: string;
+  studentId: string;
   createdBy: string;
 }
 
 interface CreateStudentAccountResult {
   success: boolean;
   message: string;
-  studentNis: string;
+  studentId: string;
   defaultPassword: string;
 }
 
 export async function createStudentAccount(
   input: CreateStudentAccountInput,
 ): Promise<CreateStudentAccountResult> {
-  const { studentNis, createdBy } = input;
+  const { studentId, createdBy } = input;
 
   const student = await prisma.student.findUnique({
-    where: { nis: studentNis },
+    where: { id: studentId },
   });
 
   if (!student) {
@@ -44,7 +44,7 @@ export async function createStudentAccount(
   const hashedPassword = await bcrypt.hash(normalizedPassword, 10);
 
   await prisma.student.update({
-    where: { nis: studentNis },
+    where: { id: studentId },
     data: {
       hasAccount: true,
       password: hashedPassword,
@@ -57,7 +57,7 @@ export async function createStudentAccount(
   return {
     success: true,
     message: "Akun berhasil dibuat. Password default: nomor HP orang tua.",
-    studentNis,
+    studentId,
     defaultPassword: normalizedPassword,
   };
 }
@@ -74,6 +74,7 @@ interface LoginInput {
 interface LoginResult {
   success: boolean;
   student?: {
+    id: string;
     nis: string;
     name: string;
     mustChangePassword: boolean;
@@ -84,7 +85,7 @@ interface LoginResult {
 export async function loginStudent(input: LoginInput): Promise<LoginResult> {
   const { nis, password } = input;
 
-  const student = await prisma.student.findUnique({
+  const student = await prisma.student.findFirst({
     where: { nis },
   });
 
@@ -102,13 +103,14 @@ export async function loginStudent(input: LoginInput): Promise<LoginResult> {
   }
 
   await prisma.student.update({
-    where: { nis },
+    where: { id: student.id },
     data: { lastLoginAt: new Date() },
   });
 
   return {
     success: true,
     student: {
+      id: student.id,
       nis: student.nis,
       name: student.name,
       mustChangePassword: student.mustChangePassword,
@@ -121,7 +123,7 @@ export async function loginStudent(input: LoginInput): Promise<LoginResult> {
 // ============================================
 
 interface ChangePasswordInput {
-  studentNis: string;
+  studentId: string;
   currentPassword: string;
   newPassword: string;
 }
@@ -129,10 +131,10 @@ interface ChangePasswordInput {
 export async function changePassword(
   input: ChangePasswordInput,
 ): Promise<boolean> {
-  const { studentNis, currentPassword, newPassword } = input;
+  const { studentId, currentPassword, newPassword } = input;
 
   const student = await prisma.student.findUnique({
-    where: { nis: studentNis },
+    where: { id: studentId },
   });
 
   if (!student || !student.hasAccount || student.accountDeleted) {
@@ -155,7 +157,7 @@ export async function changePassword(
   const hashedPassword = await bcrypt.hash(newPassword, 10);
 
   await prisma.student.update({
-    where: { nis: studentNis },
+    where: { id: studentId },
     data: {
       password: hashedPassword,
       mustChangePassword: false,
@@ -170,7 +172,7 @@ export async function changePassword(
 // ============================================
 
 interface ResetPasswordInput {
-  studentNis: string;
+  studentId: string;
   resetBy: string;
 }
 
@@ -183,10 +185,10 @@ interface ResetPasswordResult {
 export async function resetPassword(
   input: ResetPasswordInput,
 ): Promise<ResetPasswordResult> {
-  const { studentNis } = input;
+  const { studentId } = input;
 
   const student = await prisma.student.findUnique({
-    where: { nis: studentNis },
+    where: { id: studentId },
   });
 
   if (!student || !student.hasAccount) {
@@ -197,7 +199,7 @@ export async function resetPassword(
   const hashedPassword = await bcrypt.hash(normalizedPassword, 10);
 
   await prisma.student.update({
-    where: { nis: studentNis },
+    where: { id: studentId },
     data: {
       password: hashedPassword,
       mustChangePassword: true,
@@ -216,12 +218,12 @@ export async function resetPassword(
 // ============================================
 
 export async function softDeleteAccount(
-  studentNis: string,
+  studentId: string,
   deletedBy: string,
   reason?: string,
 ) {
   return prisma.student.update({
-    where: { nis: studentNis },
+    where: { id: studentId },
     data: {
       accountDeleted: true,
       accountDeletedAt: new Date(),
@@ -235,9 +237,9 @@ export async function softDeleteAccount(
 // RESTORE ACCOUNT (Admin)
 // ============================================
 
-export async function restoreAccount(studentNis: string) {
+export async function restoreAccount(studentId: string) {
   const student = await prisma.student.findUnique({
-    where: { nis: studentNis },
+    where: { id: studentId },
   });
 
   if (!student) {
@@ -253,7 +255,7 @@ export async function restoreAccount(studentNis: string) {
   }
 
   return prisma.student.update({
-    where: { nis: studentNis },
+    where: { id: studentId },
     data: {
       accountDeleted: false,
       accountDeletedAt: null,
@@ -267,10 +269,10 @@ export async function restoreAccount(studentNis: string) {
 // GET STUDENT PROFILE
 // ============================================
 
-export async function getStudentProfile(studentNis: string) {
+export async function getStudentProfile(studentId: string) {
   const student = await prisma.student.findFirst({
     where: {
-      nis: studentNis,
+      id: studentId,
       hasAccount: true,
       accountDeleted: false,
     },

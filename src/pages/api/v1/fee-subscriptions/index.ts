@@ -12,12 +12,12 @@ async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const page = Number(searchParams.get("page") || "1");
   const limit = Number(searchParams.get("limit") || "10");
-  const studentNis = searchParams.get("studentNis") || undefined;
+  const studentId = searchParams.get("studentId") || undefined;
   const feeServiceId = searchParams.get("feeServiceId") || undefined;
   const activeParam = searchParams.get("active");
 
   const where: Prisma.FeeSubscriptionWhereInput = {};
-  if (studentNis) where.studentNis = studentNis;
+  if (studentId) where.studentId = studentId;
   if (feeServiceId) where.feeServiceId = feeServiceId;
 
   const now = new Date();
@@ -63,17 +63,17 @@ async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { feeServiceId, studentNis, startDate, endDate, notes } = body as {
+    const { feeServiceId, studentId, startDate, endDate, notes } = body as {
       feeServiceId?: string;
-      studentNis?: string;
+      studentId?: string;
       startDate?: string;
       endDate?: string | null;
       notes?: string | null;
     };
 
-    if (!feeServiceId || !studentNis || !startDate) {
+    if (!feeServiceId || !studentId || !startDate) {
       return errorResponse(
-        "feeServiceId, studentNis, and startDate are required",
+        "feeServiceId, studentId, and startDate are required",
         "VALIDATION_ERROR",
         400,
       );
@@ -113,7 +113,7 @@ async function POST(request: NextRequest) {
         select: { id: true },
       }),
       prisma.student.findUnique({
-        where: { nis: studentNis },
+        where: { id: studentId },
         select: { nis: true },
       }),
     ]);
@@ -128,7 +128,7 @@ async function POST(request: NextRequest) {
     const created = await prisma.feeSubscription.create({
       data: {
         feeServiceId,
-        studentNis,
+        studentId,
         startDate: start,
         endDate: end,
         notes: notes ?? null,

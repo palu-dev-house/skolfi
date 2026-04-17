@@ -9,7 +9,7 @@ export interface ServiceFeeBill {
   id: string;
   serviceFeeId: string;
   classAcademicId: string;
-  studentNis: string;
+  studentId: string;
   period: string;
   year: number;
   amount: string;

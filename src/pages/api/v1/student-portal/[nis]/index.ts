@@ -15,9 +15,10 @@ async function GET(
   const { nis } = await params;
 
   // Get student
-  const student = await prisma.student.findUnique({
+  const student = await prisma.student.findFirst({
     where: { nis },
     select: {
+      id: true,
       nis: true,
       name: true,
       parentName: true,
@@ -43,7 +44,7 @@ async function GET(
 
   // Get all tuitions grouped by academic year
   const tuitions = await prisma.tuition.findMany({
-    where: { studentNis: nis },
+    where: { studentId: student.id },
     include: {
       classAcademic: {
         include: {
@@ -189,7 +190,7 @@ async function GET(
 
   // Get scholarships
   const scholarships = await prisma.scholarship.findMany({
-    where: { studentNis: nis },
+    where: { studentId: student.id },
     include: {
       classAcademic: {
         include: { academicYear: true },

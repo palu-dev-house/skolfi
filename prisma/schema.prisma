@@ -71,6 +71,12 @@ enum FeeServiceCategory {
   ACCOMMODATION
 }
 
+enum SchoolLevel {
+  SD
+  SMP
+  SMA
+}
+
 // ============================================
 // EMPLOYEE MANAGEMENT
 // ============================================
@@ -94,15 +100,17 @@ model Employee {
 // ============================================
 
 model Student {
-  nis           String   @id @map("nis")
-  nik           String   @unique @map("nik")
+  id            String      @id @default(uuid())
+  nis           String
+  schoolLevel   SchoolLevel @map("school_level")
+  nik           String      @unique @map("nik")
   name          String
   address       String
-  parentName    String   @map("parent_name")
-  parentPhone   String   @map("parent_phone")
-  startJoinDate DateTime @map("start_join_date")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  parentName    String      @map("parent_name")
+  parentPhone   String      @map("parent_phone")
+  startJoinDate DateTime    @map("start_join_date")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
 
   // ========== Account Fields (Phase 2) ==========
   hasAccount         Boolean   @default(false) @map("has_account")
@@ -134,6 +142,7 @@ model Student {
   serviceFeeBills  ServiceFeeBill[]
 
   // Indexes
+  @@unique([nis, schoolLevel])
   @@index([exitedAt])
   @@index([hasAccount])
   @@index([hasAccount, accountDeleted])
@@ -197,17 +206,17 @@ model ClassAcademic {
 
 model StudentClass {
   id              String   @id @default(uuid())
-  studentNis      String   @map("student_nis")
+  studentId       String   @map("student_id")
   classAcademicId String   @map("class_academic_id")
   enrolledAt      DateTime @default(now()) @map("enrolled_at")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
-  student       Student       @relation(fields: [studentNis], references: [nis], onDelete: Cascade)
+  student       Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
   classAcademic ClassAcademic @relation(fields: [classAcademicId], references: [id], onDelete: Cascade)
 
-  @@unique([studentNis, classAcademicId])
-  @@index([studentNis])
+  @@unique([studentId, classAcademicId])
+  @@index([studentId])
   @@index([classAcademicId])
   @@map("student_classes")
 }
@@ -219,7 +228,7 @@ model StudentClass {
 model Tuition {
   id                String        @id @default(uuid())
   classAcademicId   String        @map("class_academic_id")
-  studentNis        String        @map("student_nis")
+  studentId         String        @map("student_id")
   period            String        // JULY, AUGUST, ..., Q1, Q2, Q3, Q4, SEM1, SEM2
   month             Month?        // Kept for backward compatibility (nullable)
   year              Int
@@ -236,13 +245,13 @@ model Tuition {
   updatedAt         DateTime      @updatedAt @map("updated_at")
 
   classAcademic   ClassAcademic    @relation(fields: [classAcademicId], references: [id], onDelete: Cascade)
-  student         Student          @relation(fields: [studentNis], references: [nis], onDelete: Cascade)
+  student         Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
   discount        Discount?        @relation(fields: [discountId], references: [id], onDelete: SetNull)
   payments           Payment[]
   onlinePaymentItems OnlinePaymentItem[]
 
-  @@unique([classAcademicId, studentNis, period, year])
-  @@index([studentNis])
+  @@unique([classAcademicId, studentId, period, year])
+  @@index([studentId])
   @@index([classAcademicId])
   @@index([status])
   @@index([dueDate])
@@ -257,7 +266,7 @@ model Tuition {
 
 model Scholarship {
   id                String   @id @default(uuid())
-  studentNis        String   @map("student_nis")
+  studentId         String   @map("student_id")
   classAcademicId   String   @map("class_academic_id")
   name              String   @default("Scholarship") // e.g., "Academic", "Sports", "Need-based"
   nominal           Decimal  @db.Decimal(10, 2)
@@ -265,13 +274,13 @@ model Scholarship {
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
-  student       Student       @relation(fields: [studentNis], references: [nis], onDelete: Cascade)
+  student       Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
   classAcademic ClassAcademic @relation(fields: [classAcademicId], references: [id], onDelete: Cascade)
 
   // Removed unique constraint to allow multiple scholarships per student per class
-  @@index([studentNis])
+  @@index([studentId])
   @@index([classAcademicId])
-  @@index([studentNis, classAcademicId])
+  @@index([studentId, classAcademicId])
   @@map("scholarships")
 }
 
@@ -344,7 +353,7 @@ model Discount {
 model OnlinePayment {
   id               String              @id @default(uuid())
   orderId          String              @unique @map("order_id")
-  studentNis       String              @map("student_nis")
+  studentId        String              @map("student_id")
   grossAmount      Decimal             @map("gross_amount") @db.Decimal(12, 2)
   snapToken        String?             @map("snap_token")
   snapRedirectUrl  String?             @map("snap_redirect_url")
@@ -361,12 +370,12 @@ model OnlinePayment {
   createdAt        DateTime            @default(now()) @map("created_at")
   updatedAt        DateTime            @updatedAt @map("updated_at")
 
-  student     Student             @relation(fields: [studentNis], references: [nis], onDelete: Cascade)
+  student     Student             @relation(fields: [studentId], references: [id], onDelete: Cascade)
   items       OnlinePaymentItem[]
   payments    Payment[]
   webhookLogs MidtransWebhookLog[]
 
-  @@index([studentNis])
+  @@index([studentId])
   @@index([status])
   @@index([expiryTime])
   @@index([createdAt])
@@ -528,7 +537,7 @@ model FeeServicePrice {
 model FeeSubscription {
   id           String    @id @default(uuid())
   feeServiceId String    @map("fee_service_id")
-  studentNis   String    @map("student_nis")
+  studentId    String    @map("student_id")
   startDate    DateTime  @map("start_date")
   endDate      DateTime? @map("end_date")
   notes        String?
@@ -536,12 +545,12 @@ model FeeSubscription {
   updatedAt    DateTime  @updatedAt @map("updated_at")
 
   feeService FeeService @relation(fields: [feeServiceId], references: [id], onDelete: Cascade)
-  student    Student    @relation(fields: [studentNis], references: [nis], onDelete: Cascade)
+  student    Student    @relation(fields: [studentId], references: [id], onDelete: Cascade)
   bills      FeeBill[]
 
-  @@index([studentNis])
+  @@index([studentId])
   @@index([feeServiceId])
-  @@index([studentNis, endDate])
+  @@index([studentId, endDate])
   @@map("fee_subscriptions")
 }
 
@@ -549,7 +558,7 @@ model FeeBill {
   id             String        @id @default(uuid())
   subscriptionId String        @map("subscription_id")
   feeServiceId   String        @map("fee_service_id")
-  studentNis     String        @map("student_nis")
+  studentId      String        @map("student_id")
   period         String
   year           Int
   amount         Decimal       @db.Decimal(10, 2)
@@ -563,15 +572,15 @@ model FeeBill {
 
   subscription       FeeSubscription     @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
   feeService         FeeService          @relation(fields: [feeServiceId], references: [id], onDelete: Restrict)
-  student            Student             @relation(fields: [studentNis], references: [nis], onDelete: Cascade)
+  student            Student             @relation(fields: [studentId], references: [id], onDelete: Cascade)
   payments           Payment[]
   onlinePaymentItems OnlinePaymentItem[]
 
   @@unique([subscriptionId, period, year])
-  @@index([studentNis])
+  @@index([studentId])
   @@index([feeServiceId])
   @@index([status])
-  @@index([studentNis, status])
+  @@index([studentId, status])
   @@index([dueDate])
   @@map("fee_bills")
 }
@@ -600,7 +609,7 @@ model ServiceFee {
 model ServiceFeeBill {
   id              String        @id @default(uuid())
   serviceFeeId    String        @map("service_fee_id")
-  studentNis      String        @map("student_nis")
+  studentId       String        @map("student_id")
   classAcademicId String        @map("class_academic_id")
   period          String
   year            Int
@@ -614,15 +623,15 @@ model ServiceFeeBill {
   updatedAt       DateTime      @updatedAt @map("updated_at")
 
   serviceFee         ServiceFee          @relation(fields: [serviceFeeId], references: [id], onDelete: Restrict)
-  student            Student             @relation(fields: [studentNis], references: [nis], onDelete: Cascade)
+  student            Student             @relation(fields: [studentId], references: [id], onDelete: Cascade)
   classAcademic      ClassAcademic       @relation(fields: [classAcademicId], references: [id], onDelete: Restrict)
   payments           Payment[]
   onlinePaymentItems OnlinePaymentItem[]
 
-  @@unique([serviceFeeId, studentNis, period, year])
-  @@index([studentNis])
+  @@unique([serviceFeeId, studentId, period, year])
+  @@index([studentId])
   @@index([classAcademicId])
   @@index([status])
-  @@index([studentNis, status])
+  @@index([studentId, status])
   @@map("service_fee_bills")
 }

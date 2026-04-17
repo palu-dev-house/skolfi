@@ -19,7 +19,7 @@ async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const page = Number(searchParams.get("page") || "1");
   const limit = Number(searchParams.get("limit") || "10");
-  const studentNis = searchParams.get("studentNis") || undefined;
+  const studentId = searchParams.get("studentId") || undefined;
   const classAcademicId = searchParams.get("classAcademicId") || undefined;
   const employeeId = searchParams.get("employeeId") || undefined;
   const paymentDateFrom = searchParams.get("paymentDateFrom") || undefined;
@@ -41,11 +41,11 @@ async function GET(request: NextRequest) {
     }
   }
 
-  if (studentNis) {
+  if (studentId) {
     where.OR = [
-      { tuition: { studentNis } },
-      { feeBill: { studentNis } },
-      { serviceFeeBill: { studentNis } },
+      { tuition: { studentId } },
+      { feeBill: { studentId } },
+      { serviceFeeBill: { studentId } },
     ];
   }
 
@@ -134,7 +134,7 @@ async function POST(request: NextRequest) {
     const parsed = await parseWithLocale(paymentSchema, body, request);
     if (!parsed.success) return parsed.response;
 
-    const { studentNis, paymentDate, notes, items } = parsed.data;
+    const { studentId, paymentDate, notes, items } = parsed.data;
 
     // Invariant check (belt + suspenders over the zod superRefine)
     for (const item of items) {
@@ -183,7 +183,7 @@ async function POST(request: NextRequest) {
             "NOT_FOUND",
             404,
           );
-        if (row.studentNis !== studentNis)
+        if (row.studentId !== studentId)
           return errorResponse(
             "Bill does not belong to student",
             "VALIDATION_ERROR",
@@ -203,7 +203,7 @@ async function POST(request: NextRequest) {
             "NOT_FOUND",
             404,
           );
-        if (row.studentNis !== studentNis)
+        if (row.studentId !== studentId)
           return errorResponse(
             "Bill does not belong to student",
             "VALIDATION_ERROR",
@@ -223,7 +223,7 @@ async function POST(request: NextRequest) {
             "NOT_FOUND",
             404,
           );
-        if (row.studentNis !== studentNis)
+        if (row.studentId !== studentId)
           return errorResponse(
             "Bill does not belong to student",
             "VALIDATION_ERROR",

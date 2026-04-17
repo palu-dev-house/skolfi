@@ -484,7 +484,7 @@ async function main() {
 
   type TuitionInput = {
     classAcademicId: string;
-    studentNis: string;
+    studentId: string;
     period: string;
     month: string | null;
     year: number;
@@ -524,6 +524,7 @@ async function main() {
       parentName: generateParentName(),
       parentPhone,
       startJoinDate: joinDate,
+      schoolLevel: "SD" as const,
       hasAccount: true,
       password: hashedPhone,
       mustChangePassword: true,
@@ -539,7 +540,7 @@ async function main() {
 
   const oldStudents = await prisma.student.findMany({
     where: { nis: { in: oldStudentInputs.map((s) => s.nis) } },
-    select: { nis: true },
+    select: { id: true, nis: true },
   });
 
   console.log(`  Created ${oldStudents.length} historical students.`);
@@ -552,6 +553,9 @@ async function main() {
   );
 
   const oldStudentNisList = oldStudents.map((s) => s.nis);
+  const oldStudentIdByNis = Object.fromEntries(
+    oldStudents.map((s) => [s.nis, s.id]),
+  );
 
   // Build flat list of classes for historical years
   const classes2122: {
@@ -600,6 +604,7 @@ async function main() {
   for (let i = 0; i < oldStudentNisList.length; i++) {
     const cls = classes2122[i % classes2122.length];
     const studentNis = oldStudentNisList[i];
+    const studentId = oldStudentIdByNis[studentNis];
     oldStudentClassAssignment2122[studentNis] = {
       grade: cls.grade,
       section: cls.section,
@@ -608,7 +613,7 @@ async function main() {
       monthlyFee: cls.monthlyFee,
     };
     oldStudentClassData2122.push({
-      studentNis,
+      studentId,
       classAcademicId: cls.id,
       enrolledAt: new Date("2021-07-15"),
     });
@@ -631,13 +636,14 @@ async function main() {
     const nextGrade = Math.min(prev.grade + 1, 6);
     const section = prev.section;
     const cls = classMap[ay2223.id][nextGrade][section];
+    const studentId = oldStudentIdByNis[studentNis];
     oldStudentClassAssignment2223[studentNis] = {
       classId: cls.id,
       paymentFrequency: cls.paymentFrequency,
       monthlyFee: cls.monthlyFee,
     };
     oldStudentClassData2223.push({
-      studentNis,
+      studentId,
       classAcademicId: cls.id,
       enrolledAt: new Date("2022-07-15"),
     });
@@ -682,6 +688,7 @@ async function main() {
   const oldTuitionInputs: TuitionInput[] = [];
 
   for (const studentNis of oldStudentNisList) {
+    const studentId = oldStudentIdByNis[studentNis];
     // 2021/2022
     const asgn2122 = oldStudentClassAssignment2122[studentNis];
     const startYear2122 = 2021;
@@ -690,7 +697,7 @@ async function main() {
         const dueCalYear = startYear2122 + p.calYear;
         oldTuitionInputs.push({
           classAcademicId: asgn2122.classId,
-          studentNis,
+          studentId,
           period: p.period,
           month: p.month,
           year: startYear2122,
@@ -704,7 +711,7 @@ async function main() {
       for (const p of quarterlyPeriods2122) {
         oldTuitionInputs.push({
           classAcademicId: asgn2122.classId,
-          studentNis,
+          studentId,
           period: p.period,
           month: null,
           year: startYear2122,
@@ -722,7 +729,7 @@ async function main() {
         const dueCalYear = startYear2223 + p.calYear;
         oldTuitionInputs.push({
           classAcademicId: asgn2223.classId,
-          studentNis,
+          studentId,
           period: p.period,
           month: p.month,
           year: startYear2223,
@@ -736,7 +743,7 @@ async function main() {
       for (const p of quarterlyPeriods2223) {
         oldTuitionInputs.push({
           classAcademicId: asgn2223.classId,
-          studentNis,
+          studentId,
           period: p.period,
           month: null,
           year: startYear2223,
@@ -756,7 +763,7 @@ async function main() {
     await prisma.tuition.createMany({
       data: batch.map((t) => ({
         classAcademicId: t.classAcademicId,
-        studentNis: t.studentNis,
+        studentId: t.studentId,
         period: t.period,
         month: t.month as
           | "JULY"
@@ -793,13 +800,16 @@ async function main() {
   // ============================================================
   console.log("Generating payments for historical tuitions...");
 
+  const oldStudentIdList = oldStudentNisList.map(
+    (nis) => oldStudentIdByNis[nis],
+  );
   const oldTuitions = await prisma.tuition.findMany({
-    where: { studentNis: { in: oldStudentNisList } },
+    where: { studentId: { in: oldStudentIdList } },
     select: {
       id: true,
       feeAmount: true,
       classAcademicId: true,
-      studentNis: true,
+      studentId: true,
       period: true,
       year: true,
     },
@@ -911,6 +921,7 @@ async function main() {
       parentName: generateParentName(),
       parentPhone,
       startJoinDate: joinDate,
+      schoolLevel: "SD" as const,
       hasAccount: true,
       password: hashedPhone,
       mustChangePassword: true,
@@ -926,7 +937,7 @@ async function main() {
 
   const students = await prisma.student.findMany({
     where: { nis: { in: studentInputs.map((s) => s.nis) } },
-    select: { nis: true },
+    select: { id: true, nis: true },
   });
 
   console.log(`  Created ${students.length} students.`);
@@ -940,6 +951,7 @@ async function main() {
   // For 2025/2026: same students, assigned to (grade+1) or same grade if already grade 6
 
   const studentNisList = students.map((s) => s.nis);
+  const studentIdByNis = Object.fromEntries(students.map((s) => [s.nis, s.id]));
   const gradeList = [1, 2, 3, 4, 5, 6];
   const sectionList = ["A", "B"];
 
@@ -991,6 +1003,7 @@ async function main() {
   for (let i = 0; i < studentNisList.length; i++) {
     const cls = classes2425[i % classes2425.length];
     const studentNis = studentNisList[i];
+    const studentId = studentIdByNis[studentNis];
     studentClassAssignment2425[studentNis] = {
       grade: cls.grade,
       section: cls.section,
@@ -999,7 +1012,7 @@ async function main() {
       monthlyFee: cls.monthlyFee,
     };
     studentClassData2425.push({
-      studentNis,
+      studentId,
       classAcademicId: cls.id,
       enrolledAt: new Date("2024-07-15"),
     });
@@ -1022,13 +1035,14 @@ async function main() {
     const nextGrade = Math.min(prev.grade + 1, 6);
     const section = prev.section; // keep same section
     const cls = classMap[ay2526.id][nextGrade][section];
+    const studentId = studentIdByNis[studentNis];
     studentClassAssignment2526[studentNis] = {
       classId: cls.id,
       paymentFrequency: cls.paymentFrequency,
       monthlyFee: cls.monthlyFee,
     };
     studentClassData2526.push({
-      studentNis,
+      studentId,
       classAcademicId: cls.id,
       enrolledAt: new Date("2025-07-15"),
     });
@@ -1076,6 +1090,7 @@ async function main() {
   };
 
   for (const studentNis of studentNisList) {
+    const studentId = studentIdByNis[studentNis];
     // 2024/2025
     const asgn2425 = studentClassAssignment2425[studentNis];
     const startYear2425 = ayStartYears[ay2425.id];
@@ -1084,7 +1099,7 @@ async function main() {
         const dueCalYear = startYear2425 + p.calYear;
         tuitionInputs.push({
           classAcademicId: asgn2425.classId,
-          studentNis,
+          studentId,
           period: p.period,
           month: p.month,
           year: startYear2425,
@@ -1098,7 +1113,7 @@ async function main() {
       for (const p of quarterlyPeriods) {
         tuitionInputs.push({
           classAcademicId: asgn2425.classId,
-          studentNis,
+          studentId,
           period: p.period,
           month: null,
           year: startYear2425,
@@ -1116,7 +1131,7 @@ async function main() {
         const dueCalYear = startYear2526 + p.calYear;
         tuitionInputs.push({
           classAcademicId: asgn2526.classId,
-          studentNis,
+          studentId,
           period: p.period,
           month: p.month,
           year: startYear2526,
@@ -1130,7 +1145,7 @@ async function main() {
       for (const p of quarterlyPeriods2526) {
         tuitionInputs.push({
           classAcademicId: asgn2526.classId,
-          studentNis,
+          studentId,
           period: p.period,
           month: null,
           year: startYear2526,
@@ -1151,7 +1166,7 @@ async function main() {
     await prisma.tuition.createMany({
       data: batch.map((t) => ({
         classAcademicId: t.classAcademicId,
-        studentNis: t.studentNis,
+        studentId: t.studentId,
         period: t.period,
         month: t.month as
           | "JULY"
@@ -1188,13 +1203,14 @@ async function main() {
   // ============================================================
   console.log("Fetching all inserted tuitions to create payments...");
 
+  const currentStudentIdList = studentNisList.map((nis) => studentIdByNis[nis]);
   const allTuitions = await prisma.tuition.findMany({
-    where: { studentNis: { in: studentNisList } },
+    where: { studentId: { in: currentStudentIdList } },
     select: {
       id: true,
       feeAmount: true,
       classAcademicId: true,
-      studentNis: true,
+      studentId: true,
       period: true,
       year: true,
     },
@@ -1289,6 +1305,7 @@ async function main() {
 
   for (let i = 0; i < scholarshipStudents.length; i++) {
     const studentNis = scholarshipStudents[i];
+    const studentId = studentIdByNis[studentNis];
     const asgn = studentClassAssignment2425[studentNis];
     const isFullScholarship = i < 5; // first 5 get full scholarships
     const nominal = isFullScholarship
@@ -1296,7 +1313,7 @@ async function main() {
       : Math.floor(asgn.monthlyFee * 0.5);
 
     scholarshipData.push({
-      studentNis,
+      studentId,
       classAcademicId: asgn.classId,
       name: isFullScholarship ? "Beasiswa Penuh" : "Beasiswa Sebagian",
       nominal,
@@ -1496,7 +1513,7 @@ async function main() {
 
   interface SubRow {
     id: string;
-    studentNis: string;
+    studentId: string;
     feeServiceId: string;
     feeServiceName: string;
     amount: number;
@@ -1511,7 +1528,7 @@ async function main() {
     const services = feeServicesByYear[ay.id];
     const subInputs: {
       id: string;
-      studentNis: string;
+      studentId: string;
       feeServiceId: string;
       startDate: Date;
       endDate: Date | null;
@@ -1526,9 +1543,10 @@ async function main() {
       for (let s = 0; s < Math.min(numServices, shuffled.length); s++) {
         const svc = shuffled[s];
         const subId = crypto.randomUUID();
+        const studentId = studentIdByNis[studentNisList[i]];
         subInputs.push({
           id: subId,
-          studentNis: studentNisList[i],
+          studentId,
           feeServiceId: svc.id,
           startDate: ay.startDate,
           endDate: null,
@@ -1536,7 +1554,7 @@ async function main() {
         });
         allSubs.push({
           id: subId,
-          studentNis: studentNisList[i],
+          studentId,
           feeServiceId: svc.id,
           feeServiceName: svc.name,
           amount: svc.amount,
@@ -1566,7 +1584,7 @@ async function main() {
     id: string;
     subscriptionId: string;
     feeServiceId: string;
-    studentNis: string;
+    studentId: string;
     period: string;
     year: number;
     amount: number;
@@ -1583,7 +1601,7 @@ async function main() {
         id: crypto.randomUUID(),
         subscriptionId: sub.id,
         feeServiceId: sub.feeServiceId,
-        studentNis: sub.studentNis,
+        studentId: sub.studentId,
         period: p.period,
         year: startYear,
         amount: sub.amount,
@@ -1605,7 +1623,7 @@ async function main() {
         id: b.id,
         subscriptionId: b.subscriptionId,
         feeServiceId: b.feeServiceId,
-        studentNis: b.studentNis,
+        studentId: b.studentId,
         period: b.period,
         year: b.year,
         amount: b.amount,
@@ -1630,7 +1648,7 @@ async function main() {
   type ServiceFeeBillInput = {
     id: string;
     serviceFeeId: string;
-    studentNis: string;
+    studentId: string;
     classAcademicId: string;
     period: string;
     year: number;
@@ -1666,11 +1684,12 @@ async function main() {
       if (!asgn) continue;
       const svcFee = serviceFeesByClass[asgn.classId];
       if (!svcFee) continue;
+      const studentId = studentIdByNis[studentNis];
       // JULY (same calendar year as academic start)
       svcBillInputs.push({
         id: crypto.randomUUID(),
         serviceFeeId: svcFee.id,
-        studentNis,
+        studentId,
         classAcademicId: asgn.classId,
         period: "JULY",
         year: startYear,
@@ -1681,7 +1700,7 @@ async function main() {
       svcBillInputs.push({
         id: crypto.randomUUID(),
         serviceFeeId: svcFee.id,
-        studentNis,
+        studentId,
         classAcademicId: asgn.classId,
         period: "JANUARY",
         year: startYear,
@@ -1701,7 +1720,7 @@ async function main() {
       data: batch.map((b) => ({
         id: b.id,
         serviceFeeId: b.serviceFeeId,
-        studentNis: b.studentNis,
+        studentId: b.studentId,
         classAcademicId: b.classAcademicId,
         period: b.period,
         year: b.year,

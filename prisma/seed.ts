@@ -168,7 +168,7 @@ async function seedSubscriptions(
   if (!busAB || !busBC || !dorm) return { students, exitingStudent: undefined };
 
   const plan: Array<{
-    studentNis: string;
+    studentId: string;
     feeServiceId: string;
     startDate: Date;
     endDate: Date | null;
@@ -177,7 +177,7 @@ async function seedSubscriptions(
 
   if (students[0]) {
     plan.push({
-      studentNis: students[0].nis,
+      studentId: students[0].id,
       feeServiceId: busAB.id,
       startDate: new Date("2024-07-01"),
       endDate: null,
@@ -186,7 +186,7 @@ async function seedSubscriptions(
   }
   if (students[1]) {
     plan.push({
-      studentNis: students[1].nis,
+      studentId: students[1].id,
       feeServiceId: busAB.id,
       startDate: new Date("2024-07-01"),
       endDate: null,
@@ -195,7 +195,7 @@ async function seedSubscriptions(
   }
   if (students[2]) {
     plan.push({
-      studentNis: students[2].nis,
+      studentId: students[2].id,
       feeServiceId: busBC.id,
       startDate: new Date("2024-10-01"),
       endDate: null,
@@ -204,7 +204,7 @@ async function seedSubscriptions(
   }
   if (students[3]) {
     plan.push({
-      studentNis: students[3].nis,
+      studentId: students[3].id,
       feeServiceId: dorm.id,
       startDate: new Date("2024-07-01"),
       endDate: null,
@@ -215,7 +215,7 @@ async function seedSubscriptions(
   if (students[4]) {
     exitingStudent = students[4];
     plan.push({
-      studentNis: exitingStudent.nis,
+      studentId: exitingStudent.id,
       feeServiceId: busAB.id,
       startDate: new Date("2024-07-01"),
       endDate: null,
@@ -227,7 +227,7 @@ async function seedSubscriptions(
   for (const p of plan) {
     const existing = await prisma.feeSubscription.findFirst({
       where: {
-        studentNis: p.studentNis,
+        studentId: p.studentId,
         feeServiceId: p.feeServiceId,
         startDate: p.startDate,
       },
@@ -235,7 +235,7 @@ async function seedSubscriptions(
     if (existing) continue;
     await prisma.feeSubscription.create({
       data: {
-        studentNis: p.studentNis,
+        studentId: p.studentId,
         feeServiceId: p.feeServiceId,
         startDate: p.startDate,
         endDate: p.endDate,
@@ -292,12 +292,12 @@ async function generateAllBills(bl: BusinessLogic, academicYearId: string) {
 
 async function simulateExit(
   bl: BusinessLogic,
-  exitingStudent: { nis: string } | undefined,
+  exitingStudent: { id: string; nis: string } | undefined,
   employeeId: string,
 ) {
   if (!exitingStudent) return;
-  const existing = await prisma.student.findUnique({
-    where: { nis: exitingStudent.nis },
+  const existing = await prisma.student.findFirst({
+    where: { id: exitingStudent.id },
   });
   if (!existing || existing.exitedAt) return;
   try {
@@ -349,14 +349,14 @@ async function seedPayments(cashierId: string) {
   interface BillRow {
     kind: "tuition" | "feeBill" | "serviceFeeBill";
     id: string;
-    studentNis: string;
+    studentId: string;
     amount: number;
   }
   const all: BillRow[] = [
     ...unpaidTuitions.map((t) => ({
       kind: "tuition" as const,
       id: t.id,
-      studentNis: t.studentNis,
+      studentId: t.studentId,
       amount:
         Number(t.feeAmount) -
         Number(t.paidAmount) -
@@ -366,13 +366,13 @@ async function seedPayments(cashierId: string) {
     ...unpaidFeeBills.map((b) => ({
       kind: "feeBill" as const,
       id: b.id,
-      studentNis: b.studentNis,
+      studentId: b.studentId,
       amount: Number(b.amount) - Number(b.paidAmount),
     })),
     ...unpaidServiceFeeBills.map((b) => ({
       kind: "serviceFeeBill" as const,
       id: b.id,
-      studentNis: b.studentNis,
+      studentId: b.studentId,
       amount: Number(b.amount) - Number(b.paidAmount),
     })),
   ].filter((r) => r.amount > 0);
@@ -387,9 +387,9 @@ async function seedPayments(cashierId: string) {
   // Group by student → pick up to 3 multi-bill transactions (>=2 items each).
   const byStudent = new Map<string, BillRow[]>();
   for (const row of toPay) {
-    const list = byStudent.get(row.studentNis) ?? [];
+    const list = byStudent.get(row.studentId) ?? [];
     list.push(row);
-    byStudent.set(row.studentNis, list);
+    byStudent.set(row.studentId, list);
   }
 
   let multiCount = 0;

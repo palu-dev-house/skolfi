@@ -11,7 +11,7 @@ import { prisma } from "@/lib/prisma";
 interface ClassConfig {
   classAcademicId: string;
   feeAmount?: number; // Optional - uses class config if not provided
-  studentNisList?: string[];
+  studentIdList?: string[];
 }
 
 async function POST(request: NextRequest) {
@@ -47,7 +47,7 @@ async function POST(request: NextRequest) {
       const {
         classAcademicId,
         feeAmount: overrideFeeAmount,
-        studentNisList,
+        studentIdList,
       } = classConfig;
 
       if (!classAcademicId) {
@@ -109,10 +109,10 @@ async function POST(request: NextRequest) {
 
       // Get students
       let students;
-      if (studentNisList && studentNisList.length > 0) {
+      if (studentIdList && studentIdList.length > 0) {
         students = await prisma.student.findMany({
-          where: { nis: { in: studentNisList } },
-          select: { nis: true, startJoinDate: true, exitedAt: true },
+          where: { id: { in: studentIdList } },
+          select: { id: true, startJoinDate: true, exitedAt: true },
         });
       } else {
         // Get students enrolled in this class
@@ -120,7 +120,7 @@ async function POST(request: NextRequest) {
           where: { classAcademicId },
           include: {
             student: {
-              select: { nis: true, startJoinDate: true, exitedAt: true },
+              select: { id: true, startJoinDate: true, exitedAt: true },
             },
           },
         });
@@ -129,7 +129,7 @@ async function POST(request: NextRequest) {
         // Fallback: if no student classes, get all students
         if (students.length === 0) {
           students = await prisma.student.findMany({
-            select: { nis: true, startJoinDate: true, exitedAt: true },
+            select: { id: true, startJoinDate: true, exitedAt: true },
           });
         }
       }
@@ -151,7 +151,7 @@ async function POST(request: NextRequest) {
         frequency: classAcademic.paymentFrequency,
         feeAmount,
         students: students.map((s) => ({
-          nis: s.nis,
+          id: s.id,
           startJoinDate: s.startJoinDate,
           exitedAt: s.exitedAt,
         })),
@@ -165,17 +165,17 @@ async function POST(request: NextRequest) {
       const existingTuitions = await prisma.tuition.findMany({
         where: {
           classAcademicId,
-          studentNis: { in: students.map((s) => s.nis) },
+          studentId: { in: students.map((s) => s.id) },
         },
-        select: { studentNis: true, period: true, year: true },
+        select: { studentId: true, period: true, year: true },
       });
 
       const existingKeys = new Set(
-        existingTuitions.map((t) => `${t.studentNis}-${t.period}-${t.year}`),
+        existingTuitions.map((t) => `${t.studentId}-${t.period}-${t.year}`),
       );
 
       const newTuitions = tuitionsToCreate.filter(
-        (t) => !existingKeys.has(`${t.studentNis}-${t.period}-${t.year}`),
+        (t) => !existingKeys.has(`${t.studentId}-${t.period}-${t.year}`),
       );
 
       const skippedCount = tuitionsToCreate.length - newTuitions.length;
@@ -185,7 +185,7 @@ async function POST(request: NextRequest) {
         await prisma.tuition.createMany({
           data: newTuitions.map((t) => ({
             classAcademicId: t.classAcademicId,
-            studentNis: t.studentNis,
+            studentId: t.studentId,
             period: t.period,
             month: t.month, // For backward compatibility
             year: t.year,

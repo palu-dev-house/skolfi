@@ -127,7 +127,7 @@ async function GET(request: NextRequest) {
             amount: Number(p.amount),
             paymentDate: p.paymentDate,
             studentName: tuition.student.name,
-            studentNis: tuition.student.nis,
+            studentId: tuition.student.nis,
             className: tuition.classAcademic.className,
             processedBy: p.employee?.name ?? "Online Payment",
             scholarshipAmount: tuition.scholarshipAmount,

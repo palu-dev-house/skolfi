@@ -49,7 +49,7 @@ export async function processPayment(
   // Check for all scholarships (student can have multiple)
   const scholarships = await prisma.scholarship.findMany({
     where: {
-      studentNis: tuition.studentNis,
+      studentId: tuition.studentId,
       classAcademicId: tuition.classAcademicId,
     },
   });
@@ -152,7 +152,7 @@ export async function reversePayment(
   // Check for all scholarships (student can have multiple)
   const scholarships = await prisma.scholarship.findMany({
     where: {
-      studentNis: tuition.studentNis,
+      studentId: tuition.studentId,
       classAcademicId: tuition.classAcademicId,
     },
   });

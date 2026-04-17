@@ -93,7 +93,7 @@ export default function TuitionTable() {
     classAcademicId: classAcademicId || undefined,
     status: status as PaymentStatus | undefined,
     period: period || undefined,
-    studentNis: studentSearch || undefined,
+    studentId: studentSearch || undefined,
   });
 
   const deleteTuition = useDeleteTuition();

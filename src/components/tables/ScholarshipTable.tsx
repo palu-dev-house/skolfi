@@ -456,7 +456,7 @@ export default function ScholarshipTable() {
                                 {scholarship.student?.name}
                               </Text>
                               <Text size="xs" c="dimmed">
-                                {scholarship.studentNis}
+                                {scholarship.studentId}
                               </Text>
                             </Stack>
                           </Table.Td>

@@ -8,7 +8,7 @@ import { queryKeys, type TuitionFilters } from "@/lib/query-keys";
 interface Tuition {
   id: string;
   classAcademicId: string;
-  studentNis: string;
+  studentId: string;
   period: string;
   year: number;
   feeAmount: string;
@@ -152,7 +152,7 @@ export function useGenerateTuitions() {
       feeAmount: number;
       paymentFrequency?: "MONTHLY" | "QUARTERLY" | "SEMESTER";
       periodDiscounts?: PeriodDiscount[];
-      studentNisList?: string[];
+      studentIdList?: string[];
     }) => {
       const { data } = await apiClient.post<GenerateResponse>(
         "/tuitions/generate",
@@ -176,7 +176,7 @@ export function useGenerateBulkTuitions() {
       classes: Array<{
         classAcademicId: string;
         feeAmount: number;
-        studentNisList?: string[];
+        studentIdList?: string[];
       }>;
     }) => {
       const { data } = await apiClient.post<GenerateBulkResponse>(

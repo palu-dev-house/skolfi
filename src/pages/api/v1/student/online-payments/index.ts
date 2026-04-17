@@ -28,7 +28,7 @@ async function POST(request: NextRequest) {
 
     const result = await createOnlinePayment(
       {
-        studentNis: session.studentNis,
+        studentId: session.studentId,
         items: parsed.data.items,
       },
       prisma,
@@ -56,7 +56,7 @@ async function GET(request: NextRequest) {
 
     const payments = await prisma.onlinePayment.findMany({
       where: {
-        studentNis: session.studentNis,
+        studentId: session.studentId,
         ...(status ? { status: status as never } : {}),
       },
       orderBy: { createdAt: "desc" },

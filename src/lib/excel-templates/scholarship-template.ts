@@ -66,7 +66,7 @@ export function createScholarshipTemplate(
 }
 
 export interface ValidatedScholarshipRow {
-  studentNis: string;
+  studentId: string;
   studentName: string;
   className: string;
   nominal: number;
@@ -120,7 +120,7 @@ export function validateScholarshipData(
       errors.push({ row: rowNum, errors: rowErrors });
     } else {
       valid.push({
-        studentNis: nis,
+        studentId: nis,
         studentName: String(row["Student Name"] || "").trim(),
         className,
         nominal,

@@ -22,7 +22,7 @@ async function POST(request: NextRequest) {
       },
       select: {
         id: true,
-        studentNis: true,
+        studentId: true,
         classAcademicId: true,
         feeAmount: true,
         paidAmount: true,
@@ -37,7 +37,7 @@ async function POST(request: NextRequest) {
     const scholarshipMap = new Map<string, number>();
 
     for (const s of scholarships) {
-      const key = `${s.studentNis}-${s.classAcademicId}`;
+      const key = `${s.studentId}-${s.classAcademicId}`;
       const current = scholarshipMap.get(key) || 0;
       scholarshipMap.set(key, current + Number(s.nominal));
     }
@@ -47,7 +47,7 @@ async function POST(request: NextRequest) {
     const _skippedPaid = 0;
 
     for (const tuition of tuitions) {
-      const key = `${tuition.studentNis}-${tuition.classAcademicId}`;
+      const key = `${tuition.studentId}-${tuition.classAcademicId}`;
       const totalScholarship = scholarshipMap.get(key) || 0;
       const currentScholarship = Number(tuition.scholarshipAmount);
 

@@ -23,9 +23,7 @@ declare module "midtrans-client" {
   class Snap {
     constructor(config: Config);
     transaction: TransactionAPI;
-    createTransaction(
-      params: Record<string, unknown>,
-    ): Promise<SnapResponse>;
+    createTransaction(params: Record<string, unknown>): Promise<SnapResponse>;
   }
 
   class CoreApi {

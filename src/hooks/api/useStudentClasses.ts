@@ -7,7 +7,7 @@ export interface StudentClassFilters {
   page?: number;
   limit?: number;
   classAcademicId?: string;
-  studentNis?: string;
+  studentId?: string;
   academicYearId?: string;
   search?: string;
 }
@@ -31,7 +31,7 @@ interface ClassInfo {
 
 interface StudentClass {
   id: string;
-  studentNis: string;
+  studentId: string;
   classAcademicId: string;
   enrolledAt: string;
   student: Student;
@@ -163,14 +163,14 @@ export function useAssignStudentsToClass() {
   return useMutation({
     mutationFn: async ({
       classAcademicId,
-      studentNisList,
+      studentIdList,
     }: {
       classAcademicId: string;
-      studentNisList: string[];
+      studentIdList: string[];
     }) => {
       const { data } = await apiClient.post<AssignStudentsResponse>(
         "/student-classes",
-        { classAcademicId, studentNisList },
+        { classAcademicId, studentIdList },
       );
       return data.data;
     },
@@ -190,16 +190,16 @@ export function useRemoveStudentsFromClass() {
   return useMutation({
     mutationFn: async ({
       classAcademicId,
-      studentNisList,
+      studentIdList,
     }: {
       classAcademicId: string;
-      studentNisList: string[];
+      studentIdList: string[];
     }) => {
       // Note: DELETE with body needs special handling
       const response = await fetch("/api/v1/student-classes", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ classAcademicId, studentNisList }),
+        body: JSON.stringify({ classAcademicId, studentIdList }),
         credentials: "include",
       });
       if (!response.ok) {

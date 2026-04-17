@@ -30,10 +30,10 @@ export interface SnapChargeResult {
 /**
  * Generate a unique order ID for Midtrans
  */
-export function generateOrderId(studentNis: string): string {
+export function generateOrderId(studentId: string): string {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 6);
-  return `TUI-${studentNis}-${timestamp}-${random}`;
+  return `TUI-${studentId}-${timestamp}-${random}`;
 }
 
 /**

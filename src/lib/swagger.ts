@@ -98,7 +98,7 @@ export const getApiDocs = () => {
             properties: {
               id: { type: "string", format: "uuid" },
               classAcademicId: { type: "string", format: "uuid" },
-              studentNis: { type: "string" },
+              studentId: { type: "string" },
               month: {
                 type: "string",
                 enum: [
@@ -130,7 +130,7 @@ export const getApiDocs = () => {
             type: "object",
             properties: {
               id: { type: "string", format: "uuid" },
-              studentNis: { type: "string" },
+              studentId: { type: "string" },
               classAcademicId: { type: "string", format: "uuid" },
               nominal: { type: "number" },
               isFullScholarship: { type: "boolean" },
@@ -1100,7 +1100,7 @@ export const getApiDocs = () => {
                 in: "query",
                 schema: { type: "string", format: "uuid" },
               },
-              { name: "studentNis", in: "query", schema: { type: "string" } },
+              { name: "studentId", in: "query", schema: { type: "string" } },
               {
                 name: "status",
                 in: "query",
@@ -1231,7 +1231,7 @@ export const getApiDocs = () => {
                     properties: {
                       classAcademicId: { type: "string", format: "uuid" },
                       feeAmount: { type: "number", example: 500000 },
-                      studentNisList: {
+                      studentIdList: {
                         type: "array",
                         items: { type: "string" },
                         description: "Optional: specific students",
@@ -1316,7 +1316,7 @@ export const getApiDocs = () => {
                 in: "query",
                 schema: { type: "string", format: "uuid" },
               },
-              { name: "studentNis", in: "query", schema: { type: "string" } },
+              { name: "studentId", in: "query", schema: { type: "string" } },
               {
                 name: "isFullScholarship",
                 in: "query",
@@ -1364,9 +1364,9 @@ export const getApiDocs = () => {
                 "application/json": {
                   schema: {
                     type: "object",
-                    required: ["studentNis", "classAcademicId", "nominal"],
+                    required: ["studentId", "classAcademicId", "nominal"],
                     properties: {
-                      studentNis: { type: "string" },
+                      studentId: { type: "string" },
                       classAcademicId: { type: "string", format: "uuid" },
                       nominal: { type: "number", example: 500000 },
                     },
@@ -1434,7 +1434,7 @@ export const getApiDocs = () => {
                 in: "query",
                 schema: { type: "number", default: 10 },
               },
-              { name: "studentNis", in: "query", schema: { type: "string" } },
+              { name: "studentId", in: "query", schema: { type: "string" } },
               {
                 name: "classAcademicId",
                 in: "query",
