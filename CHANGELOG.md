@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.23.0] - 2026-04-17
+
+### Features
+- add SMP students with duplicate NIS in stress seed
+- NIK removal, inline imports, Excel dropdowns, sidebar groups, payment card
+
+### Other
+- docs: add Redis caching layer design spec
+
+
+
 ## [2.22.0] - 2026-04-17
 
 ### Features
