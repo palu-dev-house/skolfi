@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.22.0] - 2026-04-17
+
+### Features
+- disable student portal with middleware redirect
+
+
+
 ## [2.21.0] - 2026-04-17
 
 ### Features
