@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.19.0] - 2026-04-17
+
+### Features
+- add Excel bulk import for tuitions and simplify generate form
+- add income report Excel export and academic year filter for tuitions
+- redesign dashboard with ring progress and improved layout
+
+### Fixes
+- replace plain date inputs with Mantine DateInput dd/mm/yyyy format
+
+
+
 ## [2.18.5] - 2026-04-16
 
 ### Fixes
