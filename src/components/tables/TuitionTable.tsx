@@ -48,6 +48,7 @@ import {
 } from "@/lib/business-logic/tuition-generator";
 
 const filtersSchema = z.object({
+  academicYearId: z.string().optional(),
   classAcademicId: z.string().optional(),
   status: z.enum(["UNPAID", "PARTIAL", "PAID", "VOID"]).optional(),
   period: z.string().optional(),
@@ -67,6 +68,7 @@ export default function TuitionTable() {
     schema: filtersSchema,
     debounceKeys: ["studentSearch"],
   });
+  const academicYearId = filters.academicYearId ?? null;
   const classAcademicId = filters.classAcademicId ?? null;
   const status = filters.status ?? null;
   const period = filters.period ?? null;
@@ -77,9 +79,12 @@ export default function TuitionTable() {
   const { data: academicYearsData } = useAcademicYears({ limit: 100 });
   const activeYear = academicYearsData?.academicYears.find((ay) => ay.isActive);
 
+  // Auto-select active year if no year selected
+  const selectedYearId = academicYearId || activeYear?.id;
+
   const { data: classesData } = useClassAcademics({
     limit: 100,
-    academicYearId: activeYear?.id,
+    academicYearId: selectedYearId,
   });
 
   const { data, isLoading, refetch, isFetching } = useTuitions({
@@ -247,6 +252,22 @@ export default function TuitionTable() {
       <Paper withBorder p="md">
         <Group gap="md" grow>
           <Select
+            placeholder={t("tuition.selectAcademicYear")}
+            leftSection={<IconFilter size={16} />}
+            data={
+              academicYearsData?.academicYears.map((ay) => ({
+                value: ay.id,
+                label: `${ay.year}${ay.isActive ? ` (${t("academicYear.statuses.active")})` : ""}`,
+              })) || []
+            }
+            value={selectedYearId ?? ""}
+            onChange={(value) => {
+              setFilter("academicYearId", value || null);
+              setFilter("classAcademicId", null);
+            }}
+            clearable
+          />
+          <Select
             placeholder={t("tuition.filterByClass")}
             leftSection={<IconFilter size={16} />}
             data={classOptions}
@@ -254,6 +275,7 @@ export default function TuitionTable() {
             onChange={(value) => setFilter("classAcademicId", value || null)}
             clearable
             searchable
+            disabled={!selectedYearId}
           />
           <Select
             placeholder={t("tuition.filterByStatus")}

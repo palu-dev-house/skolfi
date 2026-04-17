@@ -28,6 +28,7 @@ import {
   IconCash,
   IconChartBar,
   IconCheck,
+  IconCoin,
   IconCreditCard,
   IconDiscount,
   IconGift,
@@ -158,6 +159,11 @@ export default function Sidebar() {
           label: t("feeServiceSummary"),
           href: "/admin/reports/fee-services",
         },
+        {
+          icon: IconCoin,
+          label: t("incomeReport"),
+          href: "/admin/reports/income",
+        },
       ],
     },
     {
@@ -226,6 +232,11 @@ export default function Sidebar() {
           icon: IconBus,
           label: t("feeServiceSummary"),
           href: "/admin/reports/fee-services",
+        },
+        {
+          icon: IconCoin,
+          label: t("incomeReport"),
+          href: "/admin/reports/income",
         },
       ],
     },

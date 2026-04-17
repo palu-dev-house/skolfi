@@ -485,6 +485,7 @@
     "overdueReport": "Overdue Report",
     "classSummary": "Class Summary",
     "feeServiceSummary": "Service Fee Report",
+    "incomeReport": "Income Report",
     "searchMenu": "Search menu...",
     "onlinePayments": "Online Payments",
     "paymentSettings": "Payment Settings",
@@ -1152,7 +1153,19 @@
     "daysOverdue": "Days Overdue",
     "days": "days",
     "feeService": "Transport & Accommodation",
-    "serviceFee": "Service Fee"
+    "serviceFee": "Service Fee",
+    "income": {
+      "title": "Income Report",
+      "description": "Export daily, monthly, or yearly income reports to Excel",
+      "periodType": "Period Type",
+      "daily": "Daily",
+      "monthly": "Monthly",
+      "yearly": "Yearly",
+      "dateFrom": "Start Date",
+      "dateTo": "End Date",
+      "exportExcel": "Download Excel Report",
+      "exportInfo": "The report includes payment details and income summary by payment type (Tuition, Transport, Service Fees)"
+    }
   },
   "header": {
     "title": "SkolFi"

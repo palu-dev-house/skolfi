@@ -485,6 +485,7 @@
     "overdueReport": "Laporan Tunggakan",
     "classSummary": "Ringkasan Kelas",
     "feeServiceSummary": "Laporan Transport",
+    "incomeReport": "Laporan Pendapatan",
     "searchMenu": "Cari menu...",
     "onlinePayments": "Pembayaran Online",
     "paymentSettings": "Pengaturan Pembayaran",
@@ -1152,7 +1153,19 @@
     "daysOverdue": "Hari Tunggakan",
     "days": "hari",
     "feeService": "Transport",
-    "serviceFee": "Uang Perlengkapan"
+    "serviceFee": "Uang Perlengkapan",
+    "income": {
+      "title": "Laporan Pendapatan",
+      "description": "Export laporan pendapatan harian, bulanan, atau tahunan ke Excel",
+      "periodType": "Jenis Periode",
+      "daily": "Harian",
+      "monthly": "Bulanan",
+      "yearly": "Tahunan",
+      "dateFrom": "Tanggal Mulai",
+      "dateTo": "Tanggal Akhir",
+      "exportExcel": "Download Laporan Excel",
+      "exportInfo": "Laporan akan berisi detail pembayaran dan ringkasan pendapatan berdasarkan jenis pembayaran (SPP, Transport, Uang Perlengkapan)"
+    }
   },
   "header": {
     "title": "SkolFi"
