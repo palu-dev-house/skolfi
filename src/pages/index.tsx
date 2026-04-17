@@ -1,15 +1,9 @@
 import type { GetServerSideProps } from "next";
-import { verifyToken } from "@/lib/auth";
 
-export const getServerSideProps: GetServerSideProps = async ({ req }) => {
-  const studentToken = req.cookies["student-token"];
-  const destination =
-    studentToken && (await verifyToken(studentToken))
-      ? "/portal"
-      : "/portal/login";
-
+// Portal disabled — redirect all visitors to admin login
+export const getServerSideProps: GetServerSideProps = async () => {
   return {
-    redirect: { destination, permanent: false },
+    redirect: { destination: "/admin/login", permanent: false },
   };
 };
 
