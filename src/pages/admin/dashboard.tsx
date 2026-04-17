@@ -1,10 +1,11 @@
 import {
   Badge,
   Card,
+  Grid,
   Group,
   NumberFormatter,
   Paper,
-  Progress,
+  RingProgress,
   SimpleGrid,
   Skeleton,
   Stack,
@@ -17,8 +18,8 @@ import {
   IconAlertTriangle,
   IconCalendar,
   IconCash,
-  IconDiscount,
-  IconGift,
+  IconCheck,
+  IconClock,
   IconReceipt,
   IconSchool,
   IconTrendingUp,
@@ -49,25 +50,27 @@ function StatCard({
   subtitle?: string;
 }) {
   return (
-    <Paper withBorder p="md" radius="md">
+    <Paper withBorder p="lg" radius="md">
       <Group justify="space-between" align="flex-start">
-        <Stack gap="xs">
-          <Text size="sm" c="dimmed">
+        <div>
+          <Text size="xs" c="dimmed" tt="uppercase" fw={600} lh={1}>
             {title}
           </Text>
           {loading ? (
-            <Skeleton height={28} width={80} />
+            <Skeleton height={32} width={100} mt="sm" />
           ) : (
-            <Title order={3}>{value}</Title>
+            <Text fw={700} fz="xl" mt="sm" lh={1}>
+              {value}
+            </Text>
           )}
           {subtitle && (
-            <Text size="xs" c="dimmed">
+            <Text size="xs" c="dimmed" mt={4}>
               {subtitle}
             </Text>
           )}
-        </Stack>
-        <ThemeIcon size="lg" color={color} variant="light">
-          <Icon size={20} />
+        </div>
+        <ThemeIcon size={48} radius="md" color={color} variant="light">
+          <Icon size={24} />
         </ThemeIcon>
       </Group>
     </Paper>
@@ -81,32 +84,37 @@ const DashboardPage: NextPageWithLayout = function DashboardPage() {
 
   usePageTitle(t("admin.dashboard"));
 
-  const collectionRate =
-    stats && stats.tuitionStats.total > 0
-      ? (stats.tuitionStats.paid / stats.tuitionStats.total) * 100
-      : 0;
+  const total = stats?.tuitionStats.total ?? 0;
+  const paid = stats?.tuitionStats.paid ?? 0;
+  const partial = stats?.tuitionStats.partial ?? 0;
+  const unpaid = stats?.tuitionStats.unpaid ?? 0;
+  const collectionRate = total > 0 ? (paid / total) * 100 : 0;
+  const partialRate = total > 0 ? (partial / total) * 100 : 0;
+  const unpaidRate = total > 0 ? (unpaid / total) * 100 : 0;
 
   return (
     <Stack gap="lg">
-      <div>
-        <Title order={2} mb="xs">
-          {t("dashboard.welcome")}, {user?.name}
-        </Title>
-        <Group gap="md">
-          <Text c="dimmed">{t("dashboard.title")}</Text>
-          {stats?.activeAcademicYear && (
-            <Badge
-              leftSection={<IconCalendar size={14} />}
-              variant="light"
-              color="blue"
-            >
-              {stats.activeAcademicYear}
-            </Badge>
-          )}
-        </Group>
-      </div>
+      <Group justify="space-between" align="flex-end">
+        <div>
+          <Text c="dimmed" size="sm">
+            {t("dashboard.title")}
+          </Text>
+          <Title order={2}>
+            {t("dashboard.welcome")}, {user?.name}
+          </Title>
+        </div>
+        {stats?.activeAcademicYear && (
+          <Badge
+            size="lg"
+            leftSection={<IconCalendar size={14} />}
+            variant="light"
+            color="blue"
+          >
+            {stats.activeAcademicYear}
+          </Badge>
+        )}
+      </Group>
 
-      {/* Stats Grid */}
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }}>
         <StatCard
           title={t("dashboard.totalStudents")}
@@ -153,212 +161,253 @@ const DashboardPage: NextPageWithLayout = function DashboardPage() {
         />
       </SimpleGrid>
 
-      {/* Collection Progress & Stats */}
-      <SimpleGrid cols={{ base: 1, lg: 2 }}>
-        <Card withBorder>
-          <Stack gap="md">
-            <Text fw={600}>{t("dashboard.collectionProgress")}</Text>
+      <Grid>
+        <Grid.Col span={{ base: 12, lg: 5 }}>
+          <Card withBorder h="100%" radius="md">
+            <Text fw={600} mb="md">
+              {t("dashboard.collectionProgress")}
+            </Text>
             {isLoading ? (
-              <Skeleton height={60} />
+              <Skeleton height={180} />
             ) : (
-              <>
-                <Group justify="space-between">
-                  <Text size="sm" c="dimmed">
-                    {t("dashboard.overallCollectionRate")}
-                  </Text>
-                  <Text
-                    fw={700}
-                    c={
-                      collectionRate >= 80
-                        ? "green"
-                        : collectionRate >= 50
-                          ? "yellow"
-                          : "red"
-                    }
-                  >
-                    {collectionRate.toFixed(1)}%
-                  </Text>
-                </Group>
-                <Progress
-                  value={collectionRate}
-                  color={
-                    collectionRate >= 80
-                      ? "green"
-                      : collectionRate >= 50
-                        ? "yellow"
-                        : "red"
+              <Stack align="center" gap="md">
+                <RingProgress
+                  size={180}
+                  thickness={16}
+                  roundCaps
+                  label={
+                    <Stack align="center" gap={0}>
+                      <Text fw={700} fz="xl" lh={1}>
+                        {collectionRate.toFixed(1)}%
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        {t("dashboard.overallCollectionRate")}
+                      </Text>
+                    </Stack>
                   }
-                  size="xl"
+                  sections={[
+                    { value: collectionRate, color: "green" },
+                    { value: partialRate, color: "yellow" },
+                    { value: unpaidRate, color: "red" },
+                  ]}
                 />
-                <Group justify="center" gap="xl">
-                  <Group gap="xs">
-                    <Badge color="green" variant="dot" />
-                    <Text size="sm">
-                      {t("dashboard.paid")}: {stats?.tuitionStats.paid ?? 0}
+                <Group justify="center" gap="lg">
+                  <Stack gap={2} align="center">
+                    <Group gap={4}>
+                      <ThemeIcon
+                        size="xs"
+                        color="green"
+                        variant="filled"
+                        radius="xl"
+                      >
+                        <IconCheck size={10} />
+                      </ThemeIcon>
+                      <Text size="sm" fw={600}>
+                        {paid}
+                      </Text>
+                    </Group>
+                    <Text size="xs" c="dimmed">
+                      {t("dashboard.paid")}
                     </Text>
-                  </Group>
-                  <Group gap="xs">
-                    <Badge color="yellow" variant="dot" />
-                    <Text size="sm">
-                      {t("dashboard.partial")}:{" "}
-                      {stats?.tuitionStats.partial ?? 0}
+                  </Stack>
+                  <Stack gap={2} align="center">
+                    <Group gap={4}>
+                      <ThemeIcon
+                        size="xs"
+                        color="yellow"
+                        variant="filled"
+                        radius="xl"
+                      >
+                        <IconClock size={10} />
+                      </ThemeIcon>
+                      <Text size="sm" fw={600}>
+                        {partial}
+                      </Text>
+                    </Group>
+                    <Text size="xs" c="dimmed">
+                      {t("dashboard.partial")}
                     </Text>
-                  </Group>
-                  <Group gap="xs">
-                    <Badge color="red" variant="dot" />
-                    <Text size="sm">
-                      {t("dashboard.unpaid")}: {stats?.tuitionStats.unpaid ?? 0}
+                  </Stack>
+                  <Stack gap={2} align="center">
+                    <Group gap={4}>
+                      <ThemeIcon
+                        size="xs"
+                        color="red"
+                        variant="filled"
+                        radius="xl"
+                      >
+                        <IconAlertTriangle size={10} />
+                      </ThemeIcon>
+                      <Text size="sm" fw={600}>
+                        {unpaid}
+                      </Text>
+                    </Group>
+                    <Text size="xs" c="dimmed">
+                      {t("dashboard.unpaid")}
                     </Text>
-                  </Group>
+                  </Stack>
                 </Group>
-              </>
+              </Stack>
             )}
-          </Stack>
-        </Card>
+          </Card>
+        </Grid.Col>
 
-        <Card withBorder>
-          <Stack gap="md">
-            <Text fw={600}>{t("dashboard.overview")}</Text>
+        <Grid.Col span={{ base: 12, lg: 7 }}>
+          <Card withBorder h="100%" radius="md">
+            <Text fw={600} mb="md">
+              {t("dashboard.overview")}
+            </Text>
             {isLoading ? (
-              <Skeleton height={60} />
+              <Skeleton height={180} />
             ) : (
-              <SimpleGrid cols={2}>
-                <Paper withBorder p="sm" radius="sm">
-                  <Group gap="xs">
-                    <ThemeIcon size="sm" color="blue" variant="light">
-                      <IconUsers size={14} />
+              <SimpleGrid cols={2} spacing="md">
+                <Paper withBorder p="md" radius="md" bg="blue.0">
+                  <Group gap="sm">
+                    <ThemeIcon
+                      size="lg"
+                      color="blue"
+                      variant="light"
+                      radius="md"
+                    >
+                      <IconUsers size={20} />
                     </ThemeIcon>
                     <div>
                       <Text size="xs" c="dimmed">
                         {t("dashboard.employees")}
                       </Text>
-                      <Text fw={600}>{stats?.totalEmployees ?? 0}</Text>
+                      <Text fw={700} fz="lg">
+                        {stats?.totalEmployees ?? 0}
+                      </Text>
                     </div>
                   </Group>
                 </Paper>
-                <Paper withBorder p="sm" radius="sm">
-                  <Group gap="xs">
-                    <ThemeIcon size="sm" color="teal" variant="light">
-                      <IconReceipt size={14} />
+                <Paper withBorder p="md" radius="md" bg="teal.0">
+                  <Group gap="sm">
+                    <ThemeIcon
+                      size="lg"
+                      color="teal"
+                      variant="light"
+                      radius="md"
+                    >
+                      <IconReceipt size={20} />
                     </ThemeIcon>
                     <div>
                       <Text size="xs" c="dimmed">
                         {t("dashboard.totalTuitions")}
                       </Text>
-                      <Text fw={600}>{stats?.tuitionStats.total ?? 0}</Text>
+                      <Text fw={700} fz="lg">
+                        {total}
+                      </Text>
+                    </div>
+                  </Group>
+                </Paper>
+                <Paper withBorder p="md" radius="md" bg="green.0">
+                  <Group gap="sm">
+                    <ThemeIcon
+                      size="lg"
+                      color="green"
+                      variant="light"
+                      radius="md"
+                    >
+                      <IconCheck size={20} />
+                    </ThemeIcon>
+                    <div>
+                      <Text size="xs" c="dimmed">
+                        {t("dashboard.paid")}
+                      </Text>
+                      <Text fw={700} fz="lg">
+                        {paid}
+                      </Text>
+                    </div>
+                  </Group>
+                </Paper>
+                <Paper withBorder p="md" radius="md" bg="orange.0">
+                  <Group gap="sm">
+                    <ThemeIcon
+                      size="lg"
+                      color="orange"
+                      variant="light"
+                      radius="md"
+                    >
+                      <IconAlertTriangle size={20} />
+                    </ThemeIcon>
+                    <div>
+                      <Text size="xs" c="dimmed">
+                        {t("dashboard.unpaid")}
+                      </Text>
+                      <Text fw={700} fz="lg">
+                        {unpaid}
+                      </Text>
                     </div>
                   </Group>
                 </Paper>
               </SimpleGrid>
             )}
+          </Card>
+        </Grid.Col>
+      </Grid>
+
+      <Card withBorder radius="md">
+        <Text fw={600} mb="md">
+          {t("dashboard.recentPayments")}
+        </Text>
+        {isLoading ? (
+          <Stack gap="xs">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={`skeleton-${i}`} height={40} />
+            ))}
           </Stack>
-        </Card>
-      </SimpleGrid>
-
-      {/* Recent Payments */}
-      <Card withBorder>
-        <Stack gap="md">
-          <Text fw={600}>{t("dashboard.recentPayments")}</Text>
-          {isLoading ? (
-            <Stack gap="xs">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={`skeleton-${i}`} height={40} />
-              ))}
-            </Stack>
-          ) : stats?.recentPayments && stats.recentPayments.length > 0 ? (
-            <Table.ScrollContainer minWidth={700}>
-              <Table striped highlightOnHover>
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th>{t("dashboard.date")}</Table.Th>
-                    <Table.Th>{t("dashboard.student")}</Table.Th>
-                    <Table.Th>{t("dashboard.class")}</Table.Th>
-                    <Table.Th ta="right">{t("dashboard.amount")}</Table.Th>
-                    <Table.Th>{t("dashboard.processedBy")}</Table.Th>
+        ) : stats?.recentPayments && stats.recentPayments.length > 0 ? (
+          <Table.ScrollContainer minWidth={700}>
+            <Table striped highlightOnHover>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>{t("dashboard.date")}</Table.Th>
+                  <Table.Th>{t("dashboard.student")}</Table.Th>
+                  <Table.Th>{t("dashboard.class")}</Table.Th>
+                  <Table.Th ta="right">{t("dashboard.amount")}</Table.Th>
+                  <Table.Th>{t("dashboard.processedBy")}</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {stats.recentPayments.map((payment) => (
+                  <Table.Tr key={payment.id}>
+                    <Table.Td>
+                      <Text size="sm">
+                        {dayjs(payment.paymentDate).format("DD/MM/YYYY HH:mm")}
+                      </Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text size="sm" fw={500}>
+                        {payment.studentName}
+                      </Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text size="sm">{payment.className}</Text>
+                    </Table.Td>
+                    <Table.Td align="right">
+                      <Text size="sm" fw={500}>
+                        <NumberFormatter
+                          value={payment.amount}
+                          prefix="Rp "
+                          thousandSeparator="."
+                          decimalSeparator=","
+                        />
+                      </Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Text size="sm">{payment.processedBy}</Text>
+                    </Table.Td>
                   </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {stats.recentPayments.map((payment) => {
-                    return (
-                      <Table.Tr key={payment.id}>
-                        <Table.Td>
-                          <Text size="sm">
-                            {dayjs(payment.paymentDate).format(
-                              "DD/MM/YYYY HH:mm",
-                            )}
-                          </Text>
-                        </Table.Td>
-                        <Table.Td>
-                          <Stack gap={0}>
-                            <Text size="sm" fw={500}>
-                              {payment.studentName}
-                            </Text>
-                            <Text size="xs" c="dimmed">
-                              {payment.studentNis}
-                            </Text>
-                          </Stack>
-                        </Table.Td>
-                        <Table.Td>
-                          <Text size="sm">{payment.className}</Text>
-                        </Table.Td>
-                        <Table.Td align="right">
-                          <Text size="sm" fw={500}>
-                            <NumberFormatter
-                              value={payment.amount}
-                              prefix="Rp "
-                              thousandSeparator="."
-                              decimalSeparator=","
-                            />
-                          </Text>
-                          {!!Number(payment.scholarshipAmount) && (
-                            <Badge
-                              size="xs"
-                              color={"blue"}
-                              variant="light"
-                              leftSection={<IconGift size={10} />}
-                            >
-                              {t("admin.scholarships")}:{" "}
-                              <NumberFormatter
-                                value={Number(payment.scholarshipAmount)}
-                                prefix="Rp "
-                                thousandSeparator="."
-                                decimalSeparator=","
-                              />
-                            </Badge>
-                          )}
-                          {!!payment.discount && (
-                            <Badge
-                              size="xs"
-                              color={"blue"}
-                              variant="light"
-                              leftSection={<IconDiscount size={10} />}
-                            >
-                              {payment.discount?.name}:{" "}
-                              <NumberFormatter
-                                value={Number(payment.discountAmount)}
-                                prefix="Rp "
-                                thousandSeparator="."
-                                decimalSeparator=","
-                              />
-                            </Badge>
-                          )}
-                        </Table.Td>
-
-                        <Table.Td>
-                          <Text size="sm">{payment.processedBy}</Text>
-                        </Table.Td>
-                      </Table.Tr>
-                    );
-                  })}
-                </Table.Tbody>
-              </Table>
-            </Table.ScrollContainer>
-          ) : (
-            <Text c="dimmed" ta="center" py="md">
-              {t("dashboard.noRecentPayments")}
-            </Text>
-          )}
-        </Stack>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </Table.ScrollContainer>
+        ) : (
+          <Text c="dimmed" ta="center" py="md">
+            {t("dashboard.noRecentPayments")}
+          </Text>
+        )}
       </Card>
     </Stack>
   );
