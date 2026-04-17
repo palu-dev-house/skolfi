@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.20.0] - 2026-04-17
+
+### Features
+- add student selector to payment card, remove tahun ajaran from print
+- redesign admin login screen with split layout
+
+
+
 ## [2.19.0] - 2026-04-17
 
 ### Features
