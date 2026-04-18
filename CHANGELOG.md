@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.25.1] - 2026-04-18
+
+### Fixes
+- xlsx exports still corrupted — adapter treated xml-containing MIME as text
+
+
+
 ## [2.25.0] - 2026-04-18
 
 ### Features
