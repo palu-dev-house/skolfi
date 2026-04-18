@@ -29,6 +29,7 @@ interface OverduePeriod {
 interface OverdueByStudent {
   student: {
     nis: string;
+    schoolLevel: string;
     name: string;
     parentName: string;
     parentPhone: string;

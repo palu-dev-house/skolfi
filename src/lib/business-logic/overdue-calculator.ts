@@ -3,6 +3,8 @@ import type { PaymentStatus, PrismaClient } from "@/generated/prisma/client";
 export interface OverdueItem {
   tuitionId: string;
   studentId: string;
+  studentNis: string;
+  schoolLevel: string;
   studentName: string;
   parentPhone: string;
   className: string;
@@ -22,6 +24,7 @@ export interface OverdueItem {
 export interface OverdueByStudent {
   student: {
     nis: string;
+    schoolLevel: string;
     name: string;
     parentName: string;
     parentPhone: string;
@@ -156,6 +159,8 @@ export async function getOverdueTuitions(
     return {
       tuitionId: t.id,
       studentId: t.studentId,
+      studentNis: t.student.nis,
+      schoolLevel: t.student.schoolLevel,
       studentName: t.student.name,
       parentPhone: t.student.parentPhone,
       className: t.classAcademic.className,
@@ -190,7 +195,8 @@ export function groupOverdueByStudent(
       const details = studentDetails.get(item.studentId);
       grouped.set(key, {
         student: {
-          nis: item.studentId,
+          nis: item.studentNis,
+          schoolLevel: item.schoolLevel,
           name: item.studentName,
           parentName: details?.parentName || "",
           parentPhone: item.parentPhone,

@@ -72,7 +72,7 @@ async function GET(request: NextRequest) {
       include: {
         tuition: {
           include: {
-            student: { select: { nis: true, name: true } },
+            student: { select: { nis: true, schoolLevel: true, name: true } },
             classAcademic: { select: { className: true } },
             discount: {
               select: { name: true, reason: true, description: true },
@@ -85,6 +85,7 @@ async function GET(request: NextRequest) {
             student: {
               select: {
                 nis: true,
+                schoolLevel: true,
                 name: true,
                 studentClasses: {
                   take: 1,
@@ -100,7 +101,7 @@ async function GET(request: NextRequest) {
         serviceFeeBill: {
           include: {
             serviceFee: { select: { id: true, name: true } },
-            student: { select: { nis: true, name: true } },
+            student: { select: { nis: true, schoolLevel: true, name: true } },
             classAcademic: { select: { className: true } },
           },
         },
@@ -307,7 +308,7 @@ async function POST(request: NextRequest) {
       include: {
         tuition: {
           include: {
-            student: { select: { nis: true, name: true } },
+            student: { select: { nis: true, schoolLevel: true, name: true } },
             classAcademic: { select: { className: true } },
             discount: {
               select: {
@@ -322,13 +323,13 @@ async function POST(request: NextRequest) {
         feeBill: {
           include: {
             feeService: { select: { id: true, name: true, category: true } },
-            student: { select: { nis: true, name: true } },
+            student: { select: { nis: true, schoolLevel: true, name: true } },
           },
         },
         serviceFeeBill: {
           include: {
             serviceFee: { select: { id: true, name: true } },
-            student: { select: { nis: true, name: true } },
+            student: { select: { nis: true, schoolLevel: true, name: true } },
             classAcademic: { select: { className: true } },
           },
         },

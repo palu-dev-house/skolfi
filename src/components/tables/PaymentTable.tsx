@@ -444,7 +444,10 @@ export default function PaymentTable() {
                                   {student?.name ?? "-"}
                                 </Text>
                                 <Text size="xs" c="dimmed">
-                                  {student?.nis ?? ""}
+                                  {student?.nis ? `NIS ${student.nis}` : ""}
+                                  {student?.schoolLevel
+                                    ? ` · ${student.schoolLevel}`
+                                    : ""}
                                 </Text>
                               </Stack>
                             </Table.Td>

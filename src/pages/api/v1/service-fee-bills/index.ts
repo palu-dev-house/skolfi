@@ -43,7 +43,12 @@ async function GET(request: NextRequest) {
           select: { id: true, name: true },
         },
         student: {
-          select: { nis: true, name: true, parentPhone: true },
+          select: {
+            nis: true,
+            schoolLevel: true,
+            name: true,
+            parentPhone: true,
+          },
         },
         classAcademic: {
           select: {

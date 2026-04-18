@@ -26,16 +26,17 @@ async function GET(request: NextRequest) {
   // Get student details
   const studentIdList = [...new Set(overdueItems.map((i) => i.studentId))];
   const students = await prisma.student.findMany({
-    where: { nis: { in: studentIdList } },
-    select: { nis: true, parentName: true },
+    where: { id: { in: studentIdList } },
+    select: { id: true, parentName: true },
   });
   const studentDetails = new Map(
-    students.map((s) => [s.nis, { parentName: s.parentName }]),
+    students.map((s) => [s.id, { parentName: s.parentName }]),
   );
 
   // Prepare Excel data
   const excelData = overdueItems.map((item) => ({
-    "Student NIS": item.studentId,
+    "Student NIS": item.studentNis,
+    "School Level": item.schoolLevel,
     "Student Name": item.studentName,
     "Parent Name": studentDetails.get(item.studentId)?.parentName || "",
     "Parent Phone": item.parentPhone,

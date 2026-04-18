@@ -69,7 +69,12 @@ async function GET(request: NextRequest) {
       where,
       include: {
         student: {
-          select: { nis: true, name: true, parentPhone: true },
+          select: {
+            nis: true,
+            schoolLevel: true,
+            name: true,
+            parentPhone: true,
+          },
         },
         classAcademic: {
           select: {

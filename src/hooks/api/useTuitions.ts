@@ -23,6 +23,7 @@ interface Tuition {
   updatedAt?: string;
   student?: {
     nis: string;
+    schoolLevel?: string;
     name: string;
     parentPhone?: string;
   };

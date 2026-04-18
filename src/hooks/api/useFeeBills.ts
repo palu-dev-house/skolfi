@@ -20,7 +20,7 @@ export interface FeeBill {
   generatedAt: string;
   createdAt: string;
   updatedAt: string;
-  student?: { nis: string; name: string };
+  student?: { nis: string; schoolLevel?: string; name: string };
   feeService?: {
     id: string;
     name: string;

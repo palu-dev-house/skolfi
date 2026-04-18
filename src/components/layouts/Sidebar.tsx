@@ -50,7 +50,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth, useChangePassword } from "@/hooks/useAuth";
 
 interface NavItem {
@@ -352,10 +352,14 @@ export default function Sidebar() {
     }
   }, [userOpenGroups]);
 
-  // When navigating, auto-open the group containing the active route if it
-  // isn't already open. User can still close it afterwards.
+  // When navigating to a new route, auto-open the group containing the
+  // active route. Only fires on route change (not re-renders), so users can
+  // still collapse the active group afterwards.
+  const lastAutoOpenedHref = useRef<string | null>(null);
   useEffect(() => {
     if (!activeHref) return;
+    if (lastAutoOpenedHref.current === activeHref) return;
+    lastAutoOpenedHref.current = activeHref;
     const activeGroup = groups.find((g) =>
       g.items.some((item) => item.href === activeHref),
     );

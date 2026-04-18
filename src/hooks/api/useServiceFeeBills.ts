@@ -21,7 +21,7 @@ export interface ServiceFeeBill {
   generatedAt: string;
   createdAt: string;
   updatedAt: string;
-  student?: { nis: string; name: string };
+  student?: { nis: string; schoolLevel?: string; name: string };
   serviceFee?: { id: string; name: string };
   classAcademic?: {
     id: string;

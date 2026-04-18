@@ -37,6 +37,7 @@ interface Payment {
     updatedAt: string;
     student?: {
       nis: string;
+      schoolLevel?: string;
       name: string;
     };
     classAcademic?: {
@@ -60,6 +61,7 @@ interface Payment {
     };
     student?: {
       nis: string;
+      schoolLevel?: string;
       name: string;
       studentClasses?: Array<{
         classAcademic?: { className: string };
@@ -72,7 +74,7 @@ interface Payment {
     year: number;
     status?: string;
     serviceFee?: { id: string; name: string };
-    student?: { nis: string; name: string } | null;
+    student?: { nis: string; schoolLevel?: string; name: string } | null;
     classAcademic?: { className: string } | null;
   } | null;
   employee?: {

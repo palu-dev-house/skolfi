@@ -33,6 +33,9 @@ import type { ReactElement } from "react";
 import { useState } from "react";
 import { z } from "zod";
 import AdminLayout from "@/components/layouts/AdminLayout";
+import ColumnSettingsDrawer, {
+  useColumnSettings,
+} from "@/components/ui/ColumnSettingsDrawer";
 import PageHeader from "@/components/ui/PageHeader/PageHeader";
 import TablePagination from "@/components/ui/TablePagination";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
@@ -156,6 +159,17 @@ function FeeBillTab({ activeYearId }: { activeYearId?: string }) {
     status: status as (typeof STATUSES)[number] | undefined,
   });
 
+  const feeBillColumnDefs = [
+    { key: "student", label: t("student.name") },
+    { key: "feeService", label: t("feeService.name") },
+    { key: "period", label: t("feeBill.period") },
+    { key: "amount", label: t("feeBill.amount") },
+    { key: "paid", label: t("feeBill.paid") },
+    { key: "status", label: t("common.status") },
+    { key: "actions", label: t("common.actions") },
+  ];
+  const { orderedKeys } = useColumnSettings("fee-bills", feeBillColumnDefs);
+
   const generate = useGenerateAllFeeBills();
   const deleteBill = useDeleteFeeBill();
   const [resultOpened, { open: openResult, close: closeResult }] =
@@ -257,13 +271,19 @@ function FeeBillTab({ activeYearId }: { activeYearId?: string }) {
               w={160}
             />
           </Group>
-          <Button
-            leftSection={<IconBolt size={16} />}
-            loading={generate.isPending}
-            onClick={handleGenerate}
-          >
-            {t("feeBill.generateAll")}
-          </Button>
+          <Group gap="xs">
+            <ColumnSettingsDrawer
+              tableId="fee-bills"
+              columnDefs={feeBillColumnDefs}
+            />
+            <Button
+              leftSection={<IconBolt size={16} />}
+              loading={generate.isPending}
+              onClick={handleGenerate}
+            >
+              {t("feeBill.generateAll")}
+            </Button>
+          </Group>
         </Group>
       </Paper>
 
@@ -271,19 +291,34 @@ function FeeBillTab({ activeYearId }: { activeYearId?: string }) {
         <Table striped highlightOnHover>
           <Table.Thead>
             <Table.Tr>
-              <Table.Th>{t("student.name")}</Table.Th>
-              <Table.Th>{t("feeService.name")}</Table.Th>
-              <Table.Th>{t("feeBill.period")}</Table.Th>
-              <Table.Th>{t("feeBill.amount")}</Table.Th>
-              <Table.Th>{t("feeBill.paid")}</Table.Th>
-              <Table.Th>{t("common.status")}</Table.Th>
-              <Table.Th style={{ width: 60 }} />
+              {orderedKeys.map((key) => {
+                switch (key) {
+                  case "student":
+                    return <Table.Th key={key}>{t("student.name")}</Table.Th>;
+                  case "feeService":
+                    return (
+                      <Table.Th key={key}>{t("feeService.name")}</Table.Th>
+                    );
+                  case "period":
+                    return <Table.Th key={key}>{t("feeBill.period")}</Table.Th>;
+                  case "amount":
+                    return <Table.Th key={key}>{t("feeBill.amount")}</Table.Th>;
+                  case "paid":
+                    return <Table.Th key={key}>{t("feeBill.paid")}</Table.Th>;
+                  case "status":
+                    return <Table.Th key={key}>{t("common.status")}</Table.Th>;
+                  case "actions":
+                    return <Table.Th key={key} style={{ width: 60 }} />;
+                  default:
+                    return null;
+                }
+              })}
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {isLoading ? (
               <Table.Tr>
-                <Table.Td colSpan={7}>
+                <Table.Td colSpan={orderedKeys.length}>
                   <Text ta="center" c="dimmed" py="md">
                     {t("common.loading")}
                   </Text>
@@ -291,7 +326,7 @@ function FeeBillTab({ activeYearId }: { activeYearId?: string }) {
               </Table.Tr>
             ) : !data?.feeBills.length ? (
               <Table.Tr>
-                <Table.Td colSpan={7}>
+                <Table.Td colSpan={orderedKeys.length}>
                   <Text ta="center" c="dimmed" py="md">
                     {t("feeBill.noBills")}
                   </Text>
@@ -300,31 +335,76 @@ function FeeBillTab({ activeYearId }: { activeYearId?: string }) {
             ) : (
               data.feeBills.map((b) => (
                 <Table.Tr key={b.id}>
-                  <Table.Td>{b.student?.name ?? b.studentId}</Table.Td>
-                  <Table.Td>{b.feeService?.name ?? "-"}</Table.Td>
-                  <Table.Td>
-                    {t(`months.${b.period}`)} {b.year}
-                  </Table.Td>
-                  <Table.Td>{formatRp(b.amount)}</Table.Td>
-                  <Table.Td>{formatRp(b.paidAmount)}</Table.Td>
-                  <Table.Td>
-                    <Badge color={STATUS_COLORS[b.status] ?? "gray"}>
-                      {t(`tuition.status.${b.status.toLowerCase()}`)}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td>
-                    {b.status === "UNPAID" && (
-                      <Tooltip label={t("common.delete")}>
-                        <ActionIcon
-                          color="red"
-                          variant="subtle"
-                          onClick={() => confirmDelete(b.id)}
-                        >
-                          <IconTrash size={14} />
-                        </ActionIcon>
-                      </Tooltip>
-                    )}
-                  </Table.Td>
+                  {orderedKeys.map((key) => {
+                    switch (key) {
+                      case "student":
+                        return (
+                          <Table.Td key={key}>
+                            <Stack gap={0}>
+                              <Text size="sm" fw={500}>
+                                {b.student?.name ?? b.studentId}
+                              </Text>
+                              {b.student?.nis && (
+                                <Text size="xs" c="dimmed">
+                                  NIS {b.student.nis}
+                                  {b.student.schoolLevel
+                                    ? ` · ${b.student.schoolLevel}`
+                                    : ""}
+                                </Text>
+                              )}
+                            </Stack>
+                          </Table.Td>
+                        );
+                      case "feeService":
+                        return (
+                          <Table.Td key={key}>
+                            {b.feeService?.name ?? "-"}
+                          </Table.Td>
+                        );
+                      case "period":
+                        return (
+                          <Table.Td key={key}>
+                            {t(`months.${b.period}`)} {b.year}
+                          </Table.Td>
+                        );
+                      case "amount":
+                        return (
+                          <Table.Td key={key}>{formatRp(b.amount)}</Table.Td>
+                        );
+                      case "paid":
+                        return (
+                          <Table.Td key={key}>
+                            {formatRp(b.paidAmount)}
+                          </Table.Td>
+                        );
+                      case "status":
+                        return (
+                          <Table.Td key={key}>
+                            <Badge color={STATUS_COLORS[b.status] ?? "gray"}>
+                              {t(`tuition.status.${b.status.toLowerCase()}`)}
+                            </Badge>
+                          </Table.Td>
+                        );
+                      case "actions":
+                        return (
+                          <Table.Td key={key}>
+                            {b.status === "UNPAID" && (
+                              <Tooltip label={t("common.delete")}>
+                                <ActionIcon
+                                  color="red"
+                                  variant="subtle"
+                                  onClick={() => confirmDelete(b.id)}
+                                >
+                                  <IconTrash size={14} />
+                                </ActionIcon>
+                              </Tooltip>
+                            )}
+                          </Table.Td>
+                        );
+                      default:
+                        return null;
+                    }
+                  })}
                 </Table.Tr>
               ))
             )}
@@ -374,6 +454,20 @@ function ServiceFeeBillTab({ activeYearId }: { activeYearId?: string }) {
     year: year ?? undefined,
     status: status as (typeof STATUSES)[number] | undefined,
   });
+
+  const serviceBillColumnDefs = [
+    { key: "student", label: t("student.name") },
+    { key: "serviceFee", label: t("serviceFee.name") },
+    { key: "period", label: t("feeBill.period") },
+    { key: "amount", label: t("feeBill.amount") },
+    { key: "paid", label: t("feeBill.paid") },
+    { key: "status", label: t("common.status") },
+    { key: "actions", label: t("common.actions") },
+  ];
+  const { orderedKeys } = useColumnSettings(
+    "service-fee-bills",
+    serviceBillColumnDefs,
+  );
 
   const generate = useGenerateAllServiceFeeBills();
   const deleteBill = useDeleteServiceFeeBill();
@@ -478,13 +572,19 @@ function ServiceFeeBillTab({ activeYearId }: { activeYearId?: string }) {
               w={160}
             />
           </Group>
-          <Button
-            leftSection={<IconBolt size={16} />}
-            loading={generate.isPending}
-            onClick={handleGenerate}
-          >
-            {t("serviceFee.generateAll")}
-          </Button>
+          <Group gap="xs">
+            <ColumnSettingsDrawer
+              tableId="service-fee-bills"
+              columnDefs={serviceBillColumnDefs}
+            />
+            <Button
+              leftSection={<IconBolt size={16} />}
+              loading={generate.isPending}
+              onClick={handleGenerate}
+            >
+              {t("serviceFee.generateAll")}
+            </Button>
+          </Group>
         </Group>
       </Paper>
 
@@ -492,19 +592,34 @@ function ServiceFeeBillTab({ activeYearId }: { activeYearId?: string }) {
         <Table striped highlightOnHover>
           <Table.Thead>
             <Table.Tr>
-              <Table.Th>{t("student.name")}</Table.Th>
-              <Table.Th>{t("serviceFee.name")}</Table.Th>
-              <Table.Th>{t("feeBill.period")}</Table.Th>
-              <Table.Th>{t("feeBill.amount")}</Table.Th>
-              <Table.Th>{t("feeBill.paid")}</Table.Th>
-              <Table.Th>{t("common.status")}</Table.Th>
-              <Table.Th style={{ width: 60 }} />
+              {orderedKeys.map((key) => {
+                switch (key) {
+                  case "student":
+                    return <Table.Th key={key}>{t("student.name")}</Table.Th>;
+                  case "serviceFee":
+                    return (
+                      <Table.Th key={key}>{t("serviceFee.name")}</Table.Th>
+                    );
+                  case "period":
+                    return <Table.Th key={key}>{t("feeBill.period")}</Table.Th>;
+                  case "amount":
+                    return <Table.Th key={key}>{t("feeBill.amount")}</Table.Th>;
+                  case "paid":
+                    return <Table.Th key={key}>{t("feeBill.paid")}</Table.Th>;
+                  case "status":
+                    return <Table.Th key={key}>{t("common.status")}</Table.Th>;
+                  case "actions":
+                    return <Table.Th key={key} style={{ width: 60 }} />;
+                  default:
+                    return null;
+                }
+              })}
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
             {isLoading ? (
               <Table.Tr>
-                <Table.Td colSpan={7}>
+                <Table.Td colSpan={orderedKeys.length}>
                   <Text ta="center" c="dimmed" py="md">
                     {t("common.loading")}
                   </Text>
@@ -512,7 +627,7 @@ function ServiceFeeBillTab({ activeYearId }: { activeYearId?: string }) {
               </Table.Tr>
             ) : !data?.serviceFeeBills.length ? (
               <Table.Tr>
-                <Table.Td colSpan={7}>
+                <Table.Td colSpan={orderedKeys.length}>
                   <Text ta="center" c="dimmed" py="md">
                     {t("feeBill.noBills")}
                   </Text>
@@ -521,31 +636,76 @@ function ServiceFeeBillTab({ activeYearId }: { activeYearId?: string }) {
             ) : (
               data.serviceFeeBills.map((b) => (
                 <Table.Tr key={b.id}>
-                  <Table.Td>{b.student?.name ?? b.studentId}</Table.Td>
-                  <Table.Td>{b.serviceFee?.name ?? "-"}</Table.Td>
-                  <Table.Td>
-                    {t(`months.${b.period}`)} {b.year}
-                  </Table.Td>
-                  <Table.Td>{formatRp(b.amount)}</Table.Td>
-                  <Table.Td>{formatRp(b.paidAmount)}</Table.Td>
-                  <Table.Td>
-                    <Badge color={STATUS_COLORS[b.status] ?? "gray"}>
-                      {t(`tuition.status.${b.status.toLowerCase()}`)}
-                    </Badge>
-                  </Table.Td>
-                  <Table.Td>
-                    {b.status === "UNPAID" && (
-                      <Tooltip label={t("common.delete")}>
-                        <ActionIcon
-                          color="red"
-                          variant="subtle"
-                          onClick={() => confirmDelete(b.id)}
-                        >
-                          <IconTrash size={14} />
-                        </ActionIcon>
-                      </Tooltip>
-                    )}
-                  </Table.Td>
+                  {orderedKeys.map((key) => {
+                    switch (key) {
+                      case "student":
+                        return (
+                          <Table.Td key={key}>
+                            <Stack gap={0}>
+                              <Text size="sm" fw={500}>
+                                {b.student?.name ?? b.studentId}
+                              </Text>
+                              {b.student?.nis && (
+                                <Text size="xs" c="dimmed">
+                                  NIS {b.student.nis}
+                                  {b.student.schoolLevel
+                                    ? ` · ${b.student.schoolLevel}`
+                                    : ""}
+                                </Text>
+                              )}
+                            </Stack>
+                          </Table.Td>
+                        );
+                      case "serviceFee":
+                        return (
+                          <Table.Td key={key}>
+                            {b.serviceFee?.name ?? "-"}
+                          </Table.Td>
+                        );
+                      case "period":
+                        return (
+                          <Table.Td key={key}>
+                            {t(`months.${b.period}`)} {b.year}
+                          </Table.Td>
+                        );
+                      case "amount":
+                        return (
+                          <Table.Td key={key}>{formatRp(b.amount)}</Table.Td>
+                        );
+                      case "paid":
+                        return (
+                          <Table.Td key={key}>
+                            {formatRp(b.paidAmount)}
+                          </Table.Td>
+                        );
+                      case "status":
+                        return (
+                          <Table.Td key={key}>
+                            <Badge color={STATUS_COLORS[b.status] ?? "gray"}>
+                              {t(`tuition.status.${b.status.toLowerCase()}`)}
+                            </Badge>
+                          </Table.Td>
+                        );
+                      case "actions":
+                        return (
+                          <Table.Td key={key}>
+                            {b.status === "UNPAID" && (
+                              <Tooltip label={t("common.delete")}>
+                                <ActionIcon
+                                  color="red"
+                                  variant="subtle"
+                                  onClick={() => confirmDelete(b.id)}
+                                >
+                                  <IconTrash size={14} />
+                                </ActionIcon>
+                              </Tooltip>
+                            )}
+                          </Table.Td>
+                        );
+                      default:
+                        return null;
+                    }
+                  })}
                 </Table.Tr>
               ))
             )}

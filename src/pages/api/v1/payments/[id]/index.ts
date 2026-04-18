@@ -24,6 +24,7 @@ async function GET(
           student: {
             select: {
               nis: true,
+              schoolLevel: true,
               name: true,
               parentName: true,
               parentPhone: true,

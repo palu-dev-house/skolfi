@@ -37,6 +37,8 @@ describe("calculateOverdueSummary", () => {
   const makeItem = (overrides: Partial<OverdueItem> = {}): OverdueItem => ({
     tuitionId: "t-1",
     studentId: "s-1",
+    studentNis: "2024001",
+    schoolLevel: "SD",
     studentName: "Student 1",
     parentPhone: "0812",
     className: "VII-A",
