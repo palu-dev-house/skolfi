@@ -121,10 +121,13 @@ export function useOverdueReport(filters: OverdueFilters = {}) {
       const { data } = await apiClient.get<OverdueReportResponse>(
         "/reports/overdue",
         {
-          params: filters as Record<
-            string,
-            string | number | boolean | undefined
-          >,
+          params: {
+            classAcademicId: filters.classAcademicId,
+            grade: filters.grade,
+            academicYearId: filters.academicYearId,
+            schoolLevel: filters.schoolLevel,
+            studentSearch: filters.search,
+          },
         },
       );
       return data.data;
@@ -325,6 +328,12 @@ export function useExportOverdueReport() {
     }
     if (filters.academicYearId) {
       params.set("academicYearId", filters.academicYearId);
+    }
+    if (filters.schoolLevel) {
+      params.set("schoolLevel", filters.schoolLevel);
+    }
+    if (filters.search) {
+      params.set("studentSearch", filters.search);
     }
 
     await downloadFileFromApi(

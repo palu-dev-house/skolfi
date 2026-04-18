@@ -13,6 +13,7 @@ import {
   Stack,
   Table,
   Text,
+  TextInput,
   Tooltip,
 } from "@mantine/core";
 import {
@@ -21,6 +22,7 @@ import {
   IconFilter,
   IconPhone,
   IconRefresh,
+  IconSearch,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useTranslations } from "next-intl";
@@ -40,19 +42,26 @@ const filterSchema = z.object({
   classAcademicId: z.string().optional(),
   grade: z.string().optional(),
   academicYearId: z.string().optional(),
+  schoolLevel: z.enum(["SD", "SMP", "SMA"]).optional(),
+  studentSearch: z.string().optional(),
 });
+
+const SCHOOL_LEVELS = ["SD", "SMP", "SMA"] as const;
 
 export default function OverdueReportTable() {
   const t = useTranslations("report");
   const tClass = useTranslations("class");
   const tAcademicYear = useTranslations("academicYear");
-  const { filters, setFilter, setFilters } = useQueryFilters({
+  const { filters, drafts, setFilter, setFilters } = useQueryFilters({
     schema: filterSchema,
+    debounceKeys: ["studentSearch"],
   });
   const [openedItem, setOpenedItem] = useState<string | null>(null);
   const classAcademicId = filters.classAcademicId ?? null;
   const grade = filters.grade ?? null;
   const academicYearId = filters.academicYearId ?? null;
+  const schoolLevel = filters.schoolLevel ?? null;
+  const studentSearch = filters.studentSearch ?? "";
 
   const grades = Array.from({ length: 12 }, (_, i) => ({
     value: String(i + 1),
@@ -71,6 +80,8 @@ export default function OverdueReportTable() {
     classAcademicId: classAcademicId || undefined,
     grade: grade ? Number(grade) : undefined,
     academicYearId: academicYearId || undefined,
+    schoolLevel: schoolLevel ?? undefined,
+    search: studentSearch || undefined,
   });
 
   const { exportReport } = useExportOverdueReport();
@@ -80,6 +91,8 @@ export default function OverdueReportTable() {
       classAcademicId: classAcademicId || undefined,
       grade: grade ? Number(grade) : undefined,
       academicYearId: academicYearId || undefined,
+      schoolLevel: schoolLevel ?? undefined,
+      search: studentSearch || undefined,
     });
   };
 
@@ -144,6 +157,23 @@ export default function OverdueReportTable() {
       {/* Filters */}
       <Paper withBorder p="md">
         <Group gap="md" grow>
+          <TextInput
+            placeholder={t("searchStudent")}
+            leftSection={<IconSearch size={16} />}
+            value={drafts.studentSearch ?? ""}
+            onChange={(e) =>
+              setFilter("studentSearch", e.currentTarget.value || null)
+            }
+          />
+          <Select
+            placeholder={t("filterBySchoolLevel")}
+            data={SCHOOL_LEVELS.map((s) => ({ value: s, label: s }))}
+            value={schoolLevel}
+            onChange={(v) =>
+              setFilter("schoolLevel", (v as "SD" | "SMP" | "SMA") || null)
+            }
+            clearable
+          />
           <Select
             placeholder={t("filterByAcademicYear")}
             leftSection={<IconFilter size={16} />}

@@ -55,10 +55,13 @@ import type { NextPageWithLayout } from "@/lib/page-types";
 
 const billFilterSchema = z.object({
   studentId: z.string().optional(),
+  schoolLevel: z.enum(["SD", "SMP", "SMA"]).optional(),
   period: z.string().optional(),
   year: z.string().optional(),
   status: z.enum(["UNPAID", "PARTIAL", "PAID", "VOID"]).optional(),
 });
+
+const SCHOOL_LEVELS = ["SD", "SMP", "SMA"] as const;
 
 function formatRp(v: string | number) {
   const n = typeof v === "string" ? parseFloat(v) : v;
@@ -145,6 +148,7 @@ function FeeBillTab({ activeYearId }: { activeYearId?: string }) {
   });
   const studentId = filters.studentId ?? "";
   const studentIdDraft = drafts.studentId ?? studentId;
+  const schoolLevel = filters.schoolLevel ?? null;
   const period = filters.period ?? null;
   const yearStr = filters.year ?? null;
   const year = yearStr ? Number(yearStr) : null;
@@ -154,6 +158,7 @@ function FeeBillTab({ activeYearId }: { activeYearId?: string }) {
     page,
     limit: 15,
     studentId: studentId || undefined,
+    schoolLevel: schoolLevel ?? undefined,
     period: period || undefined,
     year: year ?? undefined,
     status: status as (typeof STATUSES)[number] | undefined,
@@ -234,6 +239,16 @@ function FeeBillTab({ activeYearId }: { activeYearId?: string }) {
                 setFilter("studentId", e.currentTarget.value || null)
               }
               w={240}
+            />
+            <Select
+              placeholder={t("student.schoolLevel")}
+              data={SCHOOL_LEVELS.map((s) => ({ value: s, label: s }))}
+              value={schoolLevel}
+              onChange={(v) =>
+                setFilter("schoolLevel", (v as "SD" | "SMP" | "SMA") || null)
+              }
+              clearable
+              w={140}
             />
             <Select
               placeholder={t("feeBill.period")}
@@ -441,6 +456,7 @@ function ServiceFeeBillTab({ activeYearId }: { activeYearId?: string }) {
   });
   const studentId = filters.studentId ?? "";
   const studentIdDraft = drafts.studentId ?? studentId;
+  const schoolLevel = filters.schoolLevel ?? null;
   const period = filters.period ?? null;
   const yearStr = filters.year ?? null;
   const year = yearStr ? Number(yearStr) : null;
@@ -450,6 +466,7 @@ function ServiceFeeBillTab({ activeYearId }: { activeYearId?: string }) {
     page,
     limit: 15,
     studentId: studentId || undefined,
+    schoolLevel: schoolLevel ?? undefined,
     period: period || undefined,
     year: year ?? undefined,
     status: status as (typeof STATUSES)[number] | undefined,
@@ -535,6 +552,16 @@ function ServiceFeeBillTab({ activeYearId }: { activeYearId?: string }) {
                 setFilter("studentId", e.currentTarget.value || null)
               }
               w={240}
+            />
+            <Select
+              placeholder={t("student.schoolLevel")}
+              data={SCHOOL_LEVELS.map((s) => ({ value: s, label: s }))}
+              value={schoolLevel}
+              onChange={(v) =>
+                setFilter("schoolLevel", (v as "SD" | "SMP" | "SMA") || null)
+              }
+              clearable
+              w={140}
             />
             <Select
               placeholder={t("feeBill.period")}

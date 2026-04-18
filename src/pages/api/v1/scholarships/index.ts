@@ -24,7 +24,12 @@ async function GET(request: NextRequest) {
   const page = Number(searchParams.get("page") || "1");
   const limit = Number(searchParams.get("limit") || "10");
   const classAcademicId = searchParams.get("classAcademicId") || undefined;
-  const studentId = searchParams.get("studentId") || undefined;
+  const studentSearch = searchParams.get("studentId") || undefined;
+  const schoolLevelParam = searchParams.get("schoolLevel");
+  const schoolLevel =
+    schoolLevelParam && schoolLevelParam !== "null"
+      ? (schoolLevelParam as "SD" | "SMP" | "SMA")
+      : undefined;
   const isFullScholarship = searchParams.get("isFullScholarship");
 
   const where: Prisma.ScholarshipWhereInput = {};
@@ -33,8 +38,16 @@ async function GET(request: NextRequest) {
     where.classAcademicId = classAcademicId;
   }
 
-  if (studentId) {
-    where.studentId = studentId;
+  if (studentSearch || schoolLevel) {
+    where.student = {
+      ...(studentSearch && {
+        OR: [
+          { nis: { contains: studentSearch, mode: "insensitive" } },
+          { name: { contains: studentSearch, mode: "insensitive" } },
+        ],
+      }),
+      ...(schoolLevel && { schoolLevel }),
+    };
   }
 
   if (
@@ -50,7 +63,12 @@ async function GET(request: NextRequest) {
       where,
       include: {
         student: {
-          select: { nis: true, name: true, parentPhone: true },
+          select: {
+            nis: true,
+            name: true,
+            parentPhone: true,
+            schoolLevel: true,
+          },
         },
         classAcademic: {
           select: {

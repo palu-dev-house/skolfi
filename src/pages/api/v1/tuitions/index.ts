@@ -13,7 +13,12 @@ async function GET(request: NextRequest) {
   const page = Number(searchParams.get("page") || "1");
   const limit = Number(searchParams.get("limit") || "10");
   const classAcademicId = searchParams.get("classAcademicId") || undefined;
-  const studentId = searchParams.get("studentId") || undefined;
+  const studentSearch = searchParams.get("studentId") || undefined;
+  const schoolLevelParam = searchParams.get("schoolLevel");
+  const schoolLevel =
+    schoolLevelParam && schoolLevelParam !== "null"
+      ? (schoolLevelParam as "SD" | "SMP" | "SMA")
+      : undefined;
   const statusParam = searchParams.get("status");
   const status =
     statusParam && statusParam !== "null" ? statusParam : undefined;
@@ -35,8 +40,16 @@ async function GET(request: NextRequest) {
     where.classAcademicId = classAcademicId;
   }
 
-  if (studentId) {
-    where.studentId = studentId;
+  if (studentSearch || schoolLevel) {
+    where.student = {
+      ...(studentSearch && {
+        OR: [
+          { nis: { contains: studentSearch, mode: "insensitive" } },
+          { name: { contains: studentSearch, mode: "insensitive" } },
+        ],
+      }),
+      ...(schoolLevel && { schoolLevel }),
+    };
   }
 
   if (status) {

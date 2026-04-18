@@ -82,6 +82,8 @@ export async function getOverdueTuitions(
     classAcademicId?: string;
     grade?: number;
     academicYearId?: string;
+    schoolLevel?: "SD" | "SMP" | "SMA";
+    studentSearch?: string;
   },
   prisma: PrismaClient,
 ): Promise<OverdueItem[]> {
@@ -105,6 +107,20 @@ export async function getOverdueTuitions(
       (where.classAcademic as Record<string, unknown>).academicYearId =
         filters.academicYearId;
     }
+  }
+
+  if (filters.schoolLevel || filters.studentSearch) {
+    const studentWhere: Record<string, unknown> = {};
+    if (filters.schoolLevel) {
+      studentWhere.schoolLevel = filters.schoolLevel;
+    }
+    if (filters.studentSearch) {
+      studentWhere.OR = [
+        { nis: { contains: filters.studentSearch, mode: "insensitive" } },
+        { name: { contains: filters.studentSearch, mode: "insensitive" } },
+      ];
+    }
+    where.student = studentWhere;
   }
 
   const tuitions = await prisma.tuition.findMany({

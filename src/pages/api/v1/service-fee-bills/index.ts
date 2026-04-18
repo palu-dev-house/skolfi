@@ -12,9 +12,14 @@ async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const page = Number(searchParams.get("page") || "1");
   const limit = Number(searchParams.get("limit") || "10");
-  const studentId = searchParams.get("studentId") || undefined;
+  const studentSearch = searchParams.get("studentId") || undefined;
   const classAcademicId = searchParams.get("classAcademicId") || undefined;
   const serviceFeeId = searchParams.get("serviceFeeId") || undefined;
+  const schoolLevelParam = searchParams.get("schoolLevel");
+  const schoolLevel =
+    schoolLevelParam && schoolLevelParam !== "null"
+      ? (schoolLevelParam as "SD" | "SMP" | "SMA")
+      : undefined;
   const periodParam = searchParams.get("period");
   const period =
     periodParam && periodParam !== "null" ? periodParam : undefined;
@@ -26,7 +31,17 @@ async function GET(request: NextRequest) {
     statusParam && statusParam !== "null" ? statusParam : undefined;
 
   const where: Prisma.ServiceFeeBillWhereInput = {};
-  if (studentId) where.studentId = studentId;
+  if (studentSearch || schoolLevel) {
+    where.student = {
+      ...(studentSearch && {
+        OR: [
+          { nis: { contains: studentSearch, mode: "insensitive" } },
+          { name: { contains: studentSearch, mode: "insensitive" } },
+        ],
+      }),
+      ...(schoolLevel && { schoolLevel }),
+    };
+  }
   if (classAcademicId) where.classAcademicId = classAcademicId;
   if (serviceFeeId) where.serviceFeeId = serviceFeeId;
   if (period) where.period = period;

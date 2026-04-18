@@ -50,10 +50,13 @@ import {
 const filtersSchema = z.object({
   academicYearId: z.string().optional(),
   classAcademicId: z.string().optional(),
+  schoolLevel: z.enum(["SD", "SMP", "SMA"]).optional(),
   status: z.enum(["UNPAID", "PARTIAL", "PAID", "VOID"]).optional(),
   period: z.string().optional(),
   studentSearch: z.string().optional(),
 });
+
+const SCHOOL_LEVELS = ["SD", "SMP", "SMA"] as const;
 
 const STATUS_COLORS: Record<PaymentStatus, string> = {
   UNPAID: "red",
@@ -73,6 +76,7 @@ export default function TuitionTable() {
   const status = filters.status ?? null;
   const period = filters.period ?? null;
   const studentSearch = filters.studentSearch ?? "";
+  const schoolLevel = filters.schoolLevel ?? null;
 
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -89,6 +93,7 @@ export default function TuitionTable() {
     page,
     limit: 10,
     classAcademicId: classAcademicId || undefined,
+    schoolLevel: schoolLevel ?? undefined,
     status: status as PaymentStatus | undefined,
     period: period || undefined,
     studentId: studentSearch || undefined,
@@ -274,6 +279,15 @@ export default function TuitionTable() {
             clearable
             searchable
             disabled={!selectedYearId}
+          />
+          <Select
+            placeholder={t("student.schoolLevel")}
+            data={SCHOOL_LEVELS.map((s) => ({ value: s, label: s }))}
+            value={schoolLevel}
+            onChange={(v) =>
+              setFilter("schoolLevel", (v as "SD" | "SMP" | "SMA") || null)
+            }
+            clearable
           />
           <Select
             placeholder={t("tuition.filterByStatus")}

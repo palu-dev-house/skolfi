@@ -14,6 +14,7 @@ import {
   Stack,
   Table,
   Text,
+  TextInput,
   Tooltip,
 } from "@mantine/core";
 import { modals } from "@mantine/modals";
@@ -22,6 +23,7 @@ import {
   IconCurrencyDollar,
   IconFilter,
   IconRefresh,
+  IconSearch,
   IconToggleLeft,
   IconTrash,
   IconX,
@@ -46,15 +48,22 @@ import { useQueryFilters } from "@/hooks/useQueryFilters";
 
 const scholarshipFiltersSchema = z.object({
   classAcademicId: z.string().optional(),
+  schoolLevel: z.enum(["SD", "SMP", "SMA"]).optional(),
+  studentSearch: z.string().optional(),
   isFullScholarship: z.enum(["true", "false"]).optional(),
 });
 
+const SCHOOL_LEVELS = ["SD", "SMP", "SMA"] as const;
+
 export default function ScholarshipTable() {
   const t = useTranslations();
-  const { filters, page, setFilter, setPage } = useQueryFilters({
+  const { filters, page, drafts, setFilter, setPage } = useQueryFilters({
     schema: scholarshipFiltersSchema,
+    debounceKeys: ["studentSearch"],
   });
   const classAcademicId = filters.classAcademicId ?? null;
+  const schoolLevel = filters.schoolLevel ?? null;
+  const studentSearch = filters.studentSearch ?? "";
   const isFullScholarship = filters.isFullScholarship ?? null;
 
   const { data: academicYearsData } = useAcademicYears({ limit: 100 });
@@ -69,6 +78,8 @@ export default function ScholarshipTable() {
     page,
     limit: 10,
     classAcademicId: classAcademicId || undefined,
+    schoolLevel: schoolLevel ?? undefined,
+    studentId: studentSearch || undefined,
     isFullScholarship:
       isFullScholarship === null ? undefined : isFullScholarship === "true",
   });
@@ -252,6 +263,25 @@ export default function ScholarshipTable() {
     <Stack gap="md">
       <Paper withBorder p="md">
         <Group gap="md">
+          <TextInput
+            placeholder={t("scholarship.searchStudent")}
+            leftSection={<IconSearch size={16} />}
+            value={drafts.studentSearch ?? ""}
+            onChange={(e) =>
+              setFilter("studentSearch", e.currentTarget.value || null)
+            }
+            w={240}
+          />
+          <Select
+            placeholder={t("student.schoolLevel")}
+            data={SCHOOL_LEVELS.map((s) => ({ value: s, label: s }))}
+            value={schoolLevel}
+            onChange={(v) =>
+              setFilter("schoolLevel", (v as "SD" | "SMP" | "SMA") || null)
+            }
+            clearable
+            w={140}
+          />
           <Select
             placeholder={t("scholarship.filterByClass")}
             leftSection={<IconFilter size={16} />}

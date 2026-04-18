@@ -16,10 +16,16 @@ async function GET(request: NextRequest) {
     ? Number(searchParams.get("grade"))
     : undefined;
   const academicYearId = searchParams.get("academicYearId") || undefined;
+  const schoolLevelParam = searchParams.get("schoolLevel");
+  const schoolLevel =
+    schoolLevelParam && schoolLevelParam !== "null"
+      ? (schoolLevelParam as "SD" | "SMP" | "SMA")
+      : undefined;
+  const studentSearch = searchParams.get("studentSearch") || undefined;
 
   // Get overdue items
   const overdueItems = await getOverdueTuitions(
-    { classAcademicId, grade, academicYearId },
+    { classAcademicId, grade, academicYearId, schoolLevel, studentSearch },
     prisma,
   );
 
