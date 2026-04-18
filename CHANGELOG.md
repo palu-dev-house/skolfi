@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.26.0] - 2026-04-18
+
+### Features
+- download loading state + per-period pickers on income report
+
+
+
 ## [2.25.1] - 2026-04-18
 
 ### Fixes
