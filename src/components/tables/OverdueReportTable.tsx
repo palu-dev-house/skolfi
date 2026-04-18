@@ -84,7 +84,7 @@ export default function OverdueReportTable() {
     search: studentSearch || undefined,
   });
 
-  const { exportReport } = useExportOverdueReport();
+  const { exportReport, isExporting } = useExportOverdueReport();
 
   const handleExport = () => {
     exportReport({
@@ -211,6 +211,7 @@ export default function OverdueReportTable() {
             leftSection={<IconDownload size={18} />}
             variant="light"
             onClick={handleExport}
+            loading={isExporting}
             disabled={!data || data.overdue.length === 0}
           >
             {t("exportToExcel")}

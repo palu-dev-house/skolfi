@@ -1178,6 +1178,10 @@
       "yearly": "Yearly",
       "dateFrom": "Start Date",
       "dateTo": "End Date",
+      "monthFrom": "Start Month",
+      "monthTo": "End Month",
+      "yearFrom": "Start Year",
+      "yearTo": "End Year",
       "exportExcel": "Download Excel Report",
       "exportInfo": "The report includes payment details and income summary by payment type (Tuition, Transport, Service Fees)"
     }

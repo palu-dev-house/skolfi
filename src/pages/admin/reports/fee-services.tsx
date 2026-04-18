@@ -27,7 +27,7 @@ const FeeServiceSummaryPage: NextPageWithLayout =
     const t = useTranslations();
     const { filters, page, limit, drafts, setFilter, setPage } =
       useQueryFilters({ schema });
-    const { exportReport } = useExportFeeServiceSummary();
+    const { exportReport, isExporting } = useExportFeeServiceSummary();
 
     return (
       <>
@@ -39,6 +39,7 @@ const FeeServiceSummaryPage: NextPageWithLayout =
               <Button
                 variant="light"
                 leftSection={<IconFileSpreadsheet size={18} />}
+                loading={isExporting}
                 onClick={() => exportReport(filters)}
               >
                 {t("report.feeServiceSummary.exportExcel")}

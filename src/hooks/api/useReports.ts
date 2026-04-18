@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type { Month } from "@/generated/prisma/client";
 import { apiClient } from "@/lib/api-client";
 import type {
@@ -271,18 +271,24 @@ export function useClassSummary(filters: ClassSummaryFilters = {}) {
 }
 
 export function useExportClassSummary() {
+  const mutation = useMutation({
+    mutationFn: async (filters: ClassSummaryFilters = {}) => {
+      const params = new URLSearchParams();
+      if (filters.academicYearId) {
+        params.set("academicYearId", filters.academicYearId);
+      }
+      await downloadFileFromApi(
+        `/api/v1/reports/class-summary/export?${params.toString()}`,
+        "class-summary.xlsx",
+      );
+    },
+  });
+
   const exportReport = async (filters: ClassSummaryFilters = {}) => {
-    const params = new URLSearchParams();
-    if (filters.academicYearId) {
-      params.set("academicYearId", filters.academicYearId);
-    }
-    await downloadFileFromApi(
-      `/api/v1/reports/class-summary/export?${params.toString()}`,
-      "class-summary.xlsx",
-    );
+    await mutation.mutateAsync(filters);
   };
 
-  return { exportReport };
+  return { exportReport, isExporting: mutation.isPending };
 }
 
 export function useFeeServiceSummary(filters: FeeServiceSummaryFilters) {
@@ -307,46 +313,58 @@ export function useFeeServiceSummary(filters: FeeServiceSummaryFilters) {
 }
 
 export function useExportFeeServiceSummary() {
-  const exportReport = async (filters: FeeServiceSummaryFilters) => {
-    const params = new URLSearchParams();
-    for (const [k, v] of Object.entries(filters)) {
-      if (v !== undefined && v !== null && v !== "") {
-        params.set(k, String(v));
+  const mutation = useMutation({
+    mutationFn: async (filters: FeeServiceSummaryFilters) => {
+      const params = new URLSearchParams();
+      for (const [k, v] of Object.entries(filters)) {
+        if (v !== undefined && v !== null && v !== "") {
+          params.set(k, String(v));
+        }
       }
-    }
-    await downloadFileFromApi(
-      `/api/v1/reports/fee-service-summary/export?${params.toString()}`,
-      "fee-service-summary.xlsx",
-    );
+      await downloadFileFromApi(
+        `/api/v1/reports/fee-service-summary/export?${params.toString()}`,
+        "fee-service-summary.xlsx",
+      );
+    },
+  });
+
+  const exportReport = async (filters: FeeServiceSummaryFilters) => {
+    await mutation.mutateAsync(filters);
   };
 
-  return { exportReport };
+  return { exportReport, isExporting: mutation.isPending };
 }
 
 export function useExportOverdueReport() {
-  const exportReport = async (filters: OverdueFilters = {}) => {
-    const params = new URLSearchParams();
-    if (filters.classAcademicId) {
-      params.set("classAcademicId", filters.classAcademicId);
-    }
-    if (filters.grade) {
-      params.set("grade", String(filters.grade));
-    }
-    if (filters.academicYearId) {
-      params.set("academicYearId", filters.academicYearId);
-    }
-    if (filters.schoolLevel) {
-      params.set("schoolLevel", filters.schoolLevel);
-    }
-    if (filters.search) {
-      params.set("studentSearch", filters.search);
-    }
+  const mutation = useMutation({
+    mutationFn: async (filters: OverdueFilters = {}) => {
+      const params = new URLSearchParams();
+      if (filters.classAcademicId) {
+        params.set("classAcademicId", filters.classAcademicId);
+      }
+      if (filters.grade) {
+        params.set("grade", String(filters.grade));
+      }
+      if (filters.academicYearId) {
+        params.set("academicYearId", filters.academicYearId);
+      }
+      if (filters.schoolLevel) {
+        params.set("schoolLevel", filters.schoolLevel);
+      }
+      if (filters.search) {
+        params.set("studentSearch", filters.search);
+      }
 
-    await downloadFileFromApi(
-      `/api/v1/reports/overdue/export?${params.toString()}`,
-      "overdue-report.xlsx",
-    );
+      await downloadFileFromApi(
+        `/api/v1/reports/overdue/export?${params.toString()}`,
+        "overdue-report.xlsx",
+      );
+    },
+  });
+
+  const exportReport = async (filters: OverdueFilters = {}) => {
+    await mutation.mutateAsync(filters);
   };
 
-  return { exportReport };
+  return { exportReport, isExporting: mutation.isPending };
 }

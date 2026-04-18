@@ -1178,6 +1178,10 @@
       "yearly": "Tahunan",
       "dateFrom": "Tanggal Mulai",
       "dateTo": "Tanggal Akhir",
+      "monthFrom": "Bulan Mulai",
+      "monthTo": "Bulan Akhir",
+      "yearFrom": "Tahun Mulai",
+      "yearTo": "Tahun Akhir",
       "exportExcel": "Download Laporan Excel",
       "exportInfo": "Laporan akan berisi detail pembayaran dan ringkasan pendapatan berdasarkan jenis pembayaran (SPP, Transport, Uang Perlengkapan)"
     }

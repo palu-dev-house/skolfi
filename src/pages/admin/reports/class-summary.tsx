@@ -24,7 +24,7 @@ const ClassSummaryPage: NextPageWithLayout = function ClassSummaryPage() {
   const t = useTranslations();
   const { filters, setFilter } = useQueryFilters({ schema: filterSchema });
   const academicYearId = filters.academicYearId ?? null;
-  const { exportReport } = useExportClassSummary();
+  const { exportReport, isExporting } = useExportClassSummary();
 
   return (
     <>
@@ -36,6 +36,7 @@ const ClassSummaryPage: NextPageWithLayout = function ClassSummaryPage() {
             <Button
               variant="light"
               leftSection={<IconFileSpreadsheet size={18} />}
+              loading={isExporting}
               onClick={() =>
                 exportReport({ academicYearId: academicYearId ?? undefined })
               }
