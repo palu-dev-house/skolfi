@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.24.0] - 2026-04-18
+
+### Features
+- NIS+schoolLevel display, fee-bills column drawer, sidebar accordion fix
+- add NIS search and schoolLevel filter across tuitions/bills/reports
+
+### Fixes
+- xlsx exports produced corrupt files
+
+### Other
+- refactor: inline import toolbar, drop ImportModal, show NIS instead of UUID
+- refactor: make academic-year filter truly clearable
+- style: make sidebar accordion group headers look like nav items
+
+
+
 ## [2.23.0] - 2026-04-17
 
 ### Features
