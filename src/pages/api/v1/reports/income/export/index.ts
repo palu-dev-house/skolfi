@@ -255,7 +255,10 @@ async function GET(request: NextRequest) {
   infoSheet["!cols"] = [{ wch: 20 }, { wch: 40 }];
   XLSX.utils.book_append_sheet(workbook, infoSheet, "Info");
 
-  const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+  const buffer = XLSX.write(workbook, {
+    type: "array",
+    bookType: "xlsx",
+  }) as ArrayBuffer;
   const filenamePeriod =
     period === "daily"
       ? "harian"

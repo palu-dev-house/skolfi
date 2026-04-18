@@ -89,7 +89,10 @@ async function GET(request: NextRequest) {
     ];
     XLSX.utils.book_append_sheet(workbook, sheet, "Fee Service Summary");
 
-    const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+    const buffer = XLSX.write(workbook, {
+      type: "array",
+      bookType: "xlsx",
+    }) as ArrayBuffer;
     const filename = `fee-service-summary-${new Date().toISOString().split("T")[0]}.xlsx`;
 
     return new Response(buffer, {

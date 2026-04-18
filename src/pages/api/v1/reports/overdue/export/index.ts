@@ -91,8 +91,10 @@ async function GET(request: NextRequest) {
   summarySheet["!cols"] = [{ wch: 30 }, { wch: 20 }];
   XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
 
-  // Convert to buffer
-  const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+  const buffer = XLSX.write(workbook, {
+    type: "array",
+    bookType: "xlsx",
+  }) as ArrayBuffer;
 
   const filename = `overdue-report-${new Date().toISOString().split("T")[0]}.xlsx`;
 
