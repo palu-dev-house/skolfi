@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.26.1] - 2026-04-19
+
+### Other
+- docs: refresh user guides to v2.25.1
+
+
+
 ## [2.26.0] - 2026-04-18
 
 ### Features
