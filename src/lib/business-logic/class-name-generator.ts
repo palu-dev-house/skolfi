@@ -15,11 +15,16 @@ const ROMAN_MAP: Record<number, string> = {
 
 export type SchoolLevelInput = "TK" | "SD" | "SMP" | "SMA";
 
+const TK_TINGKAT_MAP: Record<number, string> = {
+  1: "PG",
+  2: "TKA",
+  3: "TKB",
+};
+
 /**
  * Generate class name pattern.
- * TK uses Arabic numerals prefixed with the level (e.g. TK-1-A-2024/2025) because
- * grade 1 collides with SD grade 1 in roman numerals. SD/SMP/SMA keep the existing
- * roman format for backwards compatibility.
+ * TK uses Indonesian tingkat tokens (PG/TKA/TKB) rather than numeric grade,
+ * e.g. TK-PG-A-2024/2025, TK-TKA-A-2024/2025. SD/SMP/SMA keep roman numerals.
  */
 export function generateClassName(
   grade: number,
@@ -28,7 +33,8 @@ export function generateClassName(
   schoolLevel?: SchoolLevelInput,
 ): string {
   if (schoolLevel === "TK") {
-    return `TK-${grade}-${section}-${academicYear}`;
+    const tingkat = TK_TINGKAT_MAP[grade] || String(grade);
+    return `TK-${tingkat}-${section}-${academicYear}`;
   }
   const romanGrade = ROMAN_MAP[grade] || String(grade);
   return `${romanGrade}-${section}-${academicYear}`;

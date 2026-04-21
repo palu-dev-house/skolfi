@@ -49,21 +49,38 @@ async function POST(request: NextRequest) {
         continue;
       }
 
-      const grade = Number.parseInt(row.Grade, 10);
+      const rawGrade = String(row.Grade ?? "")
+        .trim()
+        .toUpperCase();
+      const rawLevel = (row["School Level"] || "").trim().toUpperCase();
+
+      const TK_TINGKAT_TO_GRADE: Record<string, number> = {
+        PG: 1,
+        "TK A": 2,
+        TKA: 2,
+        "TK B": 3,
+        TKB: 3,
+      };
+
+      let grade = Number.parseInt(rawGrade, 10);
+      if (Number.isNaN(grade) && TK_TINGKAT_TO_GRADE[rawGrade] !== undefined) {
+        grade = TK_TINGKAT_TO_GRADE[rawGrade];
+      }
       if (Number.isNaN(grade) || grade < 1 || grade > 12) {
         errors.push({ row: rowNum, error: t("api.gradeRange") });
         continue;
       }
 
-      const rawLevel = (row["School Level"] || "").trim().toUpperCase();
       const schoolLevel: SchoolLevel = (
         ["TK", "SD", "SMP", "SMA"].includes(rawLevel)
           ? rawLevel
-          : grade >= 10
-            ? "SMA"
-            : grade >= 7
-              ? "SMP"
-              : "SD"
+          : TK_TINGKAT_TO_GRADE[rawGrade] !== undefined
+            ? "TK"
+            : grade >= 10
+              ? "SMA"
+              : grade >= 7
+                ? "SMP"
+                : "SD"
       ) as SchoolLevel;
 
       const range = SCHOOL_LEVEL_GRADE_RANGE[schoolLevel];

@@ -4,6 +4,7 @@ import { createApiHandler } from "@/lib/api-adapter";
 import { requireAuth } from "@/lib/api-auth";
 import { getClassSummary } from "@/lib/business-logic/overdue-calculator";
 import { prisma } from "@/lib/prisma";
+import { formatGradeLabel } from "@/lib/tk-grade-label";
 
 async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
@@ -16,7 +17,7 @@ async function GET(request: NextRequest) {
 
   const tuitionRows = classSummaries.map((cls) => ({
     Class: cls.class.className,
-    Grade: cls.class.grade,
+    Grade: formatGradeLabel(cls.class.schoolLevel, cls.class.grade),
     Students: cls.statistics.totalStudents,
     "Total Bills": cls.statistics.totalTuitions,
     Paid: cls.statistics.paid,
@@ -32,7 +33,7 @@ async function GET(request: NextRequest) {
 
   const feeBillRows = classSummaries.map((cls) => ({
     Class: cls.class.className,
-    Grade: cls.class.grade,
+    Grade: formatGradeLabel(cls.class.schoolLevel, cls.class.grade),
     "Total Bills": cls.statistics.feeBill.totalBills,
     Paid: cls.statistics.feeBill.paid,
     Partial: cls.statistics.feeBill.partial,
@@ -44,7 +45,7 @@ async function GET(request: NextRequest) {
 
   const serviceFeeRows = classSummaries.map((cls) => ({
     Class: cls.class.className,
-    Grade: cls.class.grade,
+    Grade: formatGradeLabel(cls.class.schoolLevel, cls.class.grade),
     "Total Bills": cls.statistics.serviceFeeBill.totalBills,
     Paid: cls.statistics.serviceFeeBill.paid,
     Partial: cls.statistics.serviceFeeBill.partial,

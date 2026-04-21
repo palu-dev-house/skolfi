@@ -33,6 +33,7 @@ import { useOverdueFeeBillReport } from "@/hooks/api/useReports";
 import { useQueryFilters } from "@/hooks/useQueryFilters";
 import { getMonthDisplayName } from "@/lib/business-logic/tuition-generator";
 import { schoolLevelColor } from "@/lib/school-level-color";
+import { TK_GRADE_OPTIONS } from "@/lib/tk-grade-label";
 
 const filterSchema = z.object({
   classAcademicId: z.string().optional(),
@@ -59,10 +60,13 @@ export default function OverdueFeeBillReportTable() {
   const schoolLevel = filters.schoolLevel ?? null;
   const studentSearch = filters.studentSearch ?? "";
 
-  const grades = Array.from({ length: 12 }, (_, i) => ({
-    value: String(i + 1),
-    label: `${tClass("grade")} ${i + 1}`,
-  }));
+  const grades =
+    schoolLevel === "TK"
+      ? TK_GRADE_OPTIONS
+      : Array.from({ length: 12 }, (_, i) => ({
+          value: String(i + 1),
+          label: `${tClass("grade")} ${i + 1}`,
+        }));
 
   const { data: academicYearsData } = useAcademicYears({ limit: 100 });
 

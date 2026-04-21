@@ -41,6 +41,7 @@ import {
 } from "@/hooks/api/useClassAcademics";
 import { useQueryFilters } from "@/hooks/useQueryFilters";
 import { schoolLevelColor } from "@/lib/school-level-color";
+import { formatGradeLabel } from "@/lib/tk-grade-label";
 
 const filtersSchema = z.object({
   search: z.string().optional(),
@@ -364,7 +365,11 @@ export default function ClassAcademicTable() {
                           </Table.Td>
                         );
                       case "grade":
-                        return <Table.Td key={key}>{cls.grade}</Table.Td>;
+                        return (
+                          <Table.Td key={key}>
+                            {formatGradeLabel(cls.schoolLevel, cls.grade)}
+                          </Table.Td>
+                        );
                       case "section":
                         return <Table.Td key={key}>{cls.section}</Table.Td>;
                       case "academicYear":

@@ -652,6 +652,7 @@ export async function getClassSummary(
     class: {
       id: string;
       className: string;
+      schoolLevel: SchoolLevel;
       grade: number;
       section: string;
     };
@@ -805,6 +806,7 @@ export async function getClassSummary(
       class: {
         id: cls.id,
         className: cls.className,
+        schoolLevel: cls.schoolLevel,
         grade: cls.grade,
         section: cls.section,
       },

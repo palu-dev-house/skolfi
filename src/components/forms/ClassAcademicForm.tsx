@@ -11,6 +11,7 @@ import {
 import { useForm } from "@mantine/form";
 import { useTranslations } from "next-intl";
 import { useAcademicYears } from "@/hooks/api/useAcademicYears";
+import { TK_GRADE_OPTIONS } from "@/lib/tk-grade-label";
 import { classAcademicSchema } from "@/lib/validations";
 import { zodResolver } from "@/lib/validations/mantine-zod-resolver";
 import { SCHOOL_LEVEL_GRADE_RANGE } from "@/lib/validations/schemas/class.schema";
@@ -98,14 +99,28 @@ export default function ClassAcademicForm({
           }}
         />
         <Group grow>
-          <NumberInput
-            label={t("class.grade")}
-            placeholder={t("class.gradePlaceholder")}
-            required
-            min={gradeRange.min}
-            max={gradeRange.max}
-            {...form.getInputProps("grade")}
-          />
+          {form.values.schoolLevel === "TK" ? (
+            <Select
+              label={t("class.grade")}
+              placeholder={t("class.gradePlaceholder")}
+              required
+              data={TK_GRADE_OPTIONS}
+              value={String(form.values.grade)}
+              onChange={(value) =>
+                form.setFieldValue("grade", Number(value) || 1)
+              }
+              error={form.errors.grade}
+            />
+          ) : (
+            <NumberInput
+              label={t("class.grade")}
+              placeholder={t("class.gradePlaceholder")}
+              required
+              min={gradeRange.min}
+              max={gradeRange.max}
+              {...form.getInputProps("grade")}
+            />
+          )}
           <TextInput
             label={t("class.section")}
             placeholder={t("class.sectionPlaceholder")}

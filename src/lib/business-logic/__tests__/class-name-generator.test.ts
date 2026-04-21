@@ -23,12 +23,15 @@ describe("generateClassName", () => {
     expect(generateClassName(7, "b", "2024/2025")).toBe("VII-b-2024/2025");
   });
 
-  it("uses arabic numerals and TK prefix for TK level", () => {
+  it("uses tingkat tokens (PG/TKA/TKB) for TK level", () => {
     expect(generateClassName(1, "A", "2024/2025", "TK")).toBe(
-      "TK-1-A-2024/2025",
+      "TK-PG-A-2024/2025",
     );
-    expect(generateClassName(2, "B", "2024/2025", "TK")).toBe(
-      "TK-2-B-2024/2025",
+    expect(generateClassName(2, "A", "2024/2025", "TK")).toBe(
+      "TK-TKA-A-2024/2025",
+    );
+    expect(generateClassName(3, "B", "2024/2025", "TK")).toBe(
+      "TK-TKB-B-2024/2025",
     );
   });
 });

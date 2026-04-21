@@ -7,7 +7,23 @@ import {
 
 const LAST_ROW = 1000;
 const SCHOOL_LEVELS = ["TK", "SD", "SMP", "SMA"];
-const GRADES = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
+const GRADES = [
+  "PG",
+  "TKA",
+  "TKB",
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+  "11",
+  "12",
+];
 
 export function createClassTemplate(academicYears: string[]): ExcelJS.Workbook {
   const workbook = new ExcelJS.Workbook();
@@ -52,7 +68,7 @@ export function createClassTemplate(academicYears: string[]): ExcelJS.Workbook {
   // Grade dropdown (col C) — inline list 1..12.
   applyListValidation(sheet, "C", 2, LAST_ROW, [inlineListFormula(GRADES)], {
     promptTitle: "Grade",
-    prompt: "TK: 1-3, SD: 1-6, SMP: 7-9, SMA: 10-12.",
+    prompt: "TK: PG/TKA/TKB, SD: 1-6, SMP: 7-9, SMA: 10-12.",
   });
 
   return workbook;

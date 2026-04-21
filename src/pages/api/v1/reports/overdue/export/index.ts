@@ -5,6 +5,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { getOverdueTuitions } from "@/lib/business-logic/overdue-calculator";
 import { getPeriodDisplayName } from "@/lib/business-logic/tuition-generator";
 import { prisma } from "@/lib/prisma";
+import { formatGradeLabel } from "@/lib/tk-grade-label";
 
 async function GET(request: NextRequest) {
   const auth = await requireAuth(request);
@@ -47,7 +48,7 @@ async function GET(request: NextRequest) {
     "Parent Name": studentDetails.get(item.studentId)?.parentName || "",
     "Parent Phone": item.parentPhone,
     Class: item.className,
-    Grade: item.grade,
+    Grade: formatGradeLabel(item.schoolLevel, item.grade),
     Period: getPeriodDisplayName(item.period),
     Year: item.year,
     "Fee Amount": item.feeAmount,
