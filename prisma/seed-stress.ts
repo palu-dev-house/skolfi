@@ -437,6 +437,8 @@ async function main() {
 
   console.log("  Done.");
 
+  // TK/SMP/SMA cohorts are created later in section 5c (after SHARED CONSTANTS).
+
   // ============================================================
   // SHARED CONSTANTS & HELPERS (used by both historical and current data)
   // ============================================================
@@ -960,6 +962,327 @@ async function main() {
   );
 
   // ============================================================
+  // 5c. TK / SMP / SMA COHORTS (classes + students + tuitions + payments)
+  // ============================================================
+  type LevelKey = "TK" | "SMP" | "SMA";
+
+  async function createCohort(opts: {
+    schoolLevel: LevelKey;
+    grades: number[];
+    monthlyFee: number;
+    studentCount: number;
+    nisPrefix: string; // e.g., "TK2024", "SMP2024", "SMA2024"
+    nameSuffix: string; // e.g., "(TK)"
+    classPrefix: string; // e.g., "TK-", "SMP-", "SMA-"
+    addressStreet: string;
+    nameOffset: number;
+  }) {
+    const {
+      schoolLevel,
+      grades,
+      monthlyFee,
+      studentCount,
+      nisPrefix,
+      nameSuffix,
+      classPrefix,
+      addressStreet,
+      nameOffset,
+    } = opts;
+    console.log(
+      `\n[${schoolLevel}] Creating classes (grades ${grades[0]}-${grades[grades.length - 1]}, sections A-B, 2 current years)...`,
+    );
+
+    // Classes per year
+    const classMapLvl: Record<
+      string,
+      Record<number, Record<string, { id: string; monthlyFee: number }>>
+    > = {};
+    for (const ay of [ay2425, ay2526]) {
+      classMapLvl[ay.id] = {};
+      for (const grade of grades) {
+        classMapLvl[ay.id][grade] = {};
+        for (const section of sections) {
+          const className = `${classPrefix}${grade}-${section}-${ay.year}`;
+          const cls = await prisma.classAcademic.upsert({
+            where: {
+              academicYearId_schoolLevel_grade_section: {
+                academicYearId: ay.id,
+                schoolLevel,
+                grade,
+                section,
+              },
+            },
+            update: {},
+            create: {
+              academicYearId: ay.id,
+              schoolLevel,
+              grade,
+              section,
+              className,
+              paymentFrequency: "MONTHLY",
+              monthlyFee,
+            },
+          });
+          classMapLvl[ay.id][grade][section] = { id: cls.id, monthlyFee };
+        }
+      }
+    }
+
+    // Students
+    console.log(`[${schoolLevel}] Creating ${studentCount} students...`);
+    const inputs = [];
+    for (let i = 1; i <= studentCount; i++) {
+      const nis = `${nisPrefix}${String(i).padStart(3, "0")}`;
+      const joinDate = new Date(
+        `2024-07-${String(Math.min(randomInt(1, 31), 28)).padStart(2, "0")}`,
+      );
+      const parentPhone = generatePhone();
+      const hashedPhone = await bcrypt.hash(parentPhone, 10);
+      inputs.push({
+        nis,
+        name: `${generateStudentName(i + nameOffset)} ${nameSuffix}`,
+        address: `${addressStreet} No. ${randomInt(1, 200)}, Jakarta`,
+        parentName: generateParentName(),
+        parentPhone,
+        startJoinDate: joinDate,
+        schoolLevel,
+        hasAccount: true,
+        password: hashedPhone,
+        mustChangePassword: true,
+        accountCreatedAt: joinDate,
+        accountCreatedBy: "SEED",
+      });
+    }
+    await prisma.student.createMany({ data: inputs, skipDuplicates: true });
+    const created = await prisma.student.findMany({
+      where: { nis: { in: inputs.map((s) => s.nis) }, schoolLevel },
+      select: { id: true, nis: true },
+    });
+
+    // Flat class lists per year + assignments (round-robin with promotion, capped at max grade)
+    const maxGrade = grades[grades.length - 1];
+    const list2425: {
+      id: string;
+      grade: number;
+      section: string;
+      monthlyFee: number;
+    }[] = [];
+    for (const g of grades) {
+      for (const s of sections) {
+        list2425.push({
+          ...classMapLvl[ay2425.id][g][s],
+          grade: g,
+          section: s,
+        });
+      }
+    }
+
+    const assign2425: Record<
+      string,
+      { classId: string; grade: number; section: string; monthlyFee: number }
+    > = {};
+    const assign2526: Record<string, { classId: string; monthlyFee: number }> =
+      {};
+    const classData: {
+      studentId: string;
+      classAcademicId: string;
+      enrolledAt: Date;
+    }[] = [];
+
+    for (let i = 0; i < created.length; i++) {
+      const student = created[i];
+      const cls2425 = list2425[i % list2425.length];
+      assign2425[student.nis] = {
+        classId: cls2425.id,
+        grade: cls2425.grade,
+        section: cls2425.section,
+        monthlyFee: cls2425.monthlyFee,
+      };
+      classData.push({
+        studentId: student.id,
+        classAcademicId: cls2425.id,
+        enrolledAt: new Date("2024-07-15"),
+      });
+
+      const nextGrade = Math.min(cls2425.grade + 1, maxGrade);
+      const cls2526 = classMapLvl[ay2526.id][nextGrade][cls2425.section];
+      assign2526[student.nis] = {
+        classId: cls2526.id,
+        monthlyFee: cls2526.monthlyFee,
+      };
+      classData.push({
+        studentId: student.id,
+        classAcademicId: cls2526.id,
+        enrolledAt: new Date("2025-07-15"),
+      });
+    }
+    await prisma.studentClass.createMany({
+      data: classData,
+      skipDuplicates: true,
+    });
+
+    // Tuitions (monthly, both years)
+    const idByNis = Object.fromEntries(created.map((s) => [s.nis, s.id]));
+    const tuitionInputs: TuitionInput[] = [];
+    for (const student of created) {
+      for (const [startYear, asgn] of [
+        [2024, assign2425[student.nis]] as const,
+        [2025, assign2526[student.nis]] as const,
+      ]) {
+        for (const p of monthlyPeriods) {
+          const dueCalYear = startYear + p.calYear;
+          tuitionInputs.push({
+            classAcademicId: asgn.classId,
+            studentId: idByNis[student.nis],
+            period: p.period,
+            month: p.month,
+            year: startYear,
+            feeAmount: asgn.monthlyFee,
+            dueDate: new Date(
+              `${dueCalYear}-${String(p.monthNum).padStart(2, "0")}-10`,
+            ),
+          });
+        }
+      }
+    }
+    for (let i = 0; i < tuitionInputs.length; i += BATCH_SIZE) {
+      const batch = tuitionInputs.slice(i, i + BATCH_SIZE);
+      await prisma.tuition.createMany({
+        data: batch.map((t) => ({
+          classAcademicId: t.classAcademicId,
+          studentId: t.studentId,
+          period: t.period,
+          month: t.month as
+            | "JULY"
+            | "AUGUST"
+            | "SEPTEMBER"
+            | "OCTOBER"
+            | "NOVEMBER"
+            | "DECEMBER"
+            | "JANUARY"
+            | "FEBRUARY"
+            | "MARCH"
+            | "APRIL"
+            | "MAY"
+            | "JUNE"
+            | null
+            | undefined,
+          year: t.year,
+          feeAmount: t.feeAmount,
+          dueDate: t.dueDate,
+          status: "UNPAID",
+          paidAmount: 0,
+          scholarshipAmount: 0,
+          discountAmount: 0,
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    // Payments (~40% PAID, ~10% PARTIAL)
+    const allT = await prisma.tuition.findMany({
+      where: { studentId: { in: Object.values(idByNis) } },
+      select: { id: true, feeAmount: true },
+    });
+    const paymentInserts: PaymentInput[] = [];
+    const tuitionUpdates: {
+      id: string;
+      paidAmount: number;
+      status: "PAID" | "PARTIAL";
+    }[] = [];
+    for (const tuition of allT) {
+      const roll = Math.random();
+      const fee = Number(tuition.feeAmount);
+      const cashier = randomItem(cashiers);
+      if (roll < 0.4) {
+        const payDate = new Date(2024, randomInt(6, 11), randomInt(1, 28));
+        paymentInserts.push({
+          tuitionId: tuition.id,
+          employeeId: cashier.employeeId,
+          amount: fee,
+          paymentDate: payDate,
+          notes: null,
+        });
+        tuitionUpdates.push({
+          id: tuition.id,
+          paidAmount: fee,
+          status: "PAID",
+        });
+      } else if (roll < 0.5) {
+        const partialRatio = 0.3 + Math.random() * 0.5;
+        const partialAmount = Math.floor((fee * partialRatio) / 1000) * 1000;
+        const payDate = new Date(2024, randomInt(6, 11), randomInt(1, 28));
+        paymentInserts.push({
+          tuitionId: tuition.id,
+          employeeId: cashier.employeeId,
+          amount: partialAmount,
+          paymentDate: payDate,
+          notes: "Pembayaran sebagian",
+        });
+        tuitionUpdates.push({
+          id: tuition.id,
+          paidAmount: partialAmount,
+          status: "PARTIAL",
+        });
+      }
+    }
+    for (let i = 0; i < paymentInserts.length; i += BATCH_SIZE) {
+      await prisma.payment.createMany({
+        data: paymentInserts.slice(i, i + BATCH_SIZE),
+        skipDuplicates: false,
+      });
+    }
+    for (let i = 0; i < tuitionUpdates.length; i += UPDATE_BATCH) {
+      const batch = tuitionUpdates.slice(i, i + UPDATE_BATCH);
+      await Promise.all(
+        batch.map((u) =>
+          prisma.tuition.update({
+            where: { id: u.id },
+            data: { paidAmount: u.paidAmount, status: u.status },
+          }),
+        ),
+      );
+    }
+    console.log(
+      `[${schoolLevel}] Done: ${created.length} students, ${tuitionInputs.length} tuitions, ${paymentInserts.length} payments.`,
+    );
+  }
+
+  await createCohort({
+    schoolLevel: "TK",
+    grades: [1, 2, 3],
+    monthlyFee: 400_000,
+    studentCount: 30,
+    nisPrefix: "TK2024",
+    nameSuffix: "(TK)",
+    classPrefix: "TK-",
+    addressStreet: "Jl. Anggrek",
+    nameOffset: 700,
+  });
+  await createCohort({
+    schoolLevel: "SMP",
+    grades: [7, 8, 9],
+    monthlyFee: 700_000,
+    studentCount: 40,
+    nisPrefix: "SMP2024",
+    nameSuffix: "(SMP)",
+    classPrefix: "VII-IX-",
+    addressStreet: "Jl. Kenanga",
+    nameOffset: 400,
+  });
+  await createCohort({
+    schoolLevel: "SMA",
+    grades: [10, 11, 12],
+    monthlyFee: 900_000,
+    studentCount: 40,
+    nisPrefix: "SMA2024",
+    nameSuffix: "(SMA)",
+    classPrefix: "X-XII-",
+    addressStreet: "Jl. Melati",
+    nameOffset: 600,
+  });
+
+  // ============================================================
   // 5b. CURRENT STUDENT-CLASS ASSIGNMENTS
   // ============================================================
   console.log("Assigning students to classes (~20 per class)...");
@@ -1313,29 +1636,46 @@ async function main() {
   console.log("  Payments done.");
 
   // ============================================================
-  // 8. SCHOLARSHIPS (15 students)
+  // 8. SCHOLARSHIPS — per level (SD + TK + SMP + SMA)
   // ============================================================
-  console.log("Creating scholarships for 15 students...");
+  console.log("Creating scholarships across all school levels...");
 
-  const scholarshipStudents = studentNisList.slice(0, 15);
-  const scholarshipData = [];
+  // Pull 3-6 students per level from 2024/2025 enrollments
+  const scholarshipData: {
+    studentId: string;
+    classAcademicId: string;
+    name: string;
+    nominal: number;
+    isFullScholarship: boolean;
+  }[] = [];
+  const studentsPerLevel = { TK: 3, SD: 15, SMP: 5, SMA: 5 } as const;
 
-  for (let i = 0; i < scholarshipStudents.length; i++) {
-    const studentNis = scholarshipStudents[i];
-    const studentId = studentIdByNis[studentNis];
-    const asgn = studentClassAssignment2425[studentNis];
-    const isFullScholarship = i < 5; // first 5 get full scholarships
-    const nominal = isFullScholarship
-      ? asgn.monthlyFee
-      : Math.floor(asgn.monthlyFee * 0.5);
-
-    scholarshipData.push({
-      studentId,
-      classAcademicId: asgn.classId,
-      name: isFullScholarship ? "Beasiswa Penuh" : "Beasiswa Sebagian",
-      nominal,
-      isFullScholarship,
+  for (const [lvl, count] of Object.entries(studentsPerLevel)) {
+    const enrolled = await prisma.studentClass.findMany({
+      where: {
+        classAcademic: {
+          academicYearId: ay2425.id,
+          schoolLevel: lvl as "TK" | "SD" | "SMP" | "SMA",
+        },
+      },
+      select: {
+        studentId: true,
+        classAcademicId: true,
+        classAcademic: { select: { monthlyFee: true } },
+      },
+      take: count,
     });
+    for (let i = 0; i < enrolled.length; i++) {
+      const isFull = i < Math.ceil(count / 3);
+      const monthlyFee = Number(enrolled[i].classAcademic.monthlyFee);
+      scholarshipData.push({
+        studentId: enrolled[i].studentId,
+        classAcademicId: enrolled[i].classAcademicId,
+        name: isFull ? `Beasiswa Penuh ${lvl}` : `Beasiswa Sebagian ${lvl}`,
+        nominal: isFull ? monthlyFee : Math.floor(monthlyFee * 0.5),
+        isFullScholarship: isFull,
+      });
+    }
   }
 
   await prisma.scholarship.createMany({
@@ -1343,7 +1683,9 @@ async function main() {
     skipDuplicates: true,
   });
 
-  console.log(`  Created ${scholarshipData.length} scholarships.`);
+  console.log(
+    `  Created ${scholarshipData.length} scholarships across all levels.`,
+  );
 
   // ============================================================
   // 9. DISCOUNTS (2 school-wide)
@@ -1403,7 +1745,33 @@ async function main() {
     });
   }
 
-  console.log("  Created discounts.");
+  // Per-level class-specific discount (one grade-level target per cohort)
+  for (const lvl of ["TK", "SD", "SMP", "SMA"] as const) {
+    const cls = await prisma.classAcademic.findFirst({
+      where: { academicYearId: ay2425.id, schoolLevel: lvl },
+      orderBy: { grade: "asc" },
+    });
+    if (!cls) continue;
+    const name = `Diskon Kelas ${lvl}`;
+    const exists = await prisma.discount.findFirst({
+      where: { academicYearId: ay2425.id, name },
+    });
+    if (exists) continue;
+    await prisma.discount.create({
+      data: {
+        name,
+        description: `Diskon khusus untuk siswa ${lvl}`,
+        reason: `Promosi ${lvl}`,
+        discountAmount: 75_000,
+        targetPeriods: ["JULY", "AUGUST", "SEPTEMBER"],
+        academicYearId: ay2425.id,
+        classAcademicId: cls.id,
+        isActive: true,
+      },
+    });
+  }
+
+  console.log("  Created discounts (2 school-wide + 4 per-level).");
 
   // ============================================================
   // 10. FEE SERVICES (Transport + Accommodation) for current years
@@ -1495,32 +1863,42 @@ async function main() {
   const serviceFeesByClass: Record<string, { id: string; amount: number }> = {};
   let serviceFeeCreated = 0;
 
-  for (const ay of [ay2425, ay2526]) {
-    for (const grade of gradeList) {
-      for (const section of sectionList) {
-        const cls = classMap[ay.id][grade][section];
-        let svcFee = await prisma.serviceFee.findFirst({
-          where: { classAcademicId: cls.id, name: "Uang Perlengkapan" },
-        });
-        if (!svcFee) {
-          svcFee = await prisma.serviceFee.create({
-            data: {
-              classAcademicId: cls.id,
-              name: "Uang Perlengkapan",
-              amount: 750_000,
-              billingMonths: [Month.JULY, Month.JANUARY],
-              isActive: true,
-            },
-          });
-          serviceFeeCreated++;
-        }
-        serviceFeesByClass[cls.id] = { id: svcFee.id, amount: 750_000 };
-      }
+  // Query ALL classes across current years (covers SD, TK, SMP, SMA)
+  const allCurrentClasses = await prisma.classAcademic.findMany({
+    where: { academicYearId: { in: [ay2425.id, ay2526.id] } },
+    select: { id: true, schoolLevel: true },
+  });
+
+  // Vary service fee amount by level
+  const svcFeeAmountByLevel: Record<string, number> = {
+    TK: 500_000,
+    SD: 750_000,
+    SMP: 900_000,
+    SMA: 1_100_000,
+  };
+
+  for (const cls of allCurrentClasses) {
+    const amount = svcFeeAmountByLevel[cls.schoolLevel] ?? 750_000;
+    let svcFee = await prisma.serviceFee.findFirst({
+      where: { classAcademicId: cls.id, name: "Uang Perlengkapan" },
+    });
+    if (!svcFee) {
+      svcFee = await prisma.serviceFee.create({
+        data: {
+          classAcademicId: cls.id,
+          name: "Uang Perlengkapan",
+          amount,
+          billingMonths: [Month.JULY, Month.JANUARY],
+          isActive: true,
+        },
+      });
+      serviceFeeCreated++;
     }
+    serviceFeesByClass[cls.id] = { id: svcFee.id, amount };
   }
 
   console.log(
-    `  Created ${serviceFeeCreated} service fees (rest already existed).`,
+    `  Created ${serviceFeeCreated} service fees across ${allCurrentClasses.length} classes (rest already existed).`,
   );
 
   // ============================================================
@@ -1541,8 +1919,15 @@ async function main() {
 
   const allSubs: SubRow[] = [];
 
+  // Query all students enrolled in each current year (via student_classes)
   for (const ay of [ay2425, ay2526]) {
     const services = feeServicesByYear[ay.id];
+    const enrollments = await prisma.studentClass.findMany({
+      where: { classAcademic: { academicYearId: ay.id } },
+      select: { studentId: true },
+      distinct: ["studentId"],
+    });
+
     const subInputs: {
       id: string;
       studentId: string;
@@ -1552,7 +1937,7 @@ async function main() {
       notes: string;
     }[] = [];
 
-    for (let i = 0; i < studentNisList.length; i++) {
+    for (const { studentId } of enrollments) {
       const roll = Math.random();
       if (roll >= 0.3) continue;
       const numServices = roll < 0.03 ? 3 : roll < 0.12 ? 2 : 1;
@@ -1560,7 +1945,6 @@ async function main() {
       for (let s = 0; s < Math.min(numServices, shuffled.length); s++) {
         const svc = shuffled[s];
         const subId = crypto.randomUUID();
-        const studentId = studentIdByNis[studentNisList[i]];
         subInputs.push({
           id: subId,
           studentId,
@@ -1589,7 +1973,9 @@ async function main() {
         skipDuplicates: true,
       });
     }
-    console.log(`  ${ay.year}: created ${subInputs.length} subscriptions.`);
+    console.log(
+      `  ${ay.year}: created ${subInputs.length} subscriptions across ${enrollments.length} enrolled students.`,
+    );
   }
 
   // ============================================================
@@ -1675,50 +2061,33 @@ async function main() {
 
   const svcBillInputs: ServiceFeeBillInput[] = [];
 
-  const enrollmentByYear: Array<{
-    ayId: string;
-    startYear: number;
-    assignment: Record<
-      string,
-      { classId: string; monthlyFee: number; paymentFrequency: string }
-    >;
-  }> = [
-    {
-      ayId: ay2425.id,
-      startYear: 2024,
-      assignment: studentClassAssignment2425,
-    },
-    {
-      ayId: ay2526.id,
-      startYear: 2025,
-      assignment: studentClassAssignment2526,
-    },
-  ];
-
-  for (const { startYear, assignment } of enrollmentByYear) {
-    for (const studentNis of studentNisList) {
-      const asgn = assignment[studentNis];
-      if (!asgn) continue;
-      const svcFee = serviceFeesByClass[asgn.classId];
+  // Query all enrollments in current years (covers SD + TK/SMP/SMA cohorts)
+  for (const { ayId, startYear } of [
+    { ayId: ay2425.id, startYear: 2024 },
+    { ayId: ay2526.id, startYear: 2025 },
+  ]) {
+    const enrollments = await prisma.studentClass.findMany({
+      where: { classAcademic: { academicYearId: ayId } },
+      select: { studentId: true, classAcademicId: true },
+    });
+    for (const enr of enrollments) {
+      const svcFee = serviceFeesByClass[enr.classAcademicId];
       if (!svcFee) continue;
-      const studentId = studentIdByNis[studentNis];
-      // JULY (same calendar year as academic start)
       svcBillInputs.push({
         id: crypto.randomUUID(),
         serviceFeeId: svcFee.id,
-        studentId,
-        classAcademicId: asgn.classId,
+        studentId: enr.studentId,
+        classAcademicId: enr.classAcademicId,
         period: "JULY",
         year: startYear,
         amount: svcFee.amount,
         dueDate: new Date(`${startYear}-07-10`),
       });
-      // JANUARY (next calendar year)
       svcBillInputs.push({
         id: crypto.randomUUID(),
         serviceFeeId: svcFee.id,
-        studentId,
-        classAcademicId: asgn.classId,
+        studentId: enr.studentId,
+        classAcademicId: enr.classAcademicId,
         period: "JANUARY",
         year: startYear,
         amount: svcFee.amount,
@@ -1792,18 +2161,25 @@ async function main() {
   const feeBillUpdates: {
     id: string;
     paidAmount: number;
-    status: "PAID" | "PARTIAL";
+    status: "PAID" | "PARTIAL" | "VOID";
   }[] = [];
   const svcBillUpdates: {
     id: string;
     paidAmount: number;
-    status: "PAID" | "PARTIAL";
+    status: "PAID" | "PARTIAL" | "VOID";
   }[] = [];
 
   for (const bill of payableBills) {
     const roll = Math.random();
     const cashier = randomItem(cashiers);
-    if (roll < 0.45) {
+    if (roll < 0.03) {
+      // ~3% VOID — bill cancelled, no payment
+      if (bill.kind === "feeBill") {
+        feeBillUpdates.push({ id: bill.id, paidAmount: 0, status: "VOID" });
+      } else {
+        svcBillUpdates.push({ id: bill.id, paidAmount: 0, status: "VOID" });
+      }
+    } else if (roll < 0.45) {
       const payMonth = randomInt(6, 11);
       const payDate = new Date(bill.startYear, payMonth, randomInt(1, 28));
       feePaymentInserts.push({
