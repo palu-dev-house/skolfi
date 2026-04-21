@@ -23,7 +23,7 @@ async function GET(request: NextRequest) {
     const schoolLevelParam = sp.get("schoolLevel");
     const schoolLevel =
       schoolLevelParam && schoolLevelParam !== "null"
-        ? (schoolLevelParam as "SD" | "SMP" | "SMA")
+        ? (schoolLevelParam as "TK" | "SD" | "SMP" | "SMA")
         : undefined;
     const studentSearch = sp.get("studentSearch") || undefined;
 

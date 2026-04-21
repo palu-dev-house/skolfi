@@ -7,7 +7,7 @@ import { queryKeys, type StudentFilters } from "@/lib/query-keys";
 interface Student {
   id: string;
   nis: string;
-  schoolLevel: "SD" | "SMP" | "SMA";
+  schoolLevel: "TK" | "SD" | "SMP" | "SMA";
   name: string;
   address: string;
   parentName: string;
@@ -74,7 +74,7 @@ export function useStudent(nis: string) {
 
 interface CreateStudentInput {
   nis: string;
-  schoolLevel: "SD" | "SMP" | "SMA";
+  schoolLevel: "TK" | "SD" | "SMP" | "SMA";
   name: string;
   address: string;
   parentName: string;

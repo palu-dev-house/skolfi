@@ -15,7 +15,7 @@ export interface StudentClassFilters {
 interface Student {
   id: string;
   nis: string;
-  schoolLevel: "SD" | "SMP" | "SMA";
+  schoolLevel: "TK" | "SD" | "SMP" | "SMA";
   name: string;
   parentName: string;
   parentPhone: string;

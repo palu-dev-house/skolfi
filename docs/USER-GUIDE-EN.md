@@ -144,7 +144,7 @@ A student portal account is created automatically with the default password set 
 
 **Search & filter:**
 - **NIS / name search** — the search box (with an NIS icon) above the table matches either the student's NIS or their name. Results update as you type.
-- **School Level filter** — the `SD / SMP / SMA` dropdown narrows the table to a single school level. It can be combined with the NIS search and any other filter.
+- **School Level filter** — the `TK / SD / SMP / SMA` dropdown narrows the table to a single school level. It can be combined with the NIS search and any other filter.
 
 **Columns:** The table shows the student's **NIS** (not their internal UUID) and **School Level** so you can scan the list quickly.
 
@@ -206,7 +206,7 @@ Discounts apply to entire classes (for example, sibling discounts, Independence 
 
 **Search & filter:**
 - **NIS / name search** — find a discount by the student's NIS or name via the search box above the table.
-- **School Level filter** — `SD / SMP / SMA` dropdown works alone or together with the NIS search.
+- **School Level filter** — `TK / SD / SMP / SMA` dropdown works alone or together with the NIS search.
 
 **Inline import:** The toolbar has an **Import** button with a **Download Template** button right next to it.
 
@@ -235,7 +235,7 @@ Tuition bills are typically generated at the start of the academic year for the 
 The bills table can be filtered by:
 - Academic class
 - **Student (NIS / name)** — search box above the table matches either NIS or name.
-- **School Level** — `SD / SMP / SMA` dropdown; combines with all other filters.
+- **School Level** — `TK / SD / SMP / SMA` dropdown; combines with all other filters.
 - Status: `UNPAID`, `PAID`, `PARTIAL`, `VOID`
 - Period and year
 - Due date range
@@ -423,7 +423,7 @@ The **Generate All Bills** button at the top of **All Bills** creates any missin
 ### Search, filter, and columns on All Bills
 
 - **NIS / name search** — the search box at the top of the table accepts either a student's NIS or name.
-- **School Level filter** — `SD / SMP / SMA` dropdown; combines with every other filter.
+- **School Level filter** — `TK / SD / SMP / SMA` dropdown; combines with every other filter.
 - **Column settings** — click the **column-sliders** icon button on the toolbar. A drawer slides in with a toggle for every column — show or hide whatever you need (e.g. hide the cashier column when presenting to parents). Preferences persist per browser.
 - **NIS and school-level columns** — visible by default alongside the student name.
 
@@ -572,7 +572,7 @@ Each tab uses the same filters and table format, so you can switch between bill 
 
 **Available filters (all tabs):**
 - **NIS / name search** — find a student directly by NIS or name.
-- **School Level** — `SD / SMP / SMA` dropdown.
+- **School Level** — `TK / SD / SMP / SMA` dropdown.
 - Academic class
 - Academic year
 
@@ -654,7 +654,7 @@ Changing any filter automatically resets the table back to page 1 so you never l
 A few quality-of-life behaviours apply across all admin tables and reports:
 
 - **NIS / name search** — tables that list students (Tuitions, Discounts, Scholarships, Fee Bills, Overdue Report) all have a search box with an **NIS icon**. Typing matches either the NIS or the student name.
-- **School Level filter** — the same pages have an `SD / SMP / SMA` dropdown. It combines with the NIS search and every other filter.
+- **School Level filter** — the same pages have a `TK / SD / SMP / SMA` dropdown. It combines with the NIS search and every other filter.
 - **NIS + School Level columns** — student tables and any table that shows students display the student's **NIS** (not their internal UUID) and their **school level**, so rows are easier to scan.
 - **Column Settings** — the Fee Bills table includes a **column-sliders** icon button on the toolbar. Click it to open a drawer that toggles individual columns on/off. Settings persist per browser.
 - **Inline Excel Import** — student, scholarship, and discount imports are on a toolbar **Import** button (no separate page). A **Download Template** button sits right next to it.

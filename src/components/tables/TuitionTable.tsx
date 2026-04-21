@@ -50,13 +50,13 @@ import {
 const filtersSchema = z.object({
   academicYearId: z.string().optional(),
   classAcademicId: z.string().optional(),
-  schoolLevel: z.enum(["SD", "SMP", "SMA"]).optional(),
+  schoolLevel: z.enum(["TK", "SD", "SMP", "SMA"]).optional(),
   status: z.enum(["UNPAID", "PARTIAL", "PAID", "VOID"]).optional(),
   period: z.string().optional(),
   studentSearch: z.string().optional(),
 });
 
-const SCHOOL_LEVELS = ["SD", "SMP", "SMA"] as const;
+const SCHOOL_LEVELS = ["TK", "SD", "SMP", "SMA"] as const;
 
 const STATUS_COLORS: Record<PaymentStatus, string> = {
   UNPAID: "red",
@@ -285,7 +285,10 @@ export default function TuitionTable() {
             data={SCHOOL_LEVELS.map((s) => ({ value: s, label: s }))}
             value={schoolLevel}
             onChange={(v) =>
-              setFilter("schoolLevel", (v as "SD" | "SMP" | "SMA") || null)
+              setFilter(
+                "schoolLevel",
+                (v as "TK" | "SD" | "SMP" | "SMA") || null,
+              )
             }
             clearable
           />

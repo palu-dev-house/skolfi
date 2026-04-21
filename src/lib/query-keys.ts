@@ -33,7 +33,7 @@ export interface TuitionFilters {
   limit?: number;
   classAcademicId?: string;
   studentId?: string;
-  schoolLevel?: "SD" | "SMP" | "SMA";
+  schoolLevel?: "TK" | "SD" | "SMP" | "SMA";
   status?: "UNPAID" | "PAID" | "PARTIAL" | "VOID";
   period?: string;
   month?: string; // Backward compatibility
@@ -47,7 +47,7 @@ export interface ScholarshipFilters {
   limit?: number;
   classAcademicId?: string;
   studentId?: string;
-  schoolLevel?: "SD" | "SMP" | "SMA";
+  schoolLevel?: "TK" | "SD" | "SMP" | "SMA";
   isFullScholarship?: boolean;
 }
 
@@ -65,7 +65,7 @@ export interface OverdueFilters {
   classAcademicId?: string;
   grade?: number;
   academicYearId?: string;
-  schoolLevel?: "SD" | "SMP" | "SMA";
+  schoolLevel?: "TK" | "SD" | "SMP" | "SMA";
   search?: string;
 }
 
@@ -78,7 +78,7 @@ export interface DiscountFilters {
   limit?: number;
   academicYearId?: string;
   classAcademicId?: string;
-  schoolLevel?: "SD" | "SMP" | "SMA";
+  schoolLevel?: "TK" | "SD" | "SMP" | "SMA";
   isActive?: boolean;
   search?: string;
 }
@@ -132,7 +132,7 @@ export interface FeeBillFilters {
   limit?: number;
   studentId?: string;
   feeServiceId?: string;
-  schoolLevel?: "SD" | "SMP" | "SMA";
+  schoolLevel?: "TK" | "SD" | "SMP" | "SMA";
   period?: string;
   year?: number;
   status?: "UNPAID" | "PARTIAL" | "PAID" | "VOID";
@@ -152,7 +152,7 @@ export interface ServiceFeeBillFilters {
   studentId?: string;
   classAcademicId?: string;
   serviceFeeId?: string;
-  schoolLevel?: "SD" | "SMP" | "SMA";
+  schoolLevel?: "TK" | "SD" | "SMP" | "SMA";
   period?: string;
   year?: number;
   status?: "UNPAID" | "PARTIAL" | "PAID" | "VOID";

@@ -151,7 +151,7 @@ Secara otomatis, akun portal siswa akan dibuat dengan password default berupa no
 
 **Import Excel:** Tombol **Import** dan **Download Template** kini tersedia langsung pada toolbar halaman Siswa (tidak lagi lewat modal terpisah). Unggah file berdasarkan template yang disediakan.
 
-**Kolom NIS dan Jenjang:** Tabel siswa (serta tabel-tabel lain yang menampilkan data siswa seperti Tagihan SPP, Potongan, Beasiswa, dan Tagihan Layanan) kini menampilkan **NIS** (bukan UUID internal) beserta **jenjang sekolah** (SD/SMP/SMA) sehingga lebih mudah dibaca oleh staf.
+**Kolom NIS dan Jenjang:** Tabel siswa (serta tabel-tabel lain yang menampilkan data siswa seperti Tagihan SPP, Potongan, Beasiswa, dan Tagihan Layanan) kini menampilkan **NIS** (bukan UUID internal) beserta **jenjang sekolah** (TK/SD/SMP/SMA) sehingga lebih mudah dibaca oleh staf.
 
 **Pencarian dan filter lanjutan:** Lihat bagian [14.1 Pencarian NIS dan Filter Jenjang](#141-pencarian-nis-dan-filter-jenjang) untuk detail pencarian via NIS dan filter jenjang yang tersedia di banyak tabel.
 
@@ -551,7 +551,7 @@ Setiap tab menggunakan filter dan format tabel yang sama, jadi Anda bisa beralih
 
 **Filter yang tersedia di semua tab:**
 - **Pencarian NIS/Nama** — ketik NIS atau nama siswa; hasil cocok dengan salah satu.
-- **Jenjang Sekolah** — dropdown SD / SMP / SMA (bisa dikombinasikan dengan filter lain).
+- **Jenjang Sekolah** — dropdown TK / SD / SMP / SMA (bisa dikombinasikan dengan filter lain).
 - **Tahun ajaran**.
 - **Kelas** akademik.
 - **Grade / tingkat**.
@@ -694,7 +694,7 @@ Bagian ini merangkum fitur-fitur yang berlaku lintas halaman — terutama pada t
 Sebagian besar tabel yang menampilkan data siswa kini dilengkapi dua kontrol baru di toolbar atas:
 
 - **Pencarian NIS / Nama** — input pencarian dengan ikon NIS. Ketik **NIS** atau **nama siswa**; sistem akan mencocokkan salah satunya. Cocok untuk menemukan satu siswa tertentu dengan cepat.
-- **Jenjang Sekolah** — dropdown filter **SD / SMP / SMA**. Dapat digunakan sendiri atau dikombinasikan dengan pencarian NIS untuk mempersempit hasil (misalnya hanya siswa SMP dengan nama mengandung "Andi").
+- **Jenjang Sekolah** — dropdown filter **TK / SD / SMP / SMA**. Dapat digunakan sendiri atau dikombinasikan dengan pencarian NIS untuk mempersempit hasil (misalnya hanya siswa SMP dengan nama mengandung "Andi").
 
 **Halaman yang mendukung kedua kontrol ini:**
 - Tagihan SPP

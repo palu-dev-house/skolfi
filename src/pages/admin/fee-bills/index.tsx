@@ -55,13 +55,13 @@ import type { NextPageWithLayout } from "@/lib/page-types";
 
 const billFilterSchema = z.object({
   studentId: z.string().optional(),
-  schoolLevel: z.enum(["SD", "SMP", "SMA"]).optional(),
+  schoolLevel: z.enum(["TK", "SD", "SMP", "SMA"]).optional(),
   period: z.string().optional(),
   year: z.string().optional(),
   status: z.enum(["UNPAID", "PARTIAL", "PAID", "VOID"]).optional(),
 });
 
-const SCHOOL_LEVELS = ["SD", "SMP", "SMA"] as const;
+const SCHOOL_LEVELS = ["TK", "SD", "SMP", "SMA"] as const;
 
 function formatRp(v: string | number) {
   const n = typeof v === "string" ? parseFloat(v) : v;
@@ -245,7 +245,10 @@ function FeeBillTab({ activeYearId }: { activeYearId?: string }) {
               data={SCHOOL_LEVELS.map((s) => ({ value: s, label: s }))}
               value={schoolLevel}
               onChange={(v) =>
-                setFilter("schoolLevel", (v as "SD" | "SMP" | "SMA") || null)
+                setFilter(
+                  "schoolLevel",
+                  (v as "TK" | "SD" | "SMP" | "SMA") || null,
+                )
               }
               clearable
               w={140}
@@ -558,7 +561,10 @@ function ServiceFeeBillTab({ activeYearId }: { activeYearId?: string }) {
               data={SCHOOL_LEVELS.map((s) => ({ value: s, label: s }))}
               value={schoolLevel}
               onChange={(v) =>
-                setFilter("schoolLevel", (v as "SD" | "SMP" | "SMA") || null)
+                setFilter(
+                  "schoolLevel",
+                  (v as "TK" | "SD" | "SMP" | "SMA") || null,
+                )
               }
               clearable
               w={140}

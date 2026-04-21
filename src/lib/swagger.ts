@@ -63,7 +63,7 @@ export const getApiDocs = () => {
             type: "object",
             properties: {
               nis: { type: "string" },
-              schoolLevel: { type: "string", enum: ["SD", "SMP", "SMA"] },
+              schoolLevel: { type: "string", enum: ["TK", "SD", "SMP", "SMA"] },
               name: { type: "string" },
               address: { type: "string" },
               parentName: { type: "string" },
@@ -547,7 +547,7 @@ export const getApiDocs = () => {
                       nis: { type: "string" },
                       schoolLevel: {
                         type: "string",
-                        enum: ["SD", "SMP", "SMA"],
+                        enum: ["TK", "SD", "SMP", "SMA"],
                       },
                       name: { type: "string" },
                       address: { type: "string" },
@@ -639,7 +639,7 @@ export const getApiDocs = () => {
                     properties: {
                       schoolLevel: {
                         type: "string",
-                        enum: ["SD", "SMP", "SMA"],
+                        enum: ["TK", "SD", "SMP", "SMA"],
                       },
                       name: { type: "string" },
                       address: { type: "string" },

@@ -48,12 +48,12 @@ import { useQueryFilters } from "@/hooks/useQueryFilters";
 
 const scholarshipFiltersSchema = z.object({
   classAcademicId: z.string().optional(),
-  schoolLevel: z.enum(["SD", "SMP", "SMA"]).optional(),
+  schoolLevel: z.enum(["TK", "SD", "SMP", "SMA"]).optional(),
   studentSearch: z.string().optional(),
   isFullScholarship: z.enum(["true", "false"]).optional(),
 });
 
-const SCHOOL_LEVELS = ["SD", "SMP", "SMA"] as const;
+const SCHOOL_LEVELS = ["TK", "SD", "SMP", "SMA"] as const;
 
 export default function ScholarshipTable() {
   const t = useTranslations();
@@ -277,7 +277,10 @@ export default function ScholarshipTable() {
             data={SCHOOL_LEVELS.map((s) => ({ value: s, label: s }))}
             value={schoolLevel}
             onChange={(v) =>
-              setFilter("schoolLevel", (v as "SD" | "SMP" | "SMA") || null)
+              setFilter(
+                "schoolLevel",
+                (v as "TK" | "SD" | "SMP" | "SMA") || null,
+              )
             }
             clearable
             w={140}

@@ -86,7 +86,7 @@ export async function getOverdueTuitions(
     classAcademicId?: string;
     grade?: number;
     academicYearId?: string;
-    schoolLevel?: "SD" | "SMP" | "SMA";
+    schoolLevel?: "TK" | "SD" | "SMP" | "SMA";
     studentSearch?: string;
   },
   prisma: PrismaClient,
@@ -371,7 +371,7 @@ export async function getOverdueFeeBills(
     classAcademicId?: string;
     grade?: number;
     academicYearId?: string;
-    schoolLevel?: "SD" | "SMP" | "SMA";
+    schoolLevel?: "TK" | "SD" | "SMP" | "SMA";
     studentSearch?: string;
   },
   prisma: PrismaClient,
@@ -453,7 +453,7 @@ export async function getOverdueServiceFeeBills(
     classAcademicId?: string;
     grade?: number;
     academicYearId?: string;
-    schoolLevel?: "SD" | "SMP" | "SMA";
+    schoolLevel?: "TK" | "SD" | "SMP" | "SMA";
     studentSearch?: string;
   },
   prisma: PrismaClient,

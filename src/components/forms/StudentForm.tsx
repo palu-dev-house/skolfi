@@ -7,7 +7,7 @@ import { useTranslations } from "next-intl";
 import { studentSchema } from "@/lib/validations";
 import { zodResolver } from "@/lib/validations/mantine-zod-resolver";
 
-type SchoolLevel = "SD" | "SMP" | "SMA";
+type SchoolLevel = "TK" | "SD" | "SMP" | "SMA";
 
 interface StudentFormValues {
   nis: string;

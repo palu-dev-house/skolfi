@@ -58,7 +58,7 @@ async function POST(request: NextRequest) {
       }
 
       try {
-        const schoolLevel = row["School Level"] as "SD" | "SMP" | "SMA";
+        const schoolLevel = row["School Level"] as "TK" | "SD" | "SMP" | "SMA";
         const existing = await prisma.student.findUnique({
           where: { nis_schoolLevel: { nis: row.NIS, schoolLevel } },
         });

@@ -1,7 +1,7 @@
 import ExcelJS from "exceljs";
 import { applyListValidation, inlineListFormula } from "../exceljs-utils";
 
-const SCHOOL_LEVELS = ["SD", "SMP", "SMA"];
+const SCHOOL_LEVELS = ["TK", "SD", "SMP", "SMA"];
 const LAST_ROW = 1000;
 
 export function createStudentTemplate(): ExcelJS.Workbook {
@@ -43,7 +43,7 @@ export function createStudentTemplate(): ExcelJS.Workbook {
     [inlineListFormula(SCHOOL_LEVELS)],
     {
       promptTitle: "School Level",
-      prompt: "Pick SD, SMP or SMA.",
+      prompt: "Pick TK, SD, SMP or SMA.",
     },
   );
 

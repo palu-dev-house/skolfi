@@ -72,6 +72,7 @@ enum FeeServiceCategory {
 }
 
 enum SchoolLevel {
+  TK
   SD
   SMP
   SMA
