@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.26.2] - 2026-04-21
+
+### Fixes
+- studentId to nis mapping data
+
+
+
 ## [2.26.1] - 2026-04-19
 
 ### Other
