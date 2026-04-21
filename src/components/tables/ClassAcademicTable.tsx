@@ -57,6 +57,7 @@ export default function ClassAcademicTable() {
 
   const columnDefs = [
     { key: "name", label: t("class.name") },
+    { key: "schoolLevel", label: t("student.schoolLevel") },
     { key: "grade", label: t("class.grade") },
     { key: "section", label: t("class.section") },
     { key: "academicYear", label: t("class.academicYear") },
@@ -271,6 +272,12 @@ export default function ClassAcademicTable() {
                   switch (key) {
                     case "name":
                       return <Table.Th key={key}>{t("class.name")}</Table.Th>;
+                    case "schoolLevel":
+                      return (
+                        <Table.Th key={key}>
+                          {t("student.schoolLevel")}
+                        </Table.Th>
+                      );
                     case "grade":
                       return <Table.Th key={key}>{t("class.grade")}</Table.Th>;
                     case "section":
@@ -342,6 +349,12 @@ export default function ClassAcademicTable() {
                         return (
                           <Table.Td key={key} fw={600}>
                             {cls.className}
+                          </Table.Td>
+                        );
+                      case "schoolLevel":
+                        return (
+                          <Table.Td key={key}>
+                            <Badge variant="light">{cls.schoolLevel}</Badge>
                           </Table.Td>
                         );
                       case "grade":

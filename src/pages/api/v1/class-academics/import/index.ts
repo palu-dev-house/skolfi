@@ -6,12 +6,16 @@ import { generateClassName } from "@/lib/business-logic/class-name-generator";
 import { readExcelBuffer } from "@/lib/excel-utils";
 import { getServerT } from "@/lib/i18n-server";
 import { prisma } from "@/lib/prisma";
+import { SCHOOL_LEVEL_GRADE_RANGE } from "@/lib/validations/schemas/class.schema";
 
 interface ClassRow {
   "Academic Year": string;
+  "School Level"?: string;
   Grade: string;
   Section: string;
 }
+
+type SchoolLevel = keyof typeof SCHOOL_LEVEL_GRADE_RANGE;
 
 async function POST(request: NextRequest) {
   const auth = await requireRole(request, ["ADMIN"]);
@@ -51,6 +55,26 @@ async function POST(request: NextRequest) {
         continue;
       }
 
+      const rawLevel = (row["School Level"] || "").trim().toUpperCase();
+      const schoolLevel: SchoolLevel = (
+        ["TK", "SD", "SMP", "SMA"].includes(rawLevel)
+          ? rawLevel
+          : grade >= 10
+            ? "SMA"
+            : grade >= 7
+              ? "SMP"
+              : "SD"
+      ) as SchoolLevel;
+
+      const range = SCHOOL_LEVEL_GRADE_RANGE[schoolLevel];
+      if (grade < range.min || grade > range.max) {
+        errors.push({
+          row: rowNum,
+          error: `Grade ${grade} is outside ${schoolLevel} range (${range.min}-${range.max})`,
+        });
+        continue;
+      }
+
       try {
         const academicYear = await prisma.academicYear.findUnique({
           where: { year: row["Academic Year"] },
@@ -66,8 +90,9 @@ async function POST(request: NextRequest) {
 
         const existing = await prisma.classAcademic.findUnique({
           where: {
-            academicYearId_grade_section: {
+            academicYearId_schoolLevel_grade_section: {
               academicYearId: academicYear.id,
+              schoolLevel,
               grade,
               section: row.Section,
             },
@@ -86,11 +111,13 @@ async function POST(request: NextRequest) {
           grade,
           row.Section,
           academicYear.year,
+          schoolLevel,
         );
 
         await prisma.classAcademic.create({
           data: {
             academicYearId: academicYear.id,
+            schoolLevel,
             grade,
             section: row.Section,
             className,

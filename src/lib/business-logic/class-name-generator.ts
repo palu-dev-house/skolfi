@@ -13,17 +13,23 @@ const ROMAN_MAP: Record<number, string> = {
   12: "XII",
 };
 
+export type SchoolLevelInput = "TK" | "SD" | "SMP" | "SMA";
+
 /**
- * Generate class name pattern: GRADE-SECTION-YEAR
- * Examples:
- * - Grade 1, Section A, Year 2024/2025 → I-A-2024/2025
- * - Grade 12, Section IPA, Year 2024/2025 → XII-IPA-2024/2025
+ * Generate class name pattern.
+ * TK uses Arabic numerals prefixed with the level (e.g. TK-1-A-2024/2025) because
+ * grade 1 collides with SD grade 1 in roman numerals. SD/SMP/SMA keep the existing
+ * roman format for backwards compatibility.
  */
 export function generateClassName(
   grade: number,
   section: string,
   academicYear: string,
+  schoolLevel?: SchoolLevelInput,
 ): string {
+  if (schoolLevel === "TK") {
+    return `TK-${grade}-${section}-${academicYear}`;
+  }
   const romanGrade = ROMAN_MAP[grade] || String(grade);
   return `${romanGrade}-${section}-${academicYear}`;
 }

@@ -177,6 +177,7 @@ model AcademicYear {
 model ClassAcademic {
   id               String           @id @default(uuid())
   academicYearId   String           @map("academic_year_id")
+  schoolLevel      SchoolLevel      @default(SD) @map("school_level")
   grade            Int
   section          String
   className        String           @map("class_name")
@@ -196,7 +197,7 @@ model ClassAcademic {
   serviceFees     ServiceFee[]
   serviceFeeBills ServiceFeeBill[]
 
-  @@unique([academicYearId, grade, section])
+  @@unique([academicYearId, schoolLevel, grade, section])
   @@map("class_academics")
 }
 

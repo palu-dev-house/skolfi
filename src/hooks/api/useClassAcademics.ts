@@ -7,6 +7,7 @@ import { type ClassAcademicFilters, queryKeys } from "@/lib/query-keys";
 interface ClassAcademic {
   id: string;
   academicYearId: string;
+  schoolLevel: "TK" | "SD" | "SMP" | "SMA";
   grade: number;
   section: string;
   className: string;
@@ -78,6 +79,7 @@ export function useCreateClassAcademic() {
   return useMutation({
     mutationFn: async (classAcademic: {
       academicYearId: string;
+      schoolLevel: "TK" | "SD" | "SMP" | "SMA";
       grade: number;
       section: string;
     }) => {
@@ -106,6 +108,7 @@ export function useUpdateClassAcademic() {
       id: string;
       updates: {
         academicYearId?: string;
+        schoolLevel?: "TK" | "SD" | "SMP" | "SMA";
         grade?: number;
         section?: string;
       };

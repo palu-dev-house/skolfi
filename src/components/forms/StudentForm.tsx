@@ -92,6 +92,7 @@ export default function StudentForm({
           required
           disabled={isEdit}
           data={[
+            { value: "TK", label: "TK" },
             { value: "SD", label: "SD" },
             { value: "SMP", label: "SMP" },
             { value: "SMA", label: "SMA" },

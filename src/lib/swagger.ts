@@ -88,6 +88,10 @@ export const getApiDocs = () => {
             properties: {
               id: { type: "string", format: "uuid" },
               academicYearId: { type: "string", format: "uuid" },
+              schoolLevel: {
+                type: "string",
+                enum: ["TK", "SD", "SMP", "SMA"],
+              },
               grade: { type: "number", minimum: 1, maximum: 12 },
               section: { type: "string" },
               className: { type: "string" },

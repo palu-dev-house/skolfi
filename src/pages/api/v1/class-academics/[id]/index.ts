@@ -63,6 +63,7 @@ async function PUT(
     const grade = body.grade ?? existing.grade;
     const section = body.section ?? existing.section;
     const academicYearId = body.academicYearId ?? existing.academicYearId;
+    const schoolLevel = body.schoolLevel ?? existing.schoolLevel;
 
     let academicYear = existing.academicYear;
     if (
@@ -86,12 +87,14 @@ async function PUT(
     if (
       grade !== existing.grade ||
       section !== existing.section ||
-      academicYearId !== existing.academicYearId
+      academicYearId !== existing.academicYearId ||
+      schoolLevel !== existing.schoolLevel
     ) {
       const duplicate = await prisma.classAcademic.findUnique({
         where: {
-          academicYearId_grade_section: {
+          academicYearId_schoolLevel_grade_section: {
             academicYearId,
+            schoolLevel,
             grade,
             section,
           },
@@ -106,7 +109,12 @@ async function PUT(
       }
     }
 
-    const className = generateClassName(grade, section, academicYear.year);
+    const className = generateClassName(
+      grade,
+      section,
+      academicYear.year,
+      schoolLevel,
+    );
 
     // Handle payment frequency and fee updates
     const paymentFrequency = body.paymentFrequency ?? existing.paymentFrequency;
@@ -141,6 +149,7 @@ async function PUT(
         grade,
         section,
         academicYearId,
+        schoolLevel,
         className,
         paymentFrequency,
         monthlyFee,

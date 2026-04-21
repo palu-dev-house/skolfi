@@ -80,6 +80,7 @@ async function POST(request: NextRequest) {
 
     const {
       academicYearId,
+      schoolLevel,
       grade,
       section,
       paymentFrequency = "MONTHLY",
@@ -103,8 +104,9 @@ async function POST(request: NextRequest) {
 
     const existing = await prisma.classAcademic.findUnique({
       where: {
-        academicYearId_grade_section: {
+        academicYearId_schoolLevel_grade_section: {
           academicYearId,
+          schoolLevel,
           grade,
           section,
         },
@@ -115,7 +117,12 @@ async function POST(request: NextRequest) {
       return errorResponse(t("api.classAlreadyExists"), "DUPLICATE_ENTRY", 409);
     }
 
-    const className = generateClassName(grade, section, academicYear.year);
+    const className = generateClassName(
+      grade,
+      section,
+      academicYear.year,
+      schoolLevel,
+    );
 
     // Calculate default fees if not provided
     const calculatedQuarterlyFee =
@@ -126,6 +133,7 @@ async function POST(request: NextRequest) {
     const classAcademic = await prisma.classAcademic.create({
       data: {
         academicYearId,
+        schoolLevel,
         grade,
         section,
         className,

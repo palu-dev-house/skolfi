@@ -49,10 +49,18 @@ describe("studentSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects invalid school level", () => {
+  it("accepts TK school level", () => {
     const result = studentSchema.safeParse({
       ...validStudent,
       schoolLevel: "TK",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects invalid school level", () => {
+    const result = studentSchema.safeParse({
+      ...validStudent,
+      schoolLevel: "UNIV",
     });
     expect(result.success).toBe(false);
   });

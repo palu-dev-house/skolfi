@@ -21,6 +21,7 @@ const EditClassPage: NextPageWithLayout = function EditClassPage() {
 
   const handleSubmit = (data: {
     academicYearId: string;
+    schoolLevel: "TK" | "SD" | "SMP" | "SMA";
     grade: number;
     section: string;
   }) => {
