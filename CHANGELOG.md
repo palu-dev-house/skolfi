@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.29.0] - 2026-04-21
+
+### Features
+- color-code school level badges
+
+
+
 ## [2.28.0] - 2026-04-21
 
 ### Features
