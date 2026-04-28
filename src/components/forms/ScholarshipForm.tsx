@@ -48,7 +48,7 @@ export default function ScholarshipForm() {
   const router = useRouter();
   const [academicYearId, setAcademicYearId] = useState<string | null>(null);
   const [classAcademicId, setClassAcademicId] = useState<string | null>(null);
-  const [studentId, setStudentNis] = useState<string | null>(null);
+  const [studentId, setStudentId] = useState<string | null>(null);
   const [scholarshipName, setScholarshipName] = useState<string | null>(
     "Academic",
   );
@@ -148,8 +148,8 @@ export default function ScholarshipForm() {
 
   const studentOptions =
     studentsData?.students.map((s) => ({
-      value: s.nis,
-      label: `${s.nis} - ${s.name}`,
+      value: s.id,
+      label: `${s.nis} - ${s.name} (${s.schoolLevel})`,
     })) || [];
 
   return (
@@ -184,7 +184,7 @@ export default function ScholarshipForm() {
           placeholder={t("scholarship.selectStudent")}
           data={studentOptions}
           value={studentId}
-          onChange={setStudentNis}
+          onChange={setStudentId}
           disabled={loadingStudents}
           searchable
           required

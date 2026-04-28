@@ -43,8 +43,31 @@ export async function generateServiceFeeBillsForFee(
   let skipped = 0;
   let exitSkipped = 0;
 
-  for (const period of serviceFee.billingMonths) {
-    const year = yearForPeriod(period, academicYear);
+  if (studentsInClass.length === 0 || serviceFee.billingMonths.length === 0) {
+    return { created, skipped, exitSkipped };
+  }
+
+  const studentIds = studentsInClass.map((s) => s.id);
+  const periodYearPairs = serviceFee.billingMonths.map((period) => ({
+    period,
+    year: yearForPeriod(period, academicYear),
+  }));
+
+  const existingRows = await tx.serviceFeeBill.findMany({
+    where: {
+      serviceFeeId: serviceFee.id,
+      studentId: { in: studentIds },
+      OR: periodYearPairs.map((p) => ({ period: p.period, year: p.year })),
+    },
+    select: { studentId: true, period: true, year: true },
+  });
+  const existingKeys = new Set(
+    existingRows.map((b) => `${b.studentId}:${b.period}:${b.year}`),
+  );
+
+  const rowsToCreate: Prisma.ServiceFeeBillCreateManyInput[] = [];
+
+  for (const { period, year } of periodYearPairs) {
     const firstDay = getPeriodStart(period, year, "MONTHLY");
     const dueDate = new Date(firstDay);
     dueDate.setDate(firstDay.getDate() + 10);
@@ -55,34 +78,34 @@ export async function generateServiceFeeBillsForFee(
         continue;
       }
 
-      const existing = await tx.serviceFeeBill.findUnique({
-        where: {
-          serviceFeeId_studentId_period_year: {
-            serviceFeeId: serviceFee.id,
-            studentId: student.id,
-            period,
-            year,
-          },
-        },
-        select: { id: true },
-      });
-      if (existing) {
+      const key = `${student.id}:${period}:${year}`;
+      if (existingKeys.has(key)) {
         skipped += 1;
         continue;
       }
 
-      await tx.serviceFeeBill.create({
-        data: {
-          serviceFeeId: serviceFee.id,
-          studentId: student.id,
-          classAcademicId: serviceFee.classAcademicId,
-          period,
-          year,
-          amount: new Prisma.Decimal(serviceFee.amount),
-          dueDate,
-        },
+      rowsToCreate.push({
+        serviceFeeId: serviceFee.id,
+        studentId: student.id,
+        classAcademicId: serviceFee.classAcademicId,
+        period,
+        year,
+        amount: new Prisma.Decimal(serviceFee.amount),
+        dueDate,
       });
-      created += 1;
+    }
+  }
+
+  if (rowsToCreate.length > 0) {
+    const CHUNK = 1000;
+    for (let i = 0; i < rowsToCreate.length; i += CHUNK) {
+      const chunk = rowsToCreate.slice(i, i + CHUNK);
+      const res = await tx.serviceFeeBill.createMany({
+        data: chunk,
+        skipDuplicates: true,
+      });
+      created += res.count;
+      skipped += chunk.length - res.count;
     }
   }
 
@@ -139,49 +162,47 @@ export async function generateServiceFeeBills(opts: {
     endDate: new Date(year, 11, 31),
   };
 
-  return prisma.$transaction(async (tx) => {
-    const classes = await tx.classAcademic.findMany({
-      where: classAcademicId ? { id: classAcademicId } : {},
-      include: {
-        serviceFees: {
-          where: {
-            isActive: true,
-            billingMonths: { has: period as Month },
-          },
-        },
-        studentClasses: {
-          include: {
-            student: { select: { id: true, exitedAt: true } },
-          },
+  const classes = await prisma.classAcademic.findMany({
+    where: classAcademicId ? { id: classAcademicId } : {},
+    include: {
+      serviceFees: {
+        where: {
+          isActive: true,
+          billingMonths: { has: period as Month },
         },
       },
-    });
-
-    let created = 0;
-    let skipped = 0;
-    let exitSkipped = 0;
-
-    for (const cls of classes) {
-      const students: StudentCtx[] = cls.studentClasses.map((sc) => ({
-        id: sc.student.id,
-        exitedAt: sc.student.exitedAt,
-      }));
-
-      for (const fee of cls.serviceFees) {
-        const res = await generateServiceFeeBillsForFee(
-          tx,
-          fee,
-          students,
-          academicYear,
-        );
-        created += res.created;
-        skipped += res.skipped;
-        exitSkipped += res.exitSkipped;
-      }
-    }
-
-    return { created, skipped, exitSkipped };
+      studentClasses: {
+        include: {
+          student: { select: { id: true, exitedAt: true } },
+        },
+      },
+    },
   });
+
+  let created = 0;
+  let skipped = 0;
+  let exitSkipped = 0;
+
+  for (const cls of classes) {
+    const students: StudentCtx[] = cls.studentClasses.map((sc) => ({
+      id: sc.student.id,
+      exitedAt: sc.student.exitedAt,
+    }));
+
+    for (const fee of cls.serviceFees) {
+      const res = await generateServiceFeeBillsForFee(
+        prisma,
+        fee,
+        students,
+        academicYear,
+      );
+      created += res.created;
+      skipped += res.skipped;
+      exitSkipped += res.exitSkipped;
+    }
+  }
+
+  return { created, skipped, exitSkipped };
 }
 
 /**
@@ -212,42 +233,40 @@ export async function generateAllServiceFeeBills(opts: {
     throw new Error(`Academic year ${resolvedId} not found`);
   }
 
-  return prisma.$transaction(async (tx) => {
-    const classes = await tx.classAcademic.findMany({
-      where: { academicYearId: resolvedId },
-      include: {
-        serviceFees: { where: { isActive: true } },
-        studentClasses: {
-          include: {
-            student: { select: { id: true, exitedAt: true } },
-          },
+  const classes = await prisma.classAcademic.findMany({
+    where: { academicYearId: resolvedId },
+    include: {
+      serviceFees: { where: { isActive: true } },
+      studentClasses: {
+        include: {
+          student: { select: { id: true, exitedAt: true } },
         },
       },
-    });
-
-    let created = 0;
-    let skipped = 0;
-    let exitSkipped = 0;
-
-    for (const cls of classes) {
-      const students: StudentCtx[] = cls.studentClasses.map((sc) => ({
-        id: sc.student.id,
-        exitedAt: sc.student.exitedAt,
-      }));
-
-      for (const fee of cls.serviceFees) {
-        const res = await generateServiceFeeBillsForFee(
-          tx,
-          fee,
-          students,
-          academicYear,
-        );
-        created += res.created;
-        skipped += res.skipped;
-        exitSkipped += res.exitSkipped;
-      }
-    }
-
-    return { created, skipped, exitSkipped };
+    },
   });
+
+  let created = 0;
+  let skipped = 0;
+  let exitSkipped = 0;
+
+  for (const cls of classes) {
+    const students: StudentCtx[] = cls.studentClasses.map((sc) => ({
+      id: sc.student.id,
+      exitedAt: sc.student.exitedAt,
+    }));
+
+    for (const fee of cls.serviceFees) {
+      const res = await generateServiceFeeBillsForFee(
+        prisma,
+        fee,
+        students,
+        academicYear,
+      );
+      created += res.created;
+      skipped += res.skipped;
+      exitSkipped += res.exitSkipped;
+    }
+  }
+
+  return { created, skipped, exitSkipped };
 }

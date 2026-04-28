@@ -70,7 +70,7 @@ interface CreatePaymentResult {
 export default function PaymentForm() {
   const t = useTranslations();
   const router = useRouter();
-  const [studentId, setStudentNis] = useState<string | null>(null);
+  const [studentId, setStudentId] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [selected, setSelected] = useState<Record<string, boolean>>({});
   const [inputs, setInputs] = useState<Record<string, ItemInput>>({});
@@ -253,8 +253,8 @@ export default function PaymentForm() {
 
   const studentOptions =
     studentsData?.students.map((s) => ({
-      value: s.nis,
-      label: `${s.nis} - ${s.name}`,
+      value: s.id,
+      label: `${s.nis} - ${s.name} (${s.schoolLevel})`,
     })) ?? [];
 
   return (
@@ -267,7 +267,7 @@ export default function PaymentForm() {
           data={studentOptions}
           value={studentId}
           onChange={(v) => {
-            setStudentNis(v);
+            setStudentId(v);
             setSelected({});
             setInputs({});
             setResult(null);

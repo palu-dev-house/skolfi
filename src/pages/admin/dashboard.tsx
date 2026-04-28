@@ -176,11 +176,11 @@ const DashboardPage: NextPageWithLayout = function DashboardPage() {
                   thickness={16}
                   roundCaps
                   label={
-                    <Stack align="center" gap={0}>
+                    <Stack align="center" gap={0} maw={120} mx="auto">
                       <Text fw={700} fz="xl" lh={1}>
                         {collectionRate.toFixed(1)}%
                       </Text>
-                      <Text size="xs" c="dimmed">
+                      <Text size="xs" c="dimmed" ta="center" lh={1.2}>
                         {t("dashboard.overallCollectionRate")}
                       </Text>
                     </Stack>

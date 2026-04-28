@@ -1419,6 +1419,7 @@
     "skipped": "Skipped",
     "exitSkipped": "Skipped (exited)",
     "priceWarnings": "Price Warnings",
+    "noPriceWarning": "No price for service \"{name}\" at {period} {year}",
     "deleteTitle": "Delete Bill",
     "deleteConfirm": "Delete this unpaid bill?"
   },

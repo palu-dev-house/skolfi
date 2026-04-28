@@ -1419,6 +1419,7 @@
     "skipped": "Dilewati",
     "exitSkipped": "Dilewati (keluar)",
     "priceWarnings": "Peringatan Harga",
+    "noPriceWarning": "Belum ada harga untuk layanan \"{name}\" pada {period} {year}",
     "deleteTitle": "Hapus Tagihan",
     "deleteConfirm": "Hapus tagihan belum dibayar ini?"
   },

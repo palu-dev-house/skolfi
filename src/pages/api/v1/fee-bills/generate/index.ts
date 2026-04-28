@@ -67,7 +67,7 @@ async function POST(request: NextRequest) {
         let created = 0;
         let skipped = 0;
         let exitSkipped = 0;
-        const priceWarnings: string[] = [];
+        const priceWarnings: GenerateAllFeeBillsResult["priceWarnings"] = [];
 
         for (const sub of subscriptions) {
           const res = await generateFeeBillsForSubscription(

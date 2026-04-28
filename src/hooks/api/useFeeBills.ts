@@ -68,7 +68,7 @@ interface GenerateAllFeeBillsResponse {
     created: number;
     skipped: number;
     exitSkipped: number;
-    priceWarnings: string[];
+    priceWarnings: Array<{ serviceName: string; period: string; year: number }>;
   };
 }
 

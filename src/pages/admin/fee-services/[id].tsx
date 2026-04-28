@@ -522,8 +522,8 @@ function SubscribeModal({
   const options = useMemo(
     () =>
       studentsData?.students.map((s) => ({
-        value: s.nis,
-        label: `${s.nis} — ${s.name}`,
+        value: s.id,
+        label: `${s.nis} — ${s.name} (${s.schoolLevel})`,
       })) ?? [],
     [studentsData],
   );

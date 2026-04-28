@@ -82,7 +82,7 @@ interface FeeBillGenerateResult {
   created: number;
   skipped: number;
   exitSkipped: number;
-  priceWarnings: string[];
+  priceWarnings: Array<{ serviceName: string; period: string; year: number }>;
 }
 
 interface ServiceFeeBillGenerateResult {
@@ -810,9 +810,21 @@ function FeeBillResultBody({ result }: { result: FeeBillGenerateResult }) {
             {t("feeBill.priceWarnings")}
           </Text>
           <List size="sm">
-            {result.priceWarnings.map((w) => (
-              <List.Item key={w}>{w}</List.Item>
-            ))}
+            {result.priceWarnings.map((w) => {
+              if (typeof w === "string") {
+                return <List.Item key={w}>{w}</List.Item>;
+              }
+              const key = `${w.serviceName}:${w.period}:${w.year}`;
+              return (
+                <List.Item key={key}>
+                  {t("feeBill.noPriceWarning", {
+                    name: w.serviceName,
+                    period: t(`months.${w.period}`),
+                    year: w.year,
+                  })}
+                </List.Item>
+              );
+            })}
           </List>
         </Card>
       )}

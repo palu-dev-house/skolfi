@@ -31,7 +31,15 @@ async function GET(request: NextRequest) {
     statusParam && statusParam !== "null" ? statusParam : undefined;
 
   const where: Prisma.ServiceFeeBillWhereInput = {};
-  if (studentSearch || schoolLevel) {
+  const isUuid =
+    !!studentSearch &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      studentSearch,
+    );
+  if (isUuid) {
+    where.studentId = studentSearch as string;
+    if (schoolLevel) where.student = { schoolLevel };
+  } else if (studentSearch || schoolLevel) {
     where.student = {
       ...(studentSearch && {
         OR: [

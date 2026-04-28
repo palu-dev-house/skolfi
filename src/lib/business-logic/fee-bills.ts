@@ -114,6 +114,7 @@ type TxClient = Parameters<Parameters<typeof prisma.$transaction>[0]>[0];
 interface SubscriptionWithContext extends FeeSubscription {
   feeService: {
     id: string;
+    name: string;
     prices: FeeServicePrice[];
   };
   student: {
@@ -132,16 +133,26 @@ interface AcademicYearCtx {
  * Generate any missing FeeBill rows for one subscription across the academic year.
  * Existing rows are left untouched (idempotent via @@unique).
  */
+export interface PriceWarning {
+  serviceName: string;
+  period: string;
+  year: number;
+}
+
 export async function generateFeeBillsForSubscription(
   tx: TxClient,
   subscription: SubscriptionWithContext,
   academicYear: AcademicYearCtx,
-): Promise<{ created: number; skipped: number; priceWarnings: string[] }> {
+): Promise<{
+  created: number;
+  skipped: number;
+  priceWarnings: PriceWarning[];
+}> {
   const months = getMonthsInAcademicYear(
     academicYear.startDate,
     academicYear.endDate,
   );
-  const priceWarnings: string[] = [];
+  const priceWarnings: PriceWarning[] = [];
   let created = 0;
   let skipped = 0;
 
@@ -175,9 +186,11 @@ export async function generateFeeBillsForSubscription(
       );
     } catch (err) {
       if (err instanceof NoPriceForPeriodError) {
-        priceWarnings.push(
-          `No price for service ${subscription.feeServiceId} at ${period} ${year}`,
-        );
+        priceWarnings.push({
+          serviceName: subscription.feeService.name,
+          period,
+          year,
+        });
         continue;
       }
       throw err;
@@ -246,7 +259,7 @@ export async function applyFeeBillPayment(
 export interface GenerateAllFeeBillsResult {
   created: number;
   skipped: number;
-  priceWarnings: string[];
+  priceWarnings: PriceWarning[];
   exitSkipped: number;
 }
 
@@ -265,43 +278,123 @@ export async function generateAllFeeBills(
     throw new Error(`Academic year ${academicYearId} not found`);
   }
 
-  return prisma.$transaction(async (tx) => {
-    const services = await tx.feeService.findMany({
-      where: { academicYearId, isActive: true },
-      include: {
-        prices: true,
-        subscriptions: {
-          include: {
-            feeService: { include: { prices: true } },
-            student: { select: { id: true, exitedAt: true } },
-          },
+  const services = await prisma.feeService.findMany({
+    where: { academicYearId, isActive: true },
+    include: {
+      prices: true,
+      subscriptions: {
+        include: {
+          student: { select: { id: true, exitedAt: true } },
         },
       },
+    },
+  });
+
+  const months = getMonthsInAcademicYear(
+    academicYear.startDate,
+    academicYear.endDate,
+  );
+
+  let created = 0;
+  let skipped = 0;
+  let exitSkipped = 0;
+  const priceWarningKeys = new Set<string>();
+  const priceWarnings: PriceWarning[] = [];
+
+  for (const service of services) {
+    if (service.subscriptions.length === 0) continue;
+
+    const subscriptionIds = service.subscriptions.map((s) => s.id);
+    const existing = await prisma.feeBill.findMany({
+      where: { subscriptionId: { in: subscriptionIds } },
+      select: { subscriptionId: true, period: true, year: true },
     });
+    const existingKeys = new Set(
+      existing.map((b) => `${b.subscriptionId}:${b.period}:${b.year}`),
+    );
 
-    let created = 0;
-    let skipped = 0;
-    let exitSkipped = 0;
-    const priceWarnings: string[] = [];
+    const rowsToCreate: Prisma.FeeBillCreateManyInput[] = [];
 
-    for (const service of services) {
-      for (const sub of service.subscriptions) {
-        const preCount = created;
-        const res = await generateFeeBillsForSubscription(
-          tx,
-          sub as unknown as SubscriptionWithContext,
-          academicYear,
-        );
-        created += res.created;
-        skipped += res.skipped;
-        priceWarnings.push(...res.priceWarnings);
-        if (res.created === 0 && res.skipped === 0 && sub.student.exitedAt) {
-          exitSkipped += 1;
+    for (const sub of service.subscriptions) {
+      let touched = false;
+
+      for (const { period, year } of months) {
+        const firstDay = new Date(year, monthIndexFromPeriod(period), 1);
+        const lastDay = new Date(year, monthIndexFromPeriod(period) + 1, 0);
+
+        if (sub.startDate.getTime() > lastDay.getTime()) continue;
+        if (sub.endDate && sub.endDate.getTime() < firstDay.getTime()) continue;
+        if (
+          sub.student.exitedAt &&
+          firstDay.getTime() > sub.student.exitedAt.getTime()
+        ) {
+          continue;
         }
-        void preCount;
+
+        const key = `${sub.id}:${period}:${year}`;
+        if (existingKeys.has(key)) {
+          skipped += 1;
+          touched = true;
+          continue;
+        }
+
+        let amount: Prisma.Decimal;
+        try {
+          amount = resolvePriceForPeriod(service.prices, period, year);
+        } catch (err) {
+          if (err instanceof NoPriceForPeriodError) {
+            const key = `${service.id}:${period}:${year}`;
+            if (!priceWarningKeys.has(key)) {
+              priceWarningKeys.add(key);
+              priceWarnings.push({
+                serviceName: service.name,
+                period,
+                year,
+              });
+            }
+            continue;
+          }
+          throw err;
+        }
+
+        const dueDate = new Date(firstDay);
+        dueDate.setDate(firstDay.getDate() + 10);
+
+        rowsToCreate.push({
+          subscriptionId: sub.id,
+          feeServiceId: service.id,
+          studentId: sub.studentId,
+          period,
+          year,
+          amount,
+          dueDate,
+        });
+        touched = true;
+      }
+
+      if (!touched && sub.student.exitedAt) {
+        exitSkipped += 1;
       }
     }
 
-    return { created, skipped, priceWarnings, exitSkipped };
-  });
+    if (rowsToCreate.length > 0) {
+      const CHUNK = 1000;
+      for (let i = 0; i < rowsToCreate.length; i += CHUNK) {
+        const chunk = rowsToCreate.slice(i, i + CHUNK);
+        const res = await prisma.feeBill.createMany({
+          data: chunk,
+          skipDuplicates: true,
+        });
+        created += res.count;
+        skipped += chunk.length - res.count;
+      }
+    }
+  }
+
+  return {
+    created,
+    skipped,
+    priceWarnings,
+    exitSkipped,
+  };
 }
