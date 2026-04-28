@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.31.0] - 2026-04-28
+
+### Features
+- async student search + filter-first overdue reports
+
+
+
 ## [2.30.1] - 2026-04-28
 
 ### Fixes
