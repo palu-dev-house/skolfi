@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.30.1] - 2026-04-28
+
+### Fixes
+- fix(deploy): pin packageManager to pnpm@10.33.0 for Railpack
+
+
+
 ## [2.30.0] - 2026-04-28
 
 ### Features
